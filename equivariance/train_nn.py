@@ -11,16 +11,19 @@ for i, classifier in zip(np.arange(num_networks), classifiers):
     epochs = 10
     batch_size = 100
     new_model = True
+    gpu_on = False
+    data_dir = f"{BASE_DIR}/data"
     output_dir = 'trained_models/simple'
     model_name = str(classifier) + f"_run_{i}"
     description = f""
     args_dict = {
-        'verbose':True, 'description':description, 'build':new_model,
+        'verbose': True, 'description': description, 'build': new_model,
+        'gpu': gpu_on
     }
     settings = dotdict({
-        'args_dict':args_dict, 'classifier':classifier,
-        'data_dir':data_dir, 'model_name':model_name,
-        'epochs':epochs, 'batch_size':batch_size,
-        'weight':weight, 'output_dir':output_dir})
+        'args_dict': args_dict, 'classifier': classifier,
+        'model_name': model_name, 'epochs': epochs,
+        'batch_size': batch_size, 'output_dir': output_dir,
+        'data_dir': data_dir})
 
     utils.train_pred(settings)

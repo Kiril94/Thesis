@@ -4,7 +4,7 @@ from tensorflow.keras.layers import LeakyReLU
 
 class Classifier_CNN(Classifier_Template):
 
-    def build_model(self, input_shape, nb_classes):
+    def build_model(self, input_shape, nb_classes, arg):
         padding = 'same'
         input_layer = keras.layers.Input(input_shape)
         activation = 'sigmoid'
@@ -13,16 +13,16 @@ class Classifier_CNN(Classifier_Template):
         kernel_size = 9
         if activation == 'leaky_relu':
             activation=None
-        conv1 = keras.layers.Conv1D(filters=6, kernel_size=kernel_size,padding=padding,
+        conv1 = keras.layers.Conv2D(filters=6, kernel_size=kernel_size,padding=padding,
                                     activation=activation)(input_layer)
         if activation == None:
             conv1 = LeakyReLU()(conv1)
-        conv1 = keras.layers.AveragePooling1D(pool_size=3)(conv1)
-        conv2 = keras.layers.Conv1D(filters=6,kernel_size=kernel_size,padding=padding,
+        conv1 = keras.layers.MaxPooling2D(pool_size=3)(conv1)
+        conv2 = keras.layers.Conv2D(filters=6,kernel_size=kernel_size,padding=padding,
                                     activation=activation)(conv1)
         if activation == None:
             conv2 = LeakyReLU()(conv2)
-        conv2 = keras.layers.AveragePooling1D(pool_size=3)(conv2)
+        conv2 = keras.layers.MaxPooling2D(pool_size=3)(conv2)
 
         flatten_layer = keras.layers.Flatten()(conv2)
 

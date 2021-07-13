@@ -1,6 +1,7 @@
 from builtins import print
 from tensorflow.keras import models
 import tensorflow.keras as keras
+from tensorflow.keras.datasets import cifar10
 from sklearn.metrics import confusion_matrix, f1_score
 import seaborn as sns
 import numpy as np
@@ -9,6 +10,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import os
 from sklearn.utils import class_weight
+
 matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = 'Arial'
 matplotlib.use('agg')
@@ -127,10 +129,8 @@ def load_data(data_dir):
     return data_dict
 
 def train_pred(settings):
-
     # load data
-    datad = dotdict(load_data(settings.data_dir))
-    X_train, y_train = datad.X_train, datad.y_train
+    (trainX, trainy), (testX, testy) = cifar10.load_data()
 
     # set if samples should be weighted,
     # this will be removed later as we will use only weighted samples
@@ -158,38 +158,12 @@ def train_pred(settings):
         datad.y_val = np.argmax(datad.y_val, axis=1)
 
     classifier = settings.classifier
-    if classifier == 'cnn_optimize':
+    if classifier == 'cnn':
         import classifiers.cnn_optimize
         model = classifiers.cnn_optimize.Classifier_CNN(**args_dict)
-    elif classifier == 'cnn_new':
-        import classifiers.cnn_new
-        model = classifiers.cnn_new.Classifier_CNN(**args_dict)
-    elif classifier == 'cnn_new_2':
-        import classifiers.cnn_new_2
-        model = classifiers.cnn_new_2.Classifier_CNN(**args_dict)
-    elif classifier == 'lstm':
-        import classifiers.lstm
-        model = classifiers.lstm.Classifier_LSTM(**args_dict)
-    elif classifier == 'lstm_simple':
-        import classifiers.lstm_simple
-        model = classifiers.lstm_simple.Classifier_LSTM(**args_dict)
-    elif classifier == 'tcn':
-        import classifiers.tcn
-        model = classifiers.tcn.Classifier_TCN(**args_dict)
-    elif classifier == 'tcn_simple':
-        import classifiers.tcn_simple
-        model = classifiers.tcn_simple.Classifier_TCN(**args_dict)
-    elif classifier == 'tcn_multihead':
-        import classifiers.tcn_multihead
-        model = classifiers.tcn_multihead.Classifier_TCN(**args_dict)
     else:
         print(classifier, ' is not a valid classifier name!')
 
-    if (classifier=="cnn_new") or (classifier=="tcn_multihead") or (classifier=="cnn_optimize"):
-            datad.X_train = np.split(
-                datad.X_train, args_dict.input_shape[-1], axis = -1)
-            datad.X_val = np.split(datad.X_val, args_dict.input_shape[-1], axis = -1)
-            datad.X_test = np.split(datad.X_test, args_dict.input_shape[-1], axis = -1)
 
     model.fit(datad.X_train, datad.y_train, datad.X_val, datad.y_val,
               epochs=settings.epochs, d_class_weights=d_class_weights,
