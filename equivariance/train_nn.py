@@ -8,7 +8,7 @@ num_networks = 1
 classifiers = ['cnn']*num_networks
 
 for i, classifier in zip(np.arange(num_networks), classifiers):
-    epochs = 100
+    epochs = 20
     batch_size = 1000
     new_model = True
     gpu_on = True
