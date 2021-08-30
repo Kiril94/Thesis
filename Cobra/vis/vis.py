@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import math
+import numpy as np
 
 
 def display3d(arr3d, figsize=(15, 15), start_slice=0, num_slices=None, axis=0):
