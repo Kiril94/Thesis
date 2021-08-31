@@ -12,7 +12,7 @@ import importlib
 from pydicom import dcmread
 from utils import utils
 from utils import dicom2nifti
-importlib.reload(utils)
+importlib.reload(dicom2nifti)
 importlib.reload(ld)
 def p(string): print(string)
 # In[main directories]
@@ -37,6 +37,7 @@ for sd, cd in zip(p0_scandir, patient_ids):
 #print(os.path.listdir(pos_patient_dir))
 # In[convert di2nifti]
 nifti_out_dir = "D:/Thesis/Cobra/data/dicom2nifti/p0"
+dicom2nifti.dicom2nifti(p0_scandir[0], nifti_out_dir)
 #patient0_dicom = 
 #arr = patient0.reconstruct3d(patient0.get_scan_directories()[0])
 #patient0.show_scan(1, {'axis':0})
