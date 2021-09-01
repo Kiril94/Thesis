@@ -1,11 +1,11 @@
 import numpy as np
 from pydicom import dcmread
 import os
-from vis import vis
+import vis
 from glob import iglob
 from pathlib import Path
 import datetime as dt
-from utils.utils import dotdict
+from robot.utils import dotdict
 
 
 
@@ -15,7 +15,10 @@ data_dir = f"{BASE_DIR}/data"
 patient_dirs = os.listdir(BASE_DIR)
 patient_dir = f"{data_dir}/patient1"
 
-
+def get_docs_path_list(scan_dir):
+    reports = iglob(f"{scan_dir}/*/*/*/DOC/*/*.pdf")
+    reports_list = [x for x in reports] 
+    return reports_list
 
 def reconstruct3d(scan_dir):
     """
@@ -31,11 +34,13 @@ def reconstruct3d(scan_dir):
     return arr3d
 
 def get_patient_key_list():
-    return [('PatientID', 'str'), ('PatientSex','str')]
+    return [('PatientID', 'str'), ('PatientSex','str'), ('Positive', 'boolean')]
 
 def get_scan_key_list():
     """"List containing keys and corresponding datatype as tuples."""
-    key_list = [('InstanceCreationDate','date'), 
+    key_list = [('SOPInstanceUID','str'),
+                ('PatientID', 'str'), 
+                ('InstanceCreationDate','date'), 
                 ('InstanceCreationTime','time'),
                 ('Manufacturer', 'str'), ('ManufacturerModelName', 'str'),
                 ('ScanningSequence', 'str'), ('SequenceVariant','str'),
@@ -44,6 +49,7 @@ def get_scan_key_list():
                 ('SliceThickness', 'float'),
                 ('RepititionTime', 'float'),
                 ('EchoTime','float'),
+                ('InversionTime','float'),
                 ('NumberofAverages','float'),
                 ('ImagingFrequency', 'float'),
                 ('EchoNumbers', 'int'),
@@ -60,19 +66,28 @@ class Patient():
 
     def __init__(self, patient_dir):
         self.patient_dir = patient_dir
-        self.patient_id = os.path.split(patient_dir)[1]
+        self.patient_id = os.path.split(patient_dir)[1] 
         
     def info(self):
         """Returns dictionary with general info about the patient."""
         subdir = os.path.join(self.patient_dir, os.listdir(self.patient_dir)[0])
         mr_dir = os.path.join(subdir, "MR")
         mr_subdir = os.path.join(mr_dir, os.listdir(mr_dir)[0])
+        
         dicom = dcmread(os.path.join(mr_subdir, os.listdir(mr_subdir)[0]))
+        
         patient_sex = getattr(dicom, "PatientSex")
         if patient_sex=='':
             patient_sex=None
+            
+        if (subdir.split('/')[-3]=='positive'):
+            positive = True
+        else: 
+            positive = False
+            
         info_dict = {'PatientID': self.patient_id,
-                     'PatientSex': patient_sex }
+                     'PatientSex': patient_sex,
+                     'Positive': positive, }
         return info_dict
         
     def get_scan_directories(self):
@@ -129,7 +144,7 @@ class Patient():
                 value = None
 
             scan_dict[k[0]] = value
-        return dotdict(scan_dict)
+        return scan_dict #dotdict(scan_dict)
     
     def all_scan_dicts(self, reconstruct_3d=True):
         """Returns list with all scan dictionaries for a patient."""
