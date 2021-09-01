@@ -31,7 +31,7 @@ import dcmstack
 import os
 dcm2niix_dir = "D:\\Thesis\\Cobra\\helper\\dcm2niix_win\\dcm2niix.exe"
 in_path = p0_scandir[0]#"Z:\\positive\\00e520dd9e4c7f2b7798263bd0916221\\2d8ef0eb9e77c14475dad00723fb0ca7\\MR\\2c76b30765e19a46b140d0d07df70bb5"
-out_path = "D:\\Thesis\\Cobra\\data\\dicom2nifti\\p3"
+out_path = "D:\\Thesis\\Cobra\\data\\dicom2nifti\\p4"
 #os.system(f"{dcm2niix_dir} -h")
 start = time.time()
 os.system(f"cmd /k {dcm2niix_dir} -o {out_path} {in_path}")
@@ -55,11 +55,16 @@ pos_patients_list = utils.list_subdir(positive_dir)
 pos_patient_dir = pos_patients_list[20]
 p0 = ld.Patient(pos_patient_dir)
 p0_scandir = p0.get_scan_directories()
+subdirs = utils.list_subdir(p0_scandir[0])
 #for p in p0_scandir:
 #    print(dcmread(utils.list_subdir(p)[0]).SOPInstanceUID)
 #patient_ids = [p0.scan_dictionary(n, reconstruct_3d=False).PatientID \
 #              for n in range(len(p0_scandir))]
-print(p0_scandir[2])
+print(dcmread(subdirs[0]))
+#for sub in subdirs:
+#    print(dcmread(sub).SeriesInstanceUID)
+#print(p0.get_scan_dictionary(0))
+#print(p0_scandir[2])
 
 # In[look at ni header]
 path_roi = "2c76b30765e19a46b140d0d07df70bb5_MPR_Thick_Range[4]_0_104a_ROI1.nii"
