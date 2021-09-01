@@ -61,7 +61,10 @@ class Patient():
     def __init__(self, patient_dir):
         self.patient_dir = patient_dir
         self.patient_id = os.path.split(patient_dir)[1]
-        
+    
+    def get_id(self):
+        return self.patient_id
+    
     def info(self):
         """Returns dictionary with general info about the patient."""
         subdir = os.path.join(self.patient_dir, os.listdir(self.patient_dir)[0])
