@@ -1,13 +1,3 @@
-scan_path = 'Z:\\positive\\f430460b276e6618ad2c73daf269c228';
-listing = dir(scan_path);
-subdir = listing([listing.isdir]);
-disp(a);
-for k = 1 : length(subdir)
-  fprintf('Sub folder #%d = %s\n', k, subdir(k).name);
-end
-example_folder = fullfile(scan_path, subdir(3).name);
-subsubfolder = dir(example_folder);
-subsubfolder_name = dir(example_folder);
-disp();
-%disp(example_folder);
-%dicom_file_paths = {};
+scan_path = "Z:\\positive\\27092ec9a3fd6f8c36851bd56c8168fd\bfb6b1c2afd6f6a55c8bffdb8fb1f11a\MR\5eda840fa8581fc0f11ca828e0a90675";
+nifti_path = "D:\\Thesis\\Cobra\\data\\dicom2nifti\\p1_matlab";
+dicm2nii(scan_path, nifti_path, '.nii');
