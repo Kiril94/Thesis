@@ -29,16 +29,26 @@ healthy_dirs = [f"{base_data_dir}/{x}" for x in data_dirs if x.startswith('2019'
 print(f"main directories: {data_dirs}")
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
+# In[Test]
+if not False:
+    print('a')
 # In[Convert positive patients]
 out_pos_path = "Z:\\nii\\positive"
+start = time.time()
 for patient_dir in pos_patients_list[:1]:
     patient = ld.Patient(patient_dir)
+    patient_id = patient.get_id()
     scan_dirs = patient.get_scan_directories()
+    out_patient_dir = os.path.join(out_pos_path, patient_id)
+    if not os.path.exists(out_patient_dir):
+        os.makedirs(out_patient_dir)
     for scan_dir in scan_dirs[:1]:
         _, scan_id = os.path.split(scan_dir)
-        out_path = os.path.join(out_pos_path, patient_id)
-        #dicom2nifti.dcm2nii(in_path, out_path)
-
+        out_path = os.path.join(out_patient_dir, scan_id)
+        print(out_path)
+        #dicom2nifti.dcm2nii(scan_dir, out_path)
+stop = time.time()
+print(f"The conversion took: {stop-start} s")
 # In[Look at one patient with subdirectories]
 test_pat = "Z:/positive/00e520dd9e4c7f2b7798263bd0916221/2d8ef0eb9e77c14475dad00723fb0ca7/MR/2c76b30765e19a46b140d0d07df70bb5/0e04a266d7b274469583b4044728b9a4.dcm"
 pos_patient_dir = pos_patients_list[20]
