@@ -96,7 +96,7 @@ class Patient():
         arr3d = arr2d[indices_sort]
         return arr3d
 
-    def scan_dictionary(self, scan_number, reconstruct_3d=True):
+    def get_scan_dictionary(self, scan_number, reconstruct_3d=True):
         """Returns a dictionary for scan with scan_number, if reconstruct """
         scan_directories = self.get_scan_directories()
         scan_dir = scan_directories[scan_number]
