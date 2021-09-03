@@ -32,20 +32,6 @@ print(conv_patients)
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
 
-# In[]
-print(healthy_dirs[:6])
-# In[Count pos. scan number]
-scan_counters = {}
-for healthy_dir in healthy_dirs[:6]:
-    patient_list = utils.list_subdir(healthy_dir)
-    scan_counter = 0
-    for pat_dir in patient_list:
-        scan_counter += len (ld.Patient(pat_dir).get_scan_directories())
-    scan_counters[healthy_dir] = scan_counter
-    print(f'number of patients in {healthy_dir} =  {scan_counter}')
-# In[Test]
-if not False:
-    print('a')
 # In[Convert positive patients]
 
 start = time.time()
@@ -67,6 +53,33 @@ for patient_dir in pos_patients_list[start_patient:]:
     print(str(datetime.datetime.now()))
 stop = time.time()
 print(f"The conversion took: {stop-start} s")
+
+
+# In[Count scans number]
+scan_counters = {}
+for healthy_dir in healthy_dirs[6:]:
+    patient_list = utils.list_subdir(healthy_dir)
+    scan_counter = 0
+    for pat_dir in patient_list:
+        scan_counter += len (ld.Patient(pat_dir).get_scan_directories())
+    scan_counters[healthy_dir] = scan_counter
+    print(f'number of scans in {healthy_dir} =  {scan_counter}')
+# In[Count scans number]
+study_counters = {}
+for healthy_dir in healthy_dirs[6:]:
+    patient_list = utils.list_subdir(healthy_dir)
+    study_counter = 0
+    for pat_dir in patient_list:
+        study_counter += len(os.listdir(pat_dir))
+    study_counters[healthy_dir] = study_counter
+    print(f'number of studies in {healthy_dir} =  {study_counter}')
+
+# In[Count Reports]
+
+# In[Test]
+if not False:
+    print('a')
+
 # In[Look at one patient with subdirectories]
 test_pat = "Z:/positive/00e520dd9e4c7f2b7798263bd0916221/2d8ef0eb9e77c14475dad00723fb0ca7/MR/2c76b30765e19a46b140d0d07df70bb5/0e04a266d7b274469583b4044728b9a4.dcm"
 pos_patient_dir = pos_patients_list[20]
@@ -101,17 +114,18 @@ print(healthy_count)
 # number of pos patients = 831
 # number of neg patients = 24908
 # number of pos scans = 12562
-# number of patients in Y://2019_01 =  30108
-# number of patients in Y://2019_02 =  26125
-# number of patients in Y://2019_03 =  25709
-# number of patients in Y://2019_04 =  26979
-# number of patients in Y://2019_05 =  28088
-# number of patients in Y://2019_06 =  25281
+# number of scans in Y://2019_01 =  30108
+# number of scans in Y://2019_02 =  26125
+# number of scans in Y://2019_03 =  25709
+# number of scans in Y://2019_04 =  26979
+# number of scans in Y://2019_05 =  28088
+# number of scans in Y://2019_06 =  25281
 
+# approx 250MB/patient
+# whole dataset: 6TB
 
+# In[]
 
-
-
-
-
-
+scan_dir = "Y:/positive/00e520dd9e4c7f2b7798263bd0916221/2d8ef0eb9e77c14475dad00723fb0ca7/MR/2c76b30765e19a46b140d0d07df70bb5"
+scan_dict = ld.get_scan_dictionary(scan_dir)
+print(scan_dict)

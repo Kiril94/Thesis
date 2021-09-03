@@ -30,6 +30,7 @@ def reconstruct3d(scan_dir):
     arr3d = arr2d[indices_sort]
     return arr3d
 
+
 def get_patient_key_list():
     return [('PatientID', 'str'), ('PatientSex','str')]
 
@@ -54,6 +55,44 @@ def get_scan_key_list():
                 ('SpacingBetweenSlices','float'),
                 ('ImagesInAcquisition', 'int') ]
     return key_list
+
+def get_scan_dictionary(scan_dir, reconstruct_3d=True):
+    """Returns a dictionary for scan with scan_number, if reconstruct """
+    
+    dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[1])
+    print(dicom_file_dir)
+    dicom = dcmread(dicom_file_dir)
+    print(dicom)
+    key_list = get_scan_key_list()
+    
+    if reconstruct_3d:
+        scan_dict = {'arr3d': reconstruct3d(scan_dir)}
+    else:
+        scan_dict = {}
+    for k in key_list:
+        try: # see if dicom contains this tag
+            value = getattr(dicom, k[0])
+            if value=='':
+                value = None
+            elif k[1]=='str':
+                value = str(value)
+            elif k[1]=='int':
+                value = int(value)
+            elif k[1]=='float':
+                value = float(value)
+            elif k[1]=='date':
+                value = dt.date(int(value[:4]), int(value[4:6]), int(value[6:]))
+            elif k[1]=='time':
+                value = dt.time(int(value[:2]), int(value[2:4]), int(value[4:6]))
+            else:
+                print(f"Unknown Datatype in get key list: {k[1]}")
+        except:
+            value = None
+
+        scan_dict[k[0]] = value
+    return dotdict(scan_dict)
+
+
 
 
 class Patient():
