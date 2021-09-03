@@ -12,41 +12,59 @@ import importlib
 from pydicom import dcmread
 from utils import utils
 import nibabel as nib
-import glob
-import pydicom
-import sys
-import json
 import time
 from utils import dicom2nifti
+import datetime
 importlib.reload(ld)
 def p(string): print(string)
 
 # In[main directories]
-base_data_dir = "Z:/"
+base_data_dir = "Y:/"
+out_pos_path = "Y:\\nii\\positive"
 data_dirs = os.listdir(base_data_dir)
 positive_dir = f"{base_data_dir}/positive" 
-healthy_dirs = [f"{base_data_dir}/{x}" for x in data_dirs if x.startswith('2019')]
+healthy_dirs = sorted([f"{base_data_dir}/{x}" for x in data_dirs if x.startswith('2019')])
 print(f"main directories: {data_dirs}")
+# In[Numebr of converted patients]
+conv_patients = len(os.listdir(out_pos_path))
+print(conv_patients)
+
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
+
+# In[]
+print(healthy_dirs[:6])
+# In[Count pos. scan number]
+scan_counters = {}
+for healthy_dir in healthy_dirs[:6]:
+    patient_list = utils.list_subdir(healthy_dir)
+    scan_counter = 0
+    for pat_dir in patient_list:
+        scan_counter += len (ld.Patient(pat_dir).get_scan_directories())
+    scan_counters[healthy_dir] = scan_counter
+    print(f'number of patients in {healthy_dir} =  {scan_counter}')
 # In[Test]
 if not False:
     print('a')
 # In[Convert positive patients]
-out_pos_path = "Z:\\nii\\positive"
+
 start = time.time()
-for patient_dir in pos_patients_list[:1]:
+start_patient = conv_patients
+patient_counter = start_patient
+for patient_dir in pos_patients_list[start_patient:]:
     patient = ld.Patient(patient_dir)
     patient_id = patient.get_id()
     scan_dirs = patient.get_scan_directories()
     out_patient_dir = os.path.join(out_pos_path, patient_id)
     if not os.path.exists(out_patient_dir):
         os.makedirs(out_patient_dir)
-    for scan_dir in scan_dirs[:1]:
+    for scan_dir in scan_dirs:
         _, scan_id = os.path.split(scan_dir)
-        out_path = os.path.join(out_patient_dir, scan_id)
-        print(out_path)
-        #dicom2nifti.dcm2nii(scan_dir, out_path)
+        out_path = os.path.join(out_patient_dir)
+        dicom2nifti.dcm2nii(scan_dir, out_path)
+    patient_counter += 1
+    print(patient_counter)
+    print(str(datetime.datetime.now()))
 stop = time.time()
 print(f"The conversion took: {stop-start} s")
 # In[Look at one patient with subdirectories]
@@ -80,8 +98,15 @@ for subdir in healthy_dirs:
 print(healthy_count)
 # In[]
 
-
-
+# number of pos patients = 831
+# number of neg patients = 24908
+# number of pos scans = 12562
+# number of patients in Y://2019_01 =  30108
+# number of patients in Y://2019_02 =  26125
+# number of patients in Y://2019_03 =  25709
+# number of patients in Y://2019_04 =  26979
+# number of patients in Y://2019_05 =  28088
+# number of patients in Y://2019_06 =  25281
 
 
 
