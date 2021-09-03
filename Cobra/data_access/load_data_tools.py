@@ -24,10 +24,16 @@ def reconstruct3d(scan_dir):
     """
     files = os.listdir(scan_dir)
     dicom = [dcmread(f"{scan_dir}/{f}") for f in files]  # all slices
-    slice_loc = [float(d.SliceLocation) for d in dicom]
-    indices_sort = np.argsort(np.array(slice_loc))
-    arr2d = np.array([d.pixel_array for d in dicom])
-    arr3d = arr2d[indices_sort]
+    try:
+        slice_loc = [float(d.SliceLocation) for d in dicom]
+        indices_sort = np.argsort(np.array(slice_loc))
+        arr2d = np.array([d.pixel_array for d in dicom])
+        arr3d = arr2d[indices_sort]
+    except:
+        print("Slicelocation could not be found\
+              for at least one of the dicom files,\
+                  returning empty arr")
+        arr3d = np.empty((1,1))
     return arr3d
 
 
@@ -57,12 +63,10 @@ def get_scan_key_list():
     return key_list
 
 def get_scan_dictionary(scan_dir, reconstruct_3d=True):
-    """Returns a dictionary for scan with scan_number, if reconstruct """
+    """Returns a dictionary for scan at scan_dir"""
     
     dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[1])
-    print(dicom_file_dir)
     dicom = dcmread(dicom_file_dir)
-    print(dicom)
     key_list = get_scan_key_list()
     
     if reconstruct_3d:
