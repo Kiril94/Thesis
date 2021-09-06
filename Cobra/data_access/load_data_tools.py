@@ -5,7 +5,7 @@ import vis
 from glob import iglob
 from pathlib import Path
 import datetime as dt
-from robot.utils import dotdict
+from utilss.utils import dotdict
 
 
 
@@ -38,7 +38,8 @@ def get_patient_key_list():
 
 def get_scan_key_list():
     """"List containing keys and corresponding datatype as tuples."""
-    key_list = [('SOPInstanceUID','str'),
+    key_list = [('SeriesInstanceUID','str'),
+                ('StudyInstanceUID','str'),
                 ('PatientID', 'str'), 
                 ('InstanceCreationDate','date'), 
                 ('InstanceCreationTime','time'),
@@ -67,7 +68,12 @@ class Patient():
     def __init__(self, patient_dir):
         self.patient_dir = patient_dir
         self.patient_id = os.path.split(patient_dir)[1] 
-        
+        self.patient_id = os.path.split(patient_dir)[1]
+    
+    def get_id(self):
+        return self.patient_id
+    
+
     def info(self):
         """Returns dictionary with general info about the patient."""
         subdir = os.path.join(self.patient_dir, os.listdir(self.patient_dir)[0])
@@ -144,12 +150,12 @@ class Patient():
                 value = None
 
             scan_dict[k[0]] = value
-        return scan_dict #dotdict(scan_dict)
+        return dotdict(scan_dict)
     
     def all_scan_dicts(self, reconstruct_3d=True):
         """Returns list with all scan dictionaries for a patient."""
         scan_directories = self.get_scan_directories()
-        all_scan_dicts = [self.scan_dictionary(scan_number, reconstruct_3d=reconstruct_3d)\
+        all_scan_dicts = [self.get_scan_dictionary(scan_number, reconstruct_3d=reconstruct_3d)\
                           for scan_number in range(len(scan_directories))]
         return all_scan_dicts
     
