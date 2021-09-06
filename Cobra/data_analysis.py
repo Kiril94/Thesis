@@ -38,7 +38,7 @@ print(conv_patients)
 
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
-target_patients_list = utils.list_subdir(target_dir)
+#target_patients_list = utils.list_subdir(target_dir)
 # In[Test]
 if not False:
     print('a')
@@ -127,14 +127,14 @@ for healthy_dir in healthy_dirs[6:]:
     print(f'number of scans in {healthy_dir} =  {scan_counter}')
 # In[Count study number]
 study_counters = {}
-for healthy_dir in healthy_dirs:
-    print(f"counting studies in {healthy_dir}")
-    patient_list = utils.list_subdir(healthy_dir)
+for pos_dir in [positive_dir]:
+    print(f"counting studies in {positive_dir}")
+    patient_list = utils.list_subdir(pos_dir)
     study_counter = 0
     for pat_dir in patient_list:
         print('|',end=(''))
         study_counter += sum(1 for _ in iglob(pat_dir))
-    study_counters[healthy_dir] = study_counter
+    study_counters[pos_dir] = study_counter
     print(f'number of studies in {healthy_dir} =  {study_counter}')
 # In[Test]
 start_glob = time.time()
@@ -206,14 +206,16 @@ print(healthy_count)
 # number of studies in Z://2019_05 =  2397
 # number of studies in Z://2019_06 =  2250
 # number of studies in Z://2019_07 =  1746
+# number of studies in Z://2019_08 =  2205
+# number of studies in Z://2019_09 =  2392
+# number of studies in Z://2019_10 =  2424
+# number of studies in Z://2019_11 =  2472
+# number of studies in Z://2019_12 =  2065
 
 # approx 250MB/patient
 # whole dataset: 6TB
 
 # In[]
-iterator = iglob("Z:/positive/00e520dd9e4c7f2b7798263bd0916221/*/DOC")
-#iterator = os.listdir("Z:/positive/00e520dd9e4c7f2b7798263bd0916221")
-
-print(sum(1 for _ in iterator))
-#for i in iterator:
-#    print(i)
+all_studies = 2567 + 2252 + 2186 + 2297 + 2397 + 2250 + 1746 + 2205\
+    + 2392 + 2424 + 2472 + 2065
+print(all_studies)
