@@ -7,6 +7,7 @@ Created on Mon Aug 30 10:32:43 2021
 
 import data_access.load_data_tools as ld
 import os
+from glob import iglob
 from vis import vis
 import importlib
 from pydicom import dcmread
@@ -19,41 +20,49 @@ importlib.reload(ld)
 def p(string): print(string)
 
 # In[main directories]
-base_data_dir = "Y:/"
-out_pos_path = "Y:\\nii\\positive"
+base_data_dir = "Z:/"
+out_pos_path = "Z:\\nii\\positive"
 data_dirs = os.listdir(base_data_dir)
 positive_dir = f"{base_data_dir}/positive" 
 healthy_dirs = sorted([f"{base_data_dir}/{x}" for x in data_dirs if x.startswith('2019')])
 print(f"main directories: {data_dirs}")
 # In[Numebr of converted patients]
-conv_patients = len(os.listdir(out_pos_path))
+conv_patients_list = os.listdir(out_pos_path)
+conv_patients = len(conv_patients_list)
 print(conv_patients)
 
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
 
+# In[non converted patients]
+pos_patients_id = [os.path.split(dir_)[1] for dir_ in pos_patients_list]
+non_conv_patients = set(pos_patients_id)- set(conv_patients_list)
+print(f"non converted patients:{len(non_conv_patients)}")
+non_conv_patients_dirs = sorted([os.path.join(positive_dir, non_conv_pat)\
+                          for non_conv_pat in non_conv_patients])
 # In[Convert positive patients]
 
 start = time.time()
-start_patient = conv_patients
-patient_counter = start_patient
-for patient_dir in pos_patients_list[start_patient:]:
+patient_counter = len(non_conv_patients)
+for patient_dir in non_conv_patients_dirs:
+    patient_timer = time.time()
     patient = ld.Patient(patient_dir)
     patient_id = patient.get_id()
     scan_dirs = patient.get_scan_directories()
     out_patient_dir = os.path.join(out_pos_path, patient_id)
     if not os.path.exists(out_patient_dir):
         os.makedirs(out_patient_dir)
+        print(f"{out_patient_dir} created")
     for scan_dir in scan_dirs:
         _, scan_id = os.path.split(scan_dir)
         out_path = os.path.join(out_patient_dir)
         dicom2nifti.dcm2nii(scan_dir, out_path)
-    patient_counter += 1
+        print('|',end=(''))
+    patient_counter -= 1
     print(patient_counter)
     print(str(datetime.datetime.now()))
 stop = time.time()
 print(f"The conversion took: {stop-start} s")
-
 
 # In[Count scans number]
 scan_counters = {}
@@ -74,12 +83,15 @@ for healthy_dir in healthy_dirs[6:]:
     study_counters[healthy_dir] = study_counter
     print(f'number of studies in {healthy_dir} =  {study_counter}')
 
-# In[Count Reports]
-
-# In[Test]
-if not False:
-    print('a')
-
+# In[Count number of documented studies]
+report_counters = {}
+for dir_ in healthy_dirs:
+    patient_list = utils.list_subdir(dir_)
+    report_counter = 0
+    for pat_dir in patient_list:
+        report_counter += sum(1 for _ in iglob(f"{pat_dir}/*/DOC"))
+    report_counters[dir_] = report_counter 
+    print(f'number of study reports in {dir_} =  {report_counter}')
 # In[Look at one patient with subdirectories]
 test_pat = "Z:/positive/00e520dd9e4c7f2b7798263bd0916221/2d8ef0eb9e77c14475dad00723fb0ca7/MR/2c76b30765e19a46b140d0d07df70bb5/0e04a266d7b274469583b4044728b9a4.dcm"
 pos_patient_dir = pos_patients_list[20]
@@ -126,6 +138,13 @@ print(healthy_count)
 
 # In[]
 
-scan_dir = "Y:/positive/00e520dd9e4c7f2b7798263bd0916221/2d8ef0eb9e77c14475dad00723fb0ca7/MR/2c76b30765e19a46b140d0d07df70bb5"
+scan_dir = "Z:/positive/00e520dd9e4c7f2b7798263bd0916221/2d8ef0eb9e77c14475dad00723fb0ca7/MR/2c76b30765e19a46b140d0d07df70bb5"
 scan_dict = ld.get_scan_dictionary(scan_dir)
 print(scan_dict)
+# In[]
+iterator = iglob("Z:/positive/00e520dd9e4c7f2b7798263bd0916221/*/DOC")
+#iterator = os.listdir("Z:/positive/00e520dd9e4c7f2b7798263bd0916221")
+
+print(sum(1 for _ in iterator))
+#for i in iterator:
+#    print(i)
