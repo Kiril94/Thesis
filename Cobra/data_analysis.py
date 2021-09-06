@@ -26,7 +26,7 @@ data_dirs = os.listdir(base_data_dir)
 positive_dir = f"{base_data_dir}/positive" 
 healthy_dirs = sorted([f"{base_data_dir}/{x}" for x in data_dirs if x.startswith('2019')])
 print(f"main directories: {data_dirs}")
-# In[Numebr of converted patients]
+# In[Number of converted patients]
 conv_patients_list = os.listdir(out_pos_path)
 conv_patients = len(conv_patients_list)
 print(conv_patients)
@@ -67,22 +67,32 @@ print(f"The conversion took: {stop-start} s")
 # In[Count scans number]
 scan_counters = {}
 for healthy_dir in healthy_dirs[6:]:
+    print(f"counting studies in {healthy_dir}")    
     patient_list = utils.list_subdir(healthy_dir)
     scan_counter = 0
     for pat_dir in patient_list:
-        scan_counter += len (ld.Patient(pat_dir).get_scan_directories())
+        print('|',end=(''))
+        scan_counter += len(ld.Patient(pat_dir).get_scan_directories())
     scan_counters[healthy_dir] = scan_counter
     print(f'number of scans in {healthy_dir} =  {scan_counter}')
-# In[Count scans number]
+# In[Count study number]
 study_counters = {}
-for healthy_dir in healthy_dirs[6:]:
+for healthy_dir in healthy_dirs:
+    print(f"counting studies in {healthy_dir}")
     patient_list = utils.list_subdir(healthy_dir)
     study_counter = 0
     for pat_dir in patient_list:
-        study_counter += len(os.listdir(pat_dir))
+        print('|',end=(''))
+        study_counter += sum(1 for _ in iglob(pat_dir))
     study_counters[healthy_dir] = study_counter
     print(f'number of studies in {healthy_dir} =  {study_counter}')
-
+# In[Test]
+start_glob = time.time()
+sum(1 for _ in iglob(healthy_dirs[0]))
+print(time.time()-start_glob)
+start_list = time.time()
+len(os.listdir(healthy_dirs[0]))
+print(time.time()-start_glob)
 # In[Count number of documented studies]
 report_counters = {}
 for dir_ in healthy_dirs:
@@ -93,11 +103,14 @@ for dir_ in healthy_dirs:
     report_counters[dir_] = report_counter 
     print(f'number of study reports in {dir_} =  {report_counter}')
 # In[Look at one patient with subdirectories]
-test_pat = "Z:/positive/00e520dd9e4c7f2b7798263bd0916221/2d8ef0eb9e77c14475dad00723fb0ca7/MR/2c76b30765e19a46b140d0d07df70bb5/0e04a266d7b274469583b4044728b9a4.dcm"
-pos_patient_dir = pos_patients_list[20]
-p0 = ld.Patient(pos_patient_dir)
-p0_scandir = p0.get_scan_directories()
-subdirs = utils.list_subdir(p0_scandir[0])
+test_pat = "Z:/positive/00e520dd9e4c7f2b7798263bd0916221/\
+    2d8ef0eb9e77c14475dad00723fb0ca7/MR/\
+        2c76b30765e19a46b140d0d07df70bb5/\
+            0e04a266d7b274469583b4044728b9a4.dcm"
+#pos_patient_dir = pos_patients_list[20]
+#p0 = ld.Patient(pos_patient_dir)
+#p0_scandir = p0.get_scan_directories()
+#subdirs = utils.list_subdir(p0_scandir[0])
 #for p in p0_scandir:
 #    print(dcmread(utils.list_subdir(p)[0]).SOPInstanceUID)
 #patient_ids = [p0.scan_dictionary(n, reconstruct_3d=False).PatientID \
@@ -132,15 +145,12 @@ print(healthy_count)
 # number of scans in Y://2019_04 =  26979
 # number of scans in Y://2019_05 =  28088
 # number of scans in Y://2019_06 =  25281
+# number of scans in Z://2019_07 =  19850
+
 
 # approx 250MB/patient
 # whole dataset: 6TB
 
-# In[]
-
-scan_dir = "Z:/positive/00e520dd9e4c7f2b7798263bd0916221/2d8ef0eb9e77c14475dad00723fb0ca7/MR/2c76b30765e19a46b140d0d07df70bb5"
-scan_dict = ld.get_scan_dictionary(scan_dir)
-print(scan_dict)
 # In[]
 iterator = iglob("Z:/positive/00e520dd9e4c7f2b7798263bd0916221/*/DOC")
 #iterator = os.listdir("Z:/positive/00e520dd9e4c7f2b7798263bd0916221")
