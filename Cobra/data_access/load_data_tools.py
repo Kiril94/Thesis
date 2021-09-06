@@ -27,11 +27,18 @@ def reconstruct3d(scan_dir):
     """
     files = os.listdir(scan_dir)
     dicom = [dcmread(f"{scan_dir}/{f}") for f in files]  # all slices
-    slice_loc = [float(d.SliceLocation) for d in dicom]
-    indices_sort = np.argsort(np.array(slice_loc))
-    arr2d = np.array([d.pixel_array for d in dicom])
-    arr3d = arr2d[indices_sort]
+    try:
+        slice_loc = [float(d.SliceLocation) for d in dicom]
+        indices_sort = np.argsort(np.array(slice_loc))
+        arr2d = np.array([d.pixel_array for d in dicom])
+        arr3d = arr2d[indices_sort]
+    except:
+        print("Slicelocation could not be found\
+              for at least one of the dicom files,\
+                  returning empty arr")
+        arr3d = np.empty((1,1))
     return arr3d
+
 
 def get_patient_key_list():
     return [('PatientID', 'str'), ('PatientSex','str'), ('Positive', 'boolean')]
@@ -61,6 +68,42 @@ def get_scan_key_list():
                 ('SpacingBetweenSlices','float'),
                 ('ImagesInAcquisition', 'int') ]
     return key_list
+
+def get_scan_dictionary(scan_dir, reconstruct_3d=True):
+    """Returns a dictionary for scan at scan_dir"""
+    
+    dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[1])
+    dicom = dcmread(dicom_file_dir)
+    key_list = get_scan_key_list()
+    
+    if reconstruct_3d:
+        scan_dict = {'arr3d': reconstruct3d(scan_dir)}
+    else:
+        scan_dict = {}
+    for k in key_list:
+        try: # see if dicom contains this tag
+            value = getattr(dicom, k[0])
+            if value=='':
+                value = None
+            elif k[1]=='str':
+                value = str(value)
+            elif k[1]=='int':
+                value = int(value)
+            elif k[1]=='float':
+                value = float(value)
+            elif k[1]=='date':
+                value = dt.date(int(value[:4]), int(value[4:6]), int(value[6:]))
+            elif k[1]=='time':
+                value = dt.time(int(value[:2]), int(value[2:4]), int(value[4:6]))
+            else:
+                print(f"Unknown Datatype in get key list: {k[1]}")
+        except:
+            value = None
+
+        scan_dict[k[0]] = value
+    return dotdict(scan_dict)
+
+
 
 
 class Patient():
