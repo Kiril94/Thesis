@@ -11,7 +11,7 @@ from glob import iglob
 from vis import vis
 import importlib
 from pydicom import dcmread
-from utils import utils
+from utilss import utils
 import nibabel as nib
 import time
 from utils import dicom2nifti
@@ -138,6 +138,7 @@ print(healthy_count)
 
 # number of pos patients = 831
 # number of neg patients = 24908
+
 # number of pos scans = 12562
 # number of scans in Y://2019_01 =  30108
 # number of scans in Y://2019_02 =  26125
@@ -146,6 +147,8 @@ print(healthy_count)
 # number of scans in Y://2019_05 =  28088
 # number of scans in Y://2019_06 =  25281
 # number of scans in Z://2019_07 =  19850
+# number of scans in Z://2019_08 =  25720
+
 
 
 # approx 250MB/patient

@@ -5,7 +5,7 @@ from vis import vis
 from glob import iglob
 from pathlib import Path
 import datetime as dt
-from utils.utils import dotdict
+from utilss.utils import dotdict
 
 
 
