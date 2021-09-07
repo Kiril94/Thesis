@@ -8,10 +8,11 @@ Created on Tue Sep  7 13:05:11 2021
 import os
 import csv
 import numpy as np
-import data_access.load_data_tools as ld
+from data_access import load_data_tools as ld
 import utilss.utils as utils
 import pandas as pd
-
+import importlib
+importlib.reload(ld)
 # In[Specify main directories]
 base_data_dir = "Z:/"
 out_pos_path = "Z:\\nii\\positive"
@@ -28,16 +29,15 @@ csv_file = "test.csv"
 csv_path = os.path.join(csv_folder, csv_file)
 csv_columns = [x[0] for x in ld.get_scan_key_list()]
 
-with open(csv_path, 'w') as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-    writer.writeheader()
-for pat in patient_list[:1]:
+
+for pat in patient_list[:2]:
     scan_directories = ld.Patient(pat).get_scan_directories()
-    for scan_dir in scan_directories[:2]:
+    for scan_dir in scan_directories:
         data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
         try:
             with open(csv_path, 'w') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+                writer.writeheader()
                 writer.writerow(data)
         except IOError:
             print("I/O error")
