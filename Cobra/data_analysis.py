@@ -14,6 +14,7 @@ import json
 from vis import vis
 import nibabel as nib
 import datetime
+import pydicom
 importlib.reload(ld)
 importlib.reload(vis)
 def p(string): print(string)
@@ -34,6 +35,14 @@ print(conv_patients)
 
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
+
+# In[Read some dcm files]
+
+patient = ld.Patient(pos_patients_list[101])
+scan_dirs = patient.get_scan_directories()
+scan_path = utils.list_subdir(scan_dirs[2])
+dicom = pydicom.dcmread(scan_path[0])
+print(dicom)
 # In[non converted patients]
 pos_patients_id = [os.path.split(dir_)[1] for dir_ in pos_patients_list]
 non_conv_patients = set(pos_patients_id)- set(conv_patients_list)
@@ -46,7 +55,8 @@ non_conv_patients_dirs = sorted([os.path.join(positive_dir, non_conv_pat)\
 
 start = time.time()
 patient_counter = len(non_conv_patients)
-for patient_dir in non_conv_patients_dirs:
+ut_pos_path = "Z:\\nii\\positive\\test"
+for patient_dir in pos_patients_list[:3]:
     patient_timer = time.time()
     patient = ld.Patient(patient_dir)
     patient_id = patient.get_id()
@@ -64,12 +74,10 @@ for patient_dir in non_conv_patients_dirs:
 stop = time.time()
 print(f"The conversion took: {stop-start} s")
 
-# In[Test Compression]
-
 # In[Test compression]
 
 times = []
-patient = ld.Patient(pos_patients_list[1])
+patient = ld.Patient(pos_patients_list[10])
 patient_id = patient.get_id()
 scan_dirs = patient.get_scan_directories()
 for compression in range(1,10):
@@ -84,20 +92,39 @@ for compression in range(1,10):
     stop = time.time()
     times.append(stop-start)
     print(f"The conversion took: {stop-start} s")
+
+# In[]
+print(times)
+# In[Compare access]
+atient = ld.Patient(pos_patients_list[10])
+patient_id = patient.get_id()
+out_patient_dir = os.path.join("Z:/nii/compression_test", patient_id)
+for compression in range(1,10):
+    test_compression_dir = os.path.join(out_patient_dir, str(compression))
+    files = sorted(utils.list_subdir(test_compression_dir))
+    json_file = files[0]
+    start = time.time()
+    with open(json_file) as f:
+      header = json.load(f)
+    img_mat = nib.load(files[1])
+    vis.display3d(img_mat.get_fdata(), axis =1, start_slice=21, num_slices=10)
+    stop = time.time()
+    print(f"For compression={compression} the access took: {stop-start} s")
 # In[look at converted patients]
 con_pat_paths = [os.path.join(out_pos_path, conv_pat)\
                  for conv_pat in conv_patients_list]
-converted_patient = con_pat_paths[10]
+converted_patient = con_pat_paths[400]
 files = utils.list_subdir(converted_patient)
 print(files[:2])
 # read json header
-json_file = files[0]
-#with open(json_file) as f:
-#  header = json.load(f)
-img_mat = nib.load(files[1])
-data = img_mat.get_fdata()
-print(f"the data shape is: {data.shape}")
-vis.display3d(data, axis=2, start_slice=10, num_slices=20)
+json_file = files[]
+with open(json_file) as f:
+  header = json.load(f)
+print(header)
+#img_mat = nib.load(files[1])
+#data = img_mat.get_fdata()
+#print(f"the data shape is: {data.shape}")
+#vis.display3d(data, axis=2, start_slice=10, num_slices=20)
 # In[Count scans number]
 scan_counters = {}
 for healthy_dir in healthy_dirs[6:]:
@@ -147,6 +174,7 @@ for subdir in healthy_dirs:
     healthy_count += count_subdirectories(subdir)
     print(f"subdir: {subdir}, accumulated sum: {healthy_count}")
 print(healthy_count)
+
 # In[]
 
 # number of pos patients = 831

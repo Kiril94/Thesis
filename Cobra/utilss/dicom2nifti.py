@@ -18,5 +18,5 @@ def dcm2nii(dcm_path, out_path, compression=6):
     to a nii file + json file containing the header. 
     The files are named corresponding
     to the folder name which is the SOPInstanceUID."""
-    os.system(f"cmd /k  {dcm2nii_exe_path} -c {compression}\
-              -f %f -w 2 -{compression} -o {out_path} {dcm_path}")
+    os.system(f"cmd /k {dcm2nii_exe_path} -{compression}\
+              -f %f_%z -w 0 -o {out_path} {dcm_path}")
