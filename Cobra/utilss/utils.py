@@ -33,3 +33,9 @@ def get_running_time(start):
     m, s = divmod(time.time()-start , 60)
     h, m = divmod(m, 60)
     return f'[{h:2.0f}h{m:2.0f}m{s:2.0f}s]' 
+
+def create_dictionary(keys, values):
+    result = {} # empty dictionary
+    for key, value in zip(keys, values):
+        result[key] = value
+    return result

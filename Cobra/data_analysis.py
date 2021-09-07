@@ -6,24 +6,20 @@ Created on Mon Aug 30 10:32:43 2021
 import data_access.load_data_tools as ld
 import os
 from glob import iglob
-from vis import vis
 import importlib
-from pydicom import dcmread
 from utilss import utils
-import nibabel as nib
 import time
 from utilss import dicom2nifti
+import json
+from vis import vis
+import nibabel as nib
 import datetime
+import pydicom
 importlib.reload(ld)
+importlib.reload(vis)
 def p(string): print(string)
 
 # In[main directories]
-#base_data_dir = "/run/user/1000/gvfs/sftp:host=sif-io.erda.dk"
-#data_dirs = os.listdir(base_data_dir)
-#positive_dir = f"{base_data_dir}/positive" 
-#healthy_dirs = [f"{base_data_dir}/{x}" for x in data_dirs if x.startswith('2019')]
-#target_dir = f"{base_data_dir}/2019_01" 
-
 base_data_dir = "Z:/"
 out_pos_path = "Z:\\nii\\positive"
 data_dirs = os.listdir(base_data_dir)
@@ -31,6 +27,7 @@ positive_dir = f"{base_data_dir}/positive"
 healthy_dirs = sorted([f"{base_data_dir}/{x}" for x \
                        in data_dirs if x.startswith('2019')])
 print(f"main directories: {data_dirs}")
+
 # In[Number of converted patients]
 conv_patients_list = os.listdir(out_pos_path)
 conv_patients = len(conv_patients_list)
@@ -38,32 +35,28 @@ print(conv_patients)
 
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
-#target_patients_list = utils.list_subdir(target_dir)
-# In[Test]
-if not False:
-    print('a')
-# In[Convert positive patients]
-out_pos_path = "/run/user/1000/gvfs/sftp:host=sif-io.erda.dk/nii/2019_01"
-start = time.time()
-n_total_patients = len(target_patients_list)
-i= 1352
-for patient_dir in target_patients_list[i:]:
-    m, s = divmod(time.time()-start , 60)
-    h, m = divmod(m, 60)
-    i+=1
-    print(f'Patient {i:d} out of {n_total_patients:d} [{h:2.0f}h{m:2.0f}m{s:2.0f}s]')
 
+# In[Read some dcm files]
+
+patient = ld.Patient(pos_patients_list[101])
+scan_dirs = patient.get_scan_directories()
+scan_path = utils.list_subdir(scan_dirs[2])
+dicom = pydicom.dcmread(scan_path[0])
+print(dicom)
 # In[non converted patients]
 pos_patients_id = [os.path.split(dir_)[1] for dir_ in pos_patients_list]
 non_conv_patients = set(pos_patients_id)- set(conv_patients_list)
 print(f"non converted patients:{len(non_conv_patients)}")
 non_conv_patients_dirs = sorted([os.path.join(positive_dir, non_conv_pat)\
                           for non_conv_pat in non_conv_patients])
+    
+
 # In[Convert positive patients]
 
 start = time.time()
 patient_counter = len(non_conv_patients)
-for patient_dir in non_conv_patients_dirs:
+ut_pos_path = "Z:\\nii\\positive\\test"
+for patient_dir in pos_patients_list[:3]:
     patient_timer = time.time()
     patient = ld.Patient(patient_dir)
     patient_id = patient.get_id()
@@ -73,47 +66,65 @@ for patient_dir in non_conv_patients_dirs:
         os.makedirs(out_patient_dir)
         print(f"{out_patient_dir} created")
     for scan_dir in scan_dirs:
-        _, scan_id = os.path.split(scan_dir)
-        out_path = os.path.join(out_patient_dir)
-        dicom2nifti.dcm2nii(scan_dir, out_path)
+        dicom2nifti.dcm2nii(scan_dir, out_patient_dir)
         print('|',end=(''))
     patient_counter -= 1
     print(patient_counter)
     print(str(datetime.datetime.now()))
 stop = time.time()
 print(f"The conversion took: {stop-start} s")
-# In[Look at one patient with subdirectories]
-# test_pat = "Z:/positive/00e520dd9e4c7f2b7798263bd0916221/2d8ef0eb9e77c14475dad00723fb0ca7/MR/2c76b30765e19a46b140d0d07df70bb5/0e04a266d7b274469583b4044728b9a4.dcm"
-# pos_patient_dir = pos_patients_list[20]
-# p0 = ld.Patient(pos_patient_dir)
-# p0_scandir = p0.get_scan_directories()
-# subdirs = utils.list_subdir(p0_scandir[0])
-# #for p in p0_scandir:
-# #    print(dcmread(utils.list_subdir(p)[0]).SOPInstanceUID)
-# #patient_ids = [p0.scan_dictionary(n, reconstruct_3d=False).PatientID \
-# #              for n in range(len(p0_scandir))]
-# print(dcmread(test_pat))
-# #for sub in subdirs:
-# #    print(dcmread(sub).SeriesInstanceUID)
-# #print(p0.get_scan_dictionary(0))
-# #print(p0_scandir[2])
 
-# In[look at ni header]
-# path_all = "0.nii"
-# nii_path = os.path.join(out_path,path_all )
-# img_mat = nib.load(nii_path)
-# data = img_mat.get_fdata()
-# print(img_mat.header)
-# vis.display3d(data, axis=2)
-# # In[Count Patients]
-# healthy_count = 0
-# for subdir in healthy_dirs:
-#     healthy_count += count_subdirectories(subdir)
-#     print(f"subdir: {subdir}, accumulated sum: {healthy_count}")
-# print(healthy_count)
+# In[Test compression]
 
-        
+times = []
+patient = ld.Patient(pos_patients_list[10])
+patient_id = patient.get_id()
+scan_dirs = patient.get_scan_directories()
+for compression in range(1,10):
+    out_patient_dir = os.path.join("Z:/nii/compression_test", patient_id, str(compression))
+    if not os.path.exists(out_patient_dir):
+        os.makedirs(out_patient_dir)
+        print(f"{out_patient_dir} created")
+    start = time.time()
+    for scan_dir in scan_dirs[:1]:
+        print('start converting')
+        dicom2nifti.dcm2nii(scan_dir, out_patient_dir, compression=compression)
+    stop = time.time()
+    times.append(stop-start)
+    print(f"The conversion took: {stop-start} s")
 
+# In[]
+print(times)
+# In[Compare access]
+atient = ld.Patient(pos_patients_list[10])
+patient_id = patient.get_id()
+out_patient_dir = os.path.join("Z:/nii/compression_test", patient_id)
+for compression in range(1,10):
+    test_compression_dir = os.path.join(out_patient_dir, str(compression))
+    files = sorted(utils.list_subdir(test_compression_dir))
+    json_file = files[0]
+    start = time.time()
+    with open(json_file) as f:
+      header = json.load(f)
+    img_mat = nib.load(files[1])
+    vis.display3d(img_mat.get_fdata(), axis =1, start_slice=21, num_slices=10)
+    stop = time.time()
+    print(f"For compression={compression} the access took: {stop-start} s")
+# In[look at converted patients]
+con_pat_paths = [os.path.join(out_pos_path, conv_pat)\
+                 for conv_pat in conv_patients_list]
+converted_patient = con_pat_paths[400]
+files = utils.list_subdir(converted_patient)
+print(files[:2])
+# read json header
+json_file = files[]
+with open(json_file) as f:
+  header = json.load(f)
+print(header)
+#img_mat = nib.load(files[1])
+#data = img_mat.get_fdata()
+#print(f"the data shape is: {data.shape}")
+#vis.display3d(data, axis=2, start_slice=10, num_slices=20)
 # In[Count scans number]
 scan_counters = {}
 for healthy_dir in healthy_dirs[6:]:
@@ -135,14 +146,18 @@ for pos_dir in [positive_dir]:
         print('|',end=(''))
         study_counter += sum(1 for _ in iglob(pat_dir))
     study_counters[pos_dir] = study_counter
-    print(f'number of studies in {healthy_dir} =  {study_counter}')
-# In[Test]
-start_glob = time.time()
-sum(1 for _ in iglob(healthy_dirs[0]))
-print(time.time()-start_glob)
-start_list = time.time()
-len(os.listdir(healthy_dirs[0]))
-print(time.time()-start_glob)
+    print(f'number of studies in {pos_dir} =  {study_counter}')
+# In[]
+patient_list = utils.list_subdir(positive_dir)
+# In[]
+study_counter = 0
+for pat_dir in patient_list[:3]:
+    print('|',end=(''))
+    print(pat_dir)
+    print([f for f in os.listdir(pat_dir)])
+    study_counter += sum(1 for _ in iglob(pat_dir))
+study_counters[pos_dir] = study_counter
+print(f'number of studies in {pos_dir} =  {study_counter}')
 # In[Count number of documented studies]
 report_counters = {}
 for dir_ in healthy_dirs:
@@ -151,39 +166,15 @@ for dir_ in healthy_dirs:
     for pat_dir in patient_list:
         report_counter += sum(1 for _ in iglob(f"{pat_dir}/*/DOC"))
     report_counters[dir_] = report_counter 
-    print(f'number of study reports in {dir_} =  {report_counter}')
-# In[Look at one patient with subdirectories]
-test_pat = "Z:/positive/00e520dd9e4c7f2b7798263bd0916221/\
-    2d8ef0eb9e77c14475dad00723fb0ca7/MR/\
-        2c76b30765e19a46b140d0d07df70bb5/\
-            0e04a266d7b274469583b4044728b9a4.dcm"
-#pos_patient_dir = pos_patients_list[20]
-#p0 = ld.Patient(pos_patient_dir)
-#p0_scandir = p0.get_scan_directories()
-#subdirs = utils.list_subdir(p0_scandir[0])
-#for p in p0_scandir:
-#    print(dcmread(utils.list_subdir(p)[0]).SOPInstanceUID)
-#patient_ids = [p0.scan_dictionary(n, reconstruct_3d=False).PatientID \
-#              for n in range(len(p0_scandir))]
-print(dcmread(test_pat))
-#for sub in subdirs:
-#    print(dcmread(sub).SeriesInstanceUID)
-#print(p0.get_scan_dictionary(0))
-#print(p0_scandir[2])
+    print(f'number of study reports in {dir_} = {report_counter}')
 
-# In[look at ni header]
-path_all = "0.nii"
-nii_path = os.path.join(out_path,path_all )
-img_mat = nib.load(nii_path)
-data = img_mat.get_fdata()
-print(img_mat.header)
-vis.display3d(data, axis=2)
 # In[Count Patients]
 healthy_count = 0
 for subdir in healthy_dirs:
     healthy_count += count_subdirectories(subdir)
     print(f"subdir: {subdir}, accumulated sum: {healthy_count}")
 print(healthy_count)
+
 # In[]
 
 # number of pos patients = 831
@@ -199,6 +190,7 @@ print(healthy_count)
 # number of scans in Z://2019_07 =  19850
 # number of scans in Z://2019_08 =  25720
 
+# number of pos studies = 831
 # number of studies in Z://2019_01 =  2567
 # number of studies in Z://2019_02 =  2252
 # number of studies in Z://2019_03 =  2186
@@ -211,11 +203,15 @@ print(healthy_count)
 # number of studies in Z://2019_10 =  2424
 # number of studies in Z://2019_11 =  2472
 # number of studies in Z://2019_12 =  2065
+# studies_list = [2567, 2252, 2186, 2297, 2397, 2250, 1746, 2205,\
+                #2392, 2424, 2472, 2065]
+# number of healthy studies = 27253
+
+# |pos ^ healthy| = 143
 
 # approx 250MB/patient
 # whole dataset: 6TB
 
 # In[]
-all_studies = 2567 + 2252 + 2186 + 2297 + 2397 + 2250 + 1746 + 2205\
-    + 2392 + 2424 + 2472 + 2065
-print(all_studies)
+nii_size = np.array([2.87, 2.87, 24, 15, 2.3, 11, 2.5, 240, 17, 5.9, 46, 
+                     500, 250, 260, 243, 1000, 2000, 100, 260, 1190, 200, 145])

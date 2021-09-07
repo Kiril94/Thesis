@@ -13,6 +13,11 @@ def display3d(arr3d, figsize=(15, 15), start_slice=0, num_slices=None, axis=0):
         num_slices = len(arr3d)
     if num_slices>50:
         num_slices = 50
+    data_shape = arr3d.shape
+    if data_shape[axis]<(start_slice+num_slices):
+        print("The data has only {data_shape[axis]} slices.")
+        start_slice = 0
+        num_slices = data_shape[axis]
     cols = 5
     rows = math.floor(num_slices/cols)
     figsize = (figsize[0], math.floor(rows/cols*figsize[0]))
@@ -26,7 +31,7 @@ def display3d(arr3d, figsize=(15, 15), start_slice=0, num_slices=None, axis=0):
     else:
         pass
     for i, a in enumerate(ax):
-        a.imshow(arr3d[i+start_slice])
+        a.imshow(arr3d[i+start_slice], cmap='gray')
         a.axis('off')
         a.set_title(f"slice = {i+start_slice}")
     fig.tight_layout()

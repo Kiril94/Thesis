@@ -50,9 +50,13 @@ def get_scan_key_list():
                 ('PatientID', 'str'), 
                 ('InstanceCreationDate','date'), 
                 ('InstanceCreationTime','time'),
-                ('Manufacturer', 'str'), ('ManufacturerModelName', 'str'),
-                ('ScanningSequence', 'str'), ('SequenceVariant','str'),
-                ('ScanOptions','str'), ('MRAcquisitionType', 'str'),
+                ('ImageType','str'),
+                ('Manufacturer', 'str'), 
+                ('ManufacturerModelName', 'str'),
+                ('ScanningSequence', 'str'), 
+                ('SequenceVariant','str'),
+                ('ScanOptions','str'), 
+                ('MRAcquisitionType', 'str'),
                 ('AngioFlag', 'str'), 
                 ('SliceThickness', 'float'),
                 ('RepititionTime', 'float'),
@@ -66,13 +70,20 @@ def get_scan_key_list():
                 ('EchoTrainLength', 'int'),
                 ('FlipAngle', 'float'),
                 ('SpacingBetweenSlices','float'),
-                ('ImagesInAcquisition', 'int') ]
+                ('PixelBandwith','float'),
+                ('ImagesInAcquisition', 'int'),
+                ('PatientPosition','str'),
+                ('AcquisitionDuration', 'float'),
+                ('SecondEcho', 'float'),
+                ('NumberOfEchoes', 'int'),
+                ('FrameOfReferenceUID', 'str'),
+                ]
     return key_list
 
 def get_scan_dictionary(scan_dir, reconstruct_3d=True):
     """Returns a dictionary for scan at scan_dir"""
     
-    dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[1])
+    dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
     dicom = dcmread(dicom_file_dir)
     key_list = get_scan_key_list()
     
