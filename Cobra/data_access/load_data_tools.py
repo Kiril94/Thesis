@@ -69,6 +69,7 @@ def get_scan_key_list():
                 ('NumberofPhaseEncodingSteps', 'int'),
                 ('EchoTrainLength', 'int'),
                 ('FlipAngle', 'float'),
+                ('VariableFlipAngleFlag', 'str')
                 ('SpacingBetweenSlices','float'),
                 ('PixelBandwith','float'),
                 ('ImagesInAcquisition', 'int'),
