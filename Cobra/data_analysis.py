@@ -31,6 +31,7 @@ print(f"main directories: {data_dirs}")
 conv_patients_list = os.listdir(out_pos_path)
 conv_patients = len(conv_patients_list)
 print(conv_patients)
+
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
 # In[non converted patients]
@@ -55,9 +56,7 @@ for patient_dir in non_conv_patients_dirs:
         os.makedirs(out_patient_dir)
         print(f"{out_patient_dir} created")
     for scan_dir in scan_dirs:
-        _, scan_id = os.path.split(scan_dir)
-        out_path = os.path.join(out_patient_dir)
-        dicom2nifti.dcm2nii(scan_dir, out_path)
+        dicom2nifti.dcm2nii(scan_dir, out_patient_dir)
         print('|',end=(''))
     patient_counter -= 1
     print(patient_counter)
@@ -65,6 +64,26 @@ for patient_dir in non_conv_patients_dirs:
 stop = time.time()
 print(f"The conversion took: {stop-start} s")
 
+# In[Test Compression]
+
+# In[Test compression]
+
+times = []
+patient = ld.Patient(pos_patients_list[1])
+patient_id = patient.get_id()
+scan_dirs = patient.get_scan_directories()
+for compression in range(1,10):
+    out_patient_dir = os.path.join("Z:/nii/compression_test", patient_id, str(compression))
+    if not os.path.exists(out_patient_dir):
+        os.makedirs(out_patient_dir)
+        print(f"{out_patient_dir} created")
+    start = time.time()
+    for scan_dir in scan_dirs[:1]:
+        print('start converting')
+        dicom2nifti.dcm2nii(scan_dir, out_patient_dir, compression=compression)
+    stop = time.time()
+    times.append(stop-start)
+    print(f"The conversion took: {stop-start} s")
 # In[look at converted patients]
 con_pat_paths = [os.path.join(out_pos_path, conv_pat)\
                  for conv_pat in conv_patients_list]
