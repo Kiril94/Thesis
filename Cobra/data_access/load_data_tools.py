@@ -77,6 +77,10 @@ def get_scan_key_list():
                 ('SecondEcho', 'float'),
                 ('NumberOfEchoes', 'int'),
                 ('FrameOfReferenceUID', 'str'),
+                ('PixelPresentation', 'str'),
+                ('AcquisitionContrast', 'str'),
+                ('PulseSequenceName', 'str'),
+                ('ImagedNuclues', 'str')
                 ]
     return key_list
 
