@@ -69,7 +69,7 @@ def get_scan_key_list():
                 ('NumberofPhaseEncodingSteps', 'int'),
                 ('EchoTrainLength', 'int'),
                 ('FlipAngle', 'float'),
-                ('VariableFlipAngleFlag', 'str')
+                ('VariableFlipAngleFlag', 'str'),
                 ('SpacingBetweenSlices','float'),
                 ('PixelBandwith','float'),
                 ('ImagesInAcquisition', 'int'),
@@ -81,7 +81,8 @@ def get_scan_key_list():
                 ('PixelPresentation', 'str'),
                 ('AcquisitionContrast', 'str'),
                 ('PulseSequenceName', 'str'),
-                ('ImagedNuclues', 'str')
+                ('ImagedNuclues', 'str'),
+                ('Series Description', 'str')
                 ]
     return key_list
 
@@ -95,7 +96,7 @@ def get_scan_dictionary(scan_dir, reconstruct_3d=True):
     if reconstruct_3d:
         scan_dict = {'arr3d': reconstruct3d(scan_dir)}
     else:
-        scan_dict = {}
+        scan_dict = {}  
     for k in key_list:
         try: # see if dicom contains this tag
             value = getattr(dicom, k[0])

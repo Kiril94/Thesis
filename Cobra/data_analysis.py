@@ -17,11 +17,12 @@ import datetime
 import pydicom
 importlib.reload(ld)
 importlib.reload(vis)
+importlib.reload(dicom2nifti)
 def p(string): print(string)
 
 # In[main directories]
-base_data_dir = "Z:/"
-out_pos_path = "Z:\\nii\\positive"
+base_data_dir = "Y:/"
+out_pos_path = "Y:\\nii\\positive"
 data_dirs = os.listdir(base_data_dir)
 positive_dir = f"{base_data_dir}/positive" 
 healthy_dirs = sorted([f"{base_data_dir}/{x}" for x \
@@ -38,11 +39,11 @@ pos_patients_list = utils.list_subdir(positive_dir)
 
 # In[Read some dcm files]
 
-patient = ld.Patient(pos_patients_list[101])
+patient = ld.Patient(pos_patients_list[100])
 scan_dirs = patient.get_scan_directories()
-scan_path = utils.list_subdir(scan_dirs[2])
+scan_path = utils.list_subdir(scan_dirs[0])
 dicom = pydicom.dcmread(scan_path[0])
-print(dicom)
+print(dicom.Protocol)
 # In[non converted patients]
 pos_patients_id = [os.path.split(dir_)[1] for dir_ in pos_patients_list]
 non_conv_patients = set(pos_patients_id)- set(conv_patients_list)
@@ -77,24 +78,23 @@ print(f"The conversion took: {stop-start} s")
 # In[Test compression]
 
 times = []
-patient = ld.Patient(pos_patients_list[10])
+patient = ld.Patient(pos_patients_list[1])
 patient_id = patient.get_id()
 scan_dirs = patient.get_scan_directories()
 for compression in range(1,10):
-    out_patient_dir = os.path.join("Z:/nii/compression_test", patient_id, str(compression))
+    out_patient_dir = os.path.join("Y:/nii/test_gz_compression",
+                                   patient_id, str(compression))
+    start = time.time()
     if not os.path.exists(out_patient_dir):
         os.makedirs(out_patient_dir)
-        print(f"{out_patient_dir} created")
-    start = time.time()
-    for scan_dir in scan_dirs[:1]:
-        print('start converting')
-        dicom2nifti.dcm2nii(scan_dir, out_patient_dir, compression=compression)
+        print(f"{out_patient_dir} created")    
+    for scan_dir in scan_dirs[:1]:   
+        dicom2nifti.dcm2nii(scan_dir, out_patient_dir, compression=compression,
+                            verbose=1)
     stop = time.time()
     times.append(stop-start)
     print(f"The conversion took: {stop-start} s")
 
-# In[]
-print(times)
 # In[Compare access]
 atient = ld.Patient(pos_patients_list[10])
 patient_id = patient.get_id()
@@ -127,7 +127,7 @@ print(header)
 #vis.display3d(data, axis=2, start_slice=10, num_slices=20)
 # In[Count scans number]
 scan_counters = {}
-for healthy_dir in healthy_dirs[6:]:
+for healthy_dir in healthy_dirs[8:9]:
     print(f"counting studies in {healthy_dir}")    
     patient_list = utils.list_subdir(healthy_dir)
     scan_counter = 0
@@ -160,25 +160,41 @@ study_counters[pos_dir] = study_counter
 print(f'number of studies in {pos_dir} =  {study_counter}')
 # In[Count number of documented studies]
 report_counters = {}
-for dir_ in healthy_dirs:
+for dir_ in healthy_dirs[11:12]:
     patient_list = utils.list_subdir(dir_)
     report_counter = 0
     for pat_dir in patient_list:
         report_counter += sum(1 for _ in iglob(f"{pat_dir}/*/DOC"))
+        print('|',end=(''))
     report_counters[dir_] = report_counter 
     print(f'number of study reports in {dir_} = {report_counter}')
 
 # In[Count Patients]
-healthy_count = 0
-for subdir in healthy_dirs:
-    healthy_count += count_subdirectories(subdir)
-    print(f"subdir: {subdir}, accumulated sum: {healthy_count}")
-print(healthy_count)
-
+count = []
+for subdir in healthy_dirs[:8]:
+    healthy_count = sum([1 for _ in os.listdir(subdir)])
+    count.append(healthy_count)
+    print(f"subdir: {subdir}, contains: {healthy_count}")
+# In[]
+print(healthy_dirs[11:12])
+#print(sum([1,1,1]))
 # In[]
 
 # number of pos patients = 831
 # number of neg patients = 24908
+# 2019_01, contains: 2567
+# 2019_02, contains: 2252
+# 2019_03, contains: 2186
+# 2019_04, contains: 2297
+# 2019_05, contains: 2397
+# 2019_06, contains: 2250
+# 2019_07, contains: 1746
+# 2019_09, contains: 2392
+# 2019_10, contains: 2424
+# 2019_10, contains: 2472
+# 2019_11, contains: 2472
+# 2019_12, contains: 2197
+
 
 # number of pos scans = 12562
 # number of scans in Y://2019_01 =  30108
@@ -189,6 +205,8 @@ print(healthy_count)
 # number of scans in Y://2019_06 =  25281
 # number of scans in Z://2019_07 =  19850
 # number of scans in Z://2019_08 =  25720
+
+# number of scans in Y://2019_10 =  23312
 
 # number of pos studies = 831
 # number of studies in Z://2019_01 =  2567
@@ -215,3 +233,4 @@ print(healthy_count)
 # In[]
 nii_size = np.array([2.87, 2.87, 24, 15, 2.3, 11, 2.5, 240, 17, 5.9, 46, 
                      500, 250, 260, 243, 1000, 2000, 100, 260, 1190, 200, 145])
+scans_2019 = [30108, 26125, 25709, 26979, 28088, 25281, 19850, 25720] 
