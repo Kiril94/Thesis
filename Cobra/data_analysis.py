@@ -72,9 +72,9 @@ non_conv_patients_dirs = sorted([os.path.join(positive_dir, non_conv_pat)\
 # In[Convert positive patients]
 
 start = time.time()
-patient_counter = len(non_conv_patients)
-ut_pos_path = "Z:\\nii\\positive\\test"
-for patient_dir in pos_patients_list[:3]:
+#patient_counter = len(non_conv_patients)
+out_pos_path = "Y:\\nii\\positive\\test_tags"
+for patient_dir in pos_patients_list[100:101]:
     patient_timer = time.time()
     patient = ld.Patient(patient_dir)
     patient_id = patient.get_id()
@@ -83,29 +83,30 @@ for patient_dir in pos_patients_list[:3]:
     if not os.path.exists(out_patient_dir):
         os.makedirs(out_patient_dir)
         print(f"{out_patient_dir} created")
-    for scan_dir in scan_dirs:
+    for scan_dir in scan_dirs[:1]:
         dicom2nifti.dcm2nii(scan_dir, out_patient_dir)
         print('|',end=(''))
-    patient_counter -= 1
+    #patient_counter -= 1
     print(patient_counter)
     print(str(datetime.datetime.now()))
 stop = time.time()
 print(f"The conversion took: {stop-start} s")
 
+
 # In[Test compression]
 
-times = []
-patient = ld.Patient(pos_patients_list[100])
+conversion_times = []
+patient = ld.Patient("D:/Thesis/Cobra/data/0b630d10621e9c5d831a8053f95125b6")
 patient_id = patient.get_id()
 scan_dirs = patient.get_scan_directories()
-for compression in range(6,7):
-    out_patient_dir = os.path.join("Y:/nii/test_tags",
-                                   patient_id)
+for compression in range(9,10):
+    out_patient_dir = os.path.join(f"D:/Thesis/Cobra/data/{patient_id}_converted",
+                                   str(compression))
     start = time.time()
     if not os.path.exists(out_patient_dir):
         os.makedirs(out_patient_dir)
         print(f"{out_patient_dir} created")    
-    for scan_dir in scan_dirs[1:2]:   
+    for scan_dir in scan_dirs:   
         dicom2nifti.dcm2nii(scan_dir, out_patient_dir, compression=compression,
                             verbose=1)
     stop = time.time()
@@ -115,28 +116,45 @@ for compression in range(6,7):
 # In[Compare sizes for different compression levels]
 
 sizes = np.zeros(9)
-gz_directory = "Y:/nii/test_gz_compression/003e8dbee71b67681fe72abe758cb695"
+gz_directory = "D:/Thesis/Cobra/data/0b630d10621e9c5d831a8053f95125b6_converted"
 for i, compression in enumerate(range(1,10)):
     print(f"{i}, {compression}")
-    sizes[i] = utils.get_size(os.path.join(gz_directory, str(compression)))
+    sizes[i] = utils.get_size(os.path.join(gz_directory, str(compression)),
+                              unit='')
 
+
+# In[sizes]
+print(sizes)
+    
 # In[plot sizes]
-plt.plot(np.arange(1,10), sizes)
+conversion_times = np.array([50.8, 68.0,74.77, 80.65,73.595, 89.36,105.119,121.117, 134.9])
+fig, ax1 = plt.subplots()
+ax1.set_xlabel('Compression level')
+ax1.plot(np.arange(1,10), sizes, color='r', label='size')
+ax1.set_ylabel('size in MB')
+ax2 = ax1.twinx()
+ax2.plot(np.arange(1,10), conversion_times, label='conversion time')
+ax1.legend()
+ax2.legend()
+ax2.set_ylabel('time in s')
 # In[Compare access]
-atient = ld.Patient(pos_patients_list[10])
-patient_id = patient.get_id()
-out_patient_dir = os.path.join("Z:/nii/compression_test", patient_id)
-for compression in range(1,10):
-    test_compression_dir = os.path.join(out_patient_dir, str(compression))
+
+out_patient_dir = os.path.join(f"D:/Thesis/Cobra/data/0b630d10621e9c5d831a8053f95125b6_converted")
+access_times = np.zeros(9)
+for i, compression in enumerate(range(1,10)):
+    test_compression_dir = f"{out_patient_dir}/{compression}"
     files = sorted(utils.list_subdir(test_compression_dir))
-    json_file = files[0]
     start = time.time()
-    with open(json_file) as f:
-      header = json.load(f)
-    img_mat = nib.load(files[1])
-    vis.display3d(img_mat.get_fdata(), axis =1, start_slice=21, num_slices=10)
-    stop = time.time()
+    for file in files:
+        if file.endswith('.nii.gz'):
+            img_mat = nib.load(file)
+        else:
+            print("not nii")
+    stop = time.time()   
+    access_times[i] = stop-start
     print(f"For compression={compression} the access took: {stop-start} s")
+# In[]
+out_patient_dir = os.path.join(f"D:\Thesis\Cobra\data\0b630d10621e9c5d831a8053f95125b6_converted")
 # In[look at converted patients]
 con_pat_paths = [os.path.join(out_pos_path, conv_pat)\
                  for conv_pat in conv_patients_list]
