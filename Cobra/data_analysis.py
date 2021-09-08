@@ -42,24 +42,12 @@ pos_patients_list = utils.list_subdir(positive_dir)
 
 # In[Read some dcm files]
 
-patient = ld.Patient(pos_patients_list[100])
-scan_dirs = patient.get_scan_directories()
-scan_path = utils.list_subdir(scan_dirs[1])
+#patient = ld.Patient(pos_patients_list[100])
+#scan_dirs = patient.get_scan_directories()
+scan_path = utils.list_subdir("D:\\Thesis\\Cobra\\data\\test_compression\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\26b082d69057e5884eb3ac0634966629")
 dicom = pydicom.dcmread(scan_path[0])
-#with open("dicom.txt", "w") as f:
-#    f.write(str(dicom))
-try:
-    print(dicom[0x0018, 0x1030])
-except:
-    print("no tag [0x0018, 0x1030]")
-try:
-    print(dicom[0x0018, 0x1020])
-except:
-    print("no tag [0x0018, 0x1020]")
-try:
-    print(dicom[0x0018, 0x0024])
-except:
-    print("no tag [0x0018, 0x0024]")
+with open("D:/Thesis/Cobra/dicom.txt", "w") as f:
+    f.write(str(dicom))
 
 # In[non converted patients]
 pos_patients_id = [os.path.split(dir_)[1] for dir_ in pos_patients_list]
@@ -123,8 +111,6 @@ for i, compression in enumerate(range(1,10)):
                               unit='')
 
 
-# In[sizes]
-print(sizes)
     
 # In[plot sizes]
 conversion_times = np.array([50.8, 68.0,74.77, 80.65,73.595, 89.36,105.119,121.117, 134.9])

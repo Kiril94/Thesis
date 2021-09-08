@@ -48,12 +48,14 @@ with open(csv_path, 'w') as csvfile:
             try:
                 data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
             except:
+                print(f"Sleep for 5s, director {scan_dir} not found")
                 time.sleep(5)
                 data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
             try:
                 writer.writerow(data)
             except IOError:
                 print("I/O error")
+            print('.', end='')
         print('|', end='')
     stop = time.time()
 print(f"the conversion took {stop-start}")
