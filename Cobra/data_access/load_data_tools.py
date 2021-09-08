@@ -80,13 +80,13 @@ def get_scan_key_list():
                 ('RepititionTime', 'float'),
                 ('ScanningSequence', 'str'), 
                 ('SequenceVariant','str'),
-                ('SequenceName', 'str')
+                ('SequenceName', 'str'),
                 ('ScanOptions','str'), 
                 ('SeriesDescription', 'str'),
                 ('SliceThickness', 'float'),
                 ('SpacingBetweenSlices','float'),
                 ('SecondEcho', 'float'),
-                ('VariableFlipAngleFlag', 'str'),
+                ('VariableFlipAngleFlag', 'str')
                 ]
     return key_list
 
