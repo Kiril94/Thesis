@@ -33,3 +33,22 @@ def create_dictionary(keys, values):
     for key, value in zip(keys, values):
         result[key] = value
     return result
+
+def get_size(start_path = '.', unit='M'):
+    """Gives size in bytes"""
+    if unit=='':
+        divider =1
+    elif unit=='M':
+        divider = 1000
+    elif unit=='G':
+        divider = 1e6
+    else:
+        print(f"unit {unit} unknown")
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            # skip if it is symbolic link
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+    return total_size/divider

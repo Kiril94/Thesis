@@ -15,9 +15,11 @@ from vis import vis
 import nibabel as nib
 import datetime
 import pydicom
+import numpy as np
 importlib.reload(ld)
 importlib.reload(vis)
 importlib.reload(dicom2nifti)
+importlib.reload(utils)
 def p(string): print(string)
 
 # In[main directories]
@@ -41,9 +43,23 @@ pos_patients_list = utils.list_subdir(positive_dir)
 
 patient = ld.Patient(pos_patients_list[100])
 scan_dirs = patient.get_scan_directories()
-scan_path = utils.list_subdir(scan_dirs[0])
+scan_path = utils.list_subdir(scan_dirs[1])
 dicom = pydicom.dcmread(scan_path[0])
-print(dicom.Protocol)
+#with open("dicom.txt", "w") as f:
+#    f.write(str(dicom))
+try:
+    print(dicom[0x0018, 0x1030])
+except:
+    print("no tag [0x0018, 0x1030]")
+try:
+    print(dicom[0x0018, 0x1020])
+except:
+    print("no tag [0x0018, 0x1020]")
+try:
+    print(dicom[0x0018, 0x0024])
+except:
+    print("no tag [0x0018, 0x0024]")
+
 # In[non converted patients]
 pos_patients_id = [os.path.split(dir_)[1] for dir_ in pos_patients_list]
 non_conv_patients = set(pos_patients_id)- set(conv_patients_list)
@@ -78,23 +94,30 @@ print(f"The conversion took: {stop-start} s")
 # In[Test compression]
 
 times = []
-patient = ld.Patient(pos_patients_list[1])
+patient = ld.Patient(pos_patients_list[100])
 patient_id = patient.get_id()
 scan_dirs = patient.get_scan_directories()
-for compression in range(1,10):
-    out_patient_dir = os.path.join("Y:/nii/test_gz_compression",
-                                   patient_id, str(compression))
+for compression in range(6,7):
+    out_patient_dir = os.path.join("Y:/nii/test_tags",
+                                   patient_id)
     start = time.time()
     if not os.path.exists(out_patient_dir):
         os.makedirs(out_patient_dir)
         print(f"{out_patient_dir} created")    
-    for scan_dir in scan_dirs[:1]:   
+    for scan_dir in scan_dirs[1:2]:   
         dicom2nifti.dcm2nii(scan_dir, out_patient_dir, compression=compression,
                             verbose=1)
     stop = time.time()
     times.append(stop-start)
     print(f"The conversion took: {stop-start} s")
 
+# In[Compare sizes for different compression levels]
+
+sizes = np.zeros(9)
+gz_directory = "Y:/nii/test_gz_compression/003e8dbee71b67681fe72abe758cb695"
+#for i, compresson in enumerate(range(1,10)):
+    #sizes[i] = utils.get_size(os.path.join(gz_directory, str(compression)))
+print(utils.get_size("D:/Thesis/Cobra/data_access"))
 # In[Compare access]
 atient = ld.Patient(pos_patients_list[10])
 patient_id = patient.get_id()
@@ -149,7 +172,7 @@ for pos_dir in [positive_dir]:
     print(f'number of studies in {pos_dir} =  {study_counter}')
 # In[]
 patient_list = utils.list_subdir(positive_dir)
-# In[]
+# In[count studies]
 study_counter = 0
 for pat_dir in patient_list[:3]:
     print('|',end=(''))
@@ -160,7 +183,7 @@ study_counters[pos_dir] = study_counter
 print(f'number of studies in {pos_dir} =  {study_counter}')
 # In[Count number of documented studies]
 report_counters = {}
-for dir_ in healthy_dirs[11:12]:
+for dir_ in healthy_dirs[4:5]:
     patient_list = utils.list_subdir(dir_)
     report_counter = 0
     for pat_dir in patient_list:
@@ -234,3 +257,4 @@ print(healthy_dirs[11:12])
 nii_size = np.array([2.87, 2.87, 24, 15, 2.3, 11, 2.5, 240, 17, 5.9, 46, 
                      500, 250, 260, 243, 1000, 2000, 100, 260, 1190, 200, 145])
 scans_2019 = [30108, 26125, 25709, 26979, 28088, 25281, 19850, 25720] 
+print(1000/60)
