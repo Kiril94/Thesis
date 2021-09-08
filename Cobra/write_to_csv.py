@@ -15,8 +15,8 @@ import importlib
 import time
 importlib.reload(ld)
 # In[Specify main directories]
-base_data_dir = "Z:/"
-out_pos_path = "Z:\\nii\\positive"
+base_data_dir = "Y:/"
+out_pos_path = "Y:\\nii\\positive"
 data_dirs = os.listdir(base_data_dir)
 positive_dir = f"{base_data_dir}/positive" 
 healthy_dirs = sorted([f"{base_data_dir}/{x}" for x \
@@ -45,7 +45,11 @@ with open(csv_path, 'w') as csvfile:
     for pat in patient_list:
         scan_directories = ld.Patient(pat).get_scan_directories()
         for scan_dir in scan_directories:
-            data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
+            try:
+                data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
+            except:
+                time.sleep(5)
+                data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
             try:
                 writer.writerow(data)
             except IOError:

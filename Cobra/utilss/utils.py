@@ -37,7 +37,7 @@ def create_dictionary(keys, values):
 def get_size(start_path = '.', unit='M'):
     """Gives size in bytes"""
     if unit=='':
-        divider =1
+        divider = 1
     elif unit=='M':
         divider = 1000
     elif unit=='G':

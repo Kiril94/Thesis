@@ -16,6 +16,7 @@ import nibabel as nib
 import datetime
 import pydicom
 import numpy as np
+import matplotlib.pyplot as plt
 importlib.reload(ld)
 importlib.reload(vis)
 importlib.reload(dicom2nifti)
@@ -115,9 +116,12 @@ for compression in range(6,7):
 
 sizes = np.zeros(9)
 gz_directory = "Y:/nii/test_gz_compression/003e8dbee71b67681fe72abe758cb695"
-#for i, compresson in enumerate(range(1,10)):
-    #sizes[i] = utils.get_size(os.path.join(gz_directory, str(compression)))
-print(utils.get_size("D:/Thesis/Cobra/data_access"))
+for i, compression in enumerate(range(1,10)):
+    print(f"{i}, {compression}")
+    sizes[i] = utils.get_size(os.path.join(gz_directory, str(compression)))
+
+# In[plot sizes]
+plt.plot(np.arange(1,10), sizes)
 # In[Compare access]
 atient = ld.Patient(pos_patients_list[10])
 patient_id = patient.get_id()
@@ -186,9 +190,8 @@ report_counters = {}
 for dir_ in healthy_dirs[4:5]:
     patient_list = utils.list_subdir(dir_)
     report_counter = 0
-    for pat_dir in patient_list:
-        report_counter += sum(1 for _ in iglob(f"{pat_dir}/*/DOC"))
-        print('|',end=(''))
+    report_counter += sum(1 for _ in iglob(f"{dir_}/*/*/DOC/*/*.pdf"))
+    print('|',end=(''))
     report_counters[dir_] = report_counter 
     print(f'number of study reports in {dir_} = {report_counter}')
 

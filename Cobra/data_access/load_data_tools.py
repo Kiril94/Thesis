@@ -1,3 +1,6 @@
+"""
+@author: klein
+"""
 import numpy as np
 from pydicom import dcmread
 import os
