@@ -38,6 +38,7 @@ patient_list = sorted([os.path.join(positive_dir, non_conv_pat)\
                           for non_conv_pat in non_conv_patients])
     
 # In[Convert files]
+csv_columns = [x[0] for x in ld.get_scan_key_list()]
 with open(csv_path, 'w') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
     writer.writeheader()
@@ -56,10 +57,41 @@ with open(csv_path, 'w') as csvfile:
             except IOError:
                 print("I/O error")
             print('.', end='')
-        print('|', end='')
+        print(f"{pat} stored to csv")
     stop = time.time()
 print(f"the conversion took {stop-start}")
+# In[]
+print(healthy_dirs)
+# In[Convert files for healthy dirs]
+csv_folder = "D:/Thesis/Cobra/tables"
+for month, subdir in enumerate(healthy_dirs[1:]):
+    csv_file = f"healthy_{month+2}.csv"
+    csv_path = os.path.join(csv_folder, csv_file)
+    patient_list = sorted(utils.list_subdir(subdir))
+    with open(csv_path, 'w', newline='') as csvfile:
+        start = time.time()
+        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        writer.writeheader()    
+        for pat in patient_list:
+            scan_directories = ld.Patient(pat).get_scan_directories()
+            for scan_dir in scan_directories:
+                try:
+                    data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
+                except:
+                    print(f"Sleep for 5s, director {scan_dir} not found")
+                    time.sleep(5)
+                    data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
+                try:
+                    writer.writerow(data)
+                except IOError:
+                    print("I/O error")
+                print('.', end='')
+            print(f"{os.path.split(pat)[1]} stored to csv")
+        stop = time.time()
+        print(f"the conversion took {stop-start}")
+    print(f"all patients in {subdir} converted")
 # In[]
 df = pd.read_csv(csv_path)
 print(df.keys())
 # In[]
+print(os.path.split("D:/as/as")[1])
