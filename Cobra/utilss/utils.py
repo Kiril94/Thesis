@@ -15,7 +15,6 @@ def count_subdirectories(dir_, level=1, count_all=True):
     dir_str = str(dir_)
     for _ in range(level):
         dir_str = dir_str + "/*"
-    print(dir_str)
     if not(count_all):
         result = sum(1 for x in iglob(dir_str) if os.path.isdir(x))
     else:

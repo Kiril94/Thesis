@@ -50,14 +50,11 @@ print(patient_numbers)
 study_counters = []
 for dir_ in healthy_dirs:
     print(f"counting studies in {dir_}")
-    patient_list = os.listdir(dir_)
-    study_counter = 0
-    for pat_dir in patient_list:
-        print('.',end=(''))
-        study_counter += len(os.listdir(os.path.join(dir_, pat_dir)))
+    study_counter = utils.count_subdirectories(dir_, 2)
     study_counters.append(study_counter)
-    print(f'number of studies in {dir_} =  {study_counter}')
+    print(f'number of studies in {dir_} = {study_counter}')
 print(study_counters)
+
 # In[Count scans number]
 scan_counters = {}
 for healthy_dir in healthy_dirs[8:9]:
@@ -71,7 +68,7 @@ for healthy_dir in healthy_dirs[8:9]:
     print(f'number of scans in {healthy_dir} =  {scan_counter}')
 # In[test]
 print(base_dir)
-level3 = utils.count_subdirectories(f"{base_dir}/data", 2)#sum(1 for _ in iglob(f"{base_dir}/data/*/*"))
+level3 = utils.count_subdirectories(f"{base_dir}/data", 2, True)#sum(1 for _ in iglob(f"{base_dir}/data/*/*"))
 p(level3)
 # In[Read some dcm files]
 
