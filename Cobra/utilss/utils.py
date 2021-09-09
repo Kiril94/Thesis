@@ -6,12 +6,21 @@ Created on Mon Aug 30 17:21:34 2021
 """
 import os
 import json
+from glob import iglob
 
 
-def count_subdirectories(dir_):
-    """Counts level 1 subdirectories"""
-    return sum(os.path.isdir(os.path.join(dir_,x)) for x \
-               in os.listdir(dir_))
+def count_subdirectories(dir_, level=1, count_all=True):
+    """Counts all folders on the specified level.
+    if count_all==True: also files are counter"""
+    dir_str = str(dir_)
+    for _ in range(level):
+        dir_str = dir_str + "/*"
+    print(dir_str)
+    if not(count_all):
+        result = sum(1 for x in iglob(dir_str) if os.path.isdir(x))
+    else:
+        result = sum(1 for x in iglob(dir_str))
+    return result
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""

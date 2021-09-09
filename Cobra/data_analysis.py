@@ -17,6 +17,7 @@ import datetime
 import pydicom
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 importlib.reload(ld)
 importlib.reload(vis)
 importlib.reload(dicom2nifti)
@@ -24,44 +25,39 @@ importlib.reload(utils)
 def p(string): print(string)
 
 # In[main directories]
+script_dir = os.path.realpath(__file__)
+base_dir = Path(script_dir).parent
 base_data_dir = "Y:/"
 out_pos_path = "Y:\\nii\\positive"
 data_dirs = os.listdir(base_data_dir)
 positive_dir = f"{base_data_dir}/positive" 
 healthy_dirs = sorted([f"{base_data_dir}/{x}" for x \
                        in data_dirs if x.startswith('2019')])
+print(base_dir)
 print(f"main directories: {data_dirs}")
 
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
 
-# In[Read some dcm files]
+# In[Count patient numbers]
+patient_numbers = []
+for dir_ in healthy_dirs:
+    patient_numbers.append(len(os.listdir(dir_)))
+    print('.')
+print(patient_numbers)
 
-#patient = ld.Patient(pos_patients_list[100])
-#scan_dirs = patient.get_scan_directories()
-scan_path = utils.list_subdir("D:\\Thesis\\Cobra\\data\\test_compression\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\26b082d69057e5884eb3ac0634966629")
-dicom = pydicom.dcmread(scan_path[0])
-with open("D:/Thesis/Cobra/dicom.txt", "w") as f:
-    f.write(str(dicom))
-
-
-# In[]
-out_patient_dir = os.path.join(f"D:\Thesis\Cobra\data\0b630d10621e9c5d831a8053f95125b6_converted")
-# In[look at converted patients]
-con_pat_paths = [os.path.join(out_pos_path, conv_pat)\
-                 for conv_pat in conv_patients_list]
-converted_patient = con_pat_paths[400]
-files = utils.list_subdir(converted_patient)
-print(files[:2])
-# read json header
-json_file = files[]
-with open(json_file) as f:
-  header = json.load(f)
-print(header)
-#img_mat = nib.load(files[1])
-#data = img_mat.get_fdata()
-#print(f"the data shape is: {data.shape}")
-#vis.display3d(data, axis=2, start_slice=10, num_slices=20)
+# In[Count study number]
+study_counters = []
+for dir_ in healthy_dirs:
+    print(f"counting studies in {dir_}")
+    patient_list = os.listdir(dir_)
+    study_counter = 0
+    for pat_dir in patient_list:
+        print('.',end=(''))
+        study_counter += len(os.listdir(os.path.join(dir_, pat_dir)))
+    study_counters.append(study_counter)
+    print(f'number of studies in {dir_} =  {study_counter}')
+print(study_counters)
 # In[Count scans number]
 scan_counters = {}
 for healthy_dir in healthy_dirs[8:9]:
@@ -73,17 +69,37 @@ for healthy_dir in healthy_dirs[8:9]:
         scan_counter += len(ld.Patient(pat_dir).get_scan_directories())
     scan_counters[healthy_dir] = scan_counter
     print(f'number of scans in {healthy_dir} =  {scan_counter}')
-# In[Count study number]
-study_counters = {}
-for pos_dir in [positive_dir]:
-    print(f"counting studies in {positive_dir}")
-    patient_list = utils.list_subdir(pos_dir)
-    study_counter = 0
-    for pat_dir in patient_list:
-        print('|',end=(''))
-        study_counter += sum(1 for _ in iglob(pat_dir))
-    study_counters[pos_dir] = study_counter
-    print(f'number of studies in {pos_dir} =  {study_counter}')
+# In[test]
+print(base_dir)
+level3 = utils.count_subdirectories(f"{base_dir}/data", 2)#sum(1 for _ in iglob(f"{base_dir}/data/*/*"))
+p(level3)
+# In[Read some dcm files]
+
+#patient = ld.Patient(pos_patients_list[100])
+#scan_dirs = patient.get_scan_directories()
+scan_path = utils.list_subdir("D:\\Thesis\\Cobra\\data\\test_compression\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\26b082d69057e5884eb3ac0634966629")
+dicom = pydicom.dcmread(scan_path[0])
+with open("D:/Thesis/Cobra/dicom.txt", "w") as f:
+    f.write(str(dicom))
+
+# In[]
+out_patient_dir = os.path.join(f"D:\Thesis\Cobra\data\0b630d10621e9c5d831a8053f95125b6_converted")
+# In[look at converted patients]
+con_pat_paths = [os.path.join(out_pos_path, conv_pat)\
+                 for conv_pat in conv_patients_list]
+converted_patient = con_pat_paths[400]
+files = utils.list_subdir(converted_patient)
+print(files[:2])
+# read json header
+json_file = files[1]
+with open(json_file) as f:
+  header = json.load(f)
+print(header)
+#img_mat = nib.load(files[1])
+#data = img_mat.get_fdata()
+#print(f"the data shape is: {data.shape}")
+#vis.display3d(data, axis=2, start_slice=10, num_slices=20)
+
 # In[]
 patient_list = utils.list_subdir(positive_dir)
 # In[count studies]
@@ -105,12 +121,6 @@ for dir_ in healthy_dirs[4:5]:
     report_counters[dir_] = report_counter 
     print(f'number of study reports in {dir_} = {report_counter}')
 
-# In[Count Patients]
-count = []
-for subdir in healthy_dirs[:8]:
-    healthy_count = sum([1 for _ in os.listdir(subdir)])
-    count.append(healthy_count)
-    print(f"subdir: {subdir}, contains: {healthy_count}")
 # In[]
 print(healthy_dirs[11:12])
 #print(sum([1,1,1]))
@@ -165,9 +175,3 @@ print(healthy_dirs[11:12])
 
 # approx 250MB/patient
 # whole dataset: 6TB
-
-# In[]
-nii_size = np.array([2.87, 2.87, 24, 15, 2.3, 11, 2.5, 240, 17, 5.9, 46, 
-                     500, 250, 260, 243, 1000, 2000, 100, 260, 1190, 200, 145])
-scans_2019 = [30108, 26125, 25709, 26979, 28088, 25281, 19850, 25720] 
-print(1000/60)
