@@ -40,23 +40,24 @@ def display3d(arr3d, figsize=(15, 15), start_slice=0, num_slices=None, axis=0):
 ##########################################
 def bar_plot(labels, counts, figsize=(10,6), width=.8,
              lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,
-             ticklabels_fs=25, title='', title_fs=25,
+             title='', title_fs=25,
              ylabel='count', ylabel_fs=25,
              xlabel='x', xlabel_fs=25,
-             tickparams_ls=25, logscale=False,
+             xtickparams_ls=25, ytickparams_ls=25, logscale=False,
              save_plot=False, figname=None, dpi=80):
     fig, ax = plt.subplots(1,figsize = figsize)
     ax.bar(np.arange(len(counts)), counts, width, label = lgd_label)
     x = np.arange(len(counts))  # the label locations
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, fontsize=ticklabels_fs)
+    ax.set_xticklabels(labels)
     if lgd:
         ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor = 'white')
     if title!='':
         ax.set_title(title, fontsize=title_fs)
     ax.set_ylabel(ylabel, fontsize=ylabel_fs)
     ax.set_xlabel(xlabel, fontsize=xlabel_fs)
-    ax.tick_params(axis='both', which='major', labelsize=tickparams_ls)
+    ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls)
+    ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls)
     if logscale:
         ax.set_yscale('log')
     fig.tight_layout()
