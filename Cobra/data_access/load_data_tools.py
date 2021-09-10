@@ -1,3 +1,6 @@
+"""
+@author: klein
+"""
 import numpy as np
 from pydicom import dcmread
 import os
@@ -48,35 +51,42 @@ def get_scan_key_list():
     key_list = [('SeriesInstanceUID','str'),
                 ('StudyInstanceUID','str'),
                 ('PatientID', 'str'), 
+                ('AngioFlag', 'str'),
+                ('AcquisitionContrast', 'str'),
+                ('AcquisitionDuration', 'float'),
+                ('EchoTime','float'),
+                ('EchoTrainLength', 'int'),
+                ('EchoNumbers', 'int'),
+                ('FlipAngle', 'float'),
+                ('FrameOfReferenceUID', 'str'),
+                ('ImagingFrequency', 'float'),
+                ('ImagedNuclues', 'str'),
                 ('InstanceCreationDate','date'), 
                 ('InstanceCreationTime','time'),
+                ('InversionTime','float'),
+                ('ImagesInAcquisition', 'int'),
                 ('ImageType','str'),
+                ('MagneticFieldStrength', 'float'),
                 ('Manufacturer', 'str'), 
                 ('ManufacturerModelName', 'str'),
+                ('MRAcquisitionType', 'str'),
+                ('NumberofAverages','float'),
+                ('NumberOfEchoes', 'int'),
+                ('NumberofPhaseEncodingSteps', 'int'),
+                ('PatientPosition','str'),
+                ('PixelBandwith','float'),
+                ('PixelPresentation', 'str'),
+                ('PulseSequenceName', 'str'),
+                ('RepititionTime', 'float'),
                 ('ScanningSequence', 'str'), 
                 ('SequenceVariant','str'),
+                ('SequenceName', 'str'),
                 ('ScanOptions','str'), 
-                ('MRAcquisitionType', 'str'),
-                ('AngioFlag', 'str'), 
+                ('SeriesDescription', 'str'),
                 ('SliceThickness', 'float'),
-                ('RepititionTime', 'float'),
-                ('EchoTime','float'),
-                ('InversionTime','float'),
-                ('NumberofAverages','float'),
-                ('ImagingFrequency', 'float'),
-                ('EchoNumbers', 'int'),
-                ('MagneticFieldStrength', 'float'),
-                ('NumberofPhaseEncodingSteps', 'int'),
-                ('EchoTrainLength', 'int'),
-                ('FlipAngle', 'float'),
                 ('SpacingBetweenSlices','float'),
-                ('PixelBandwith','float'),
-                ('ImagesInAcquisition', 'int'),
-                ('PatientPosition','str'),
-                ('AcquisitionDuration', 'float'),
                 ('SecondEcho', 'float'),
-                ('NumberOfEchoes', 'int'),
-                ('FrameOfReferenceUID', 'str'),
+                ('VariableFlipAngleFlag', 'str')
                 ]
     return key_list
 
@@ -90,7 +100,7 @@ def get_scan_dictionary(scan_dir, reconstruct_3d=True):
     if reconstruct_3d:
         scan_dict = {'arr3d': reconstruct3d(scan_dir)}
     else:
-        scan_dict = {}
+        scan_dict = {}  
     for k in key_list:
         try: # see if dicom contains this tag
             value = getattr(dicom, k[0])

@@ -7,12 +7,20 @@ Created on Mon Aug 30 17:21:34 2021
 import os
 import json
 import time
+from glob import iglob
 
 
-def count_subdirectories(dir_):
-    """Counts level 1 subdirectories"""
-    return sum(os.path.isdir(os.path.join(dir_,x)) for x \
-               in os.listdir(dir_))
+def count_subdirectories(dir_, level=1, count_all=True):
+    """Counts all folders on the specified level.
+    if count_all==True: also files are counter"""
+    dir_str = str(dir_)
+    for _ in range(level):
+        dir_str = dir_str + "/*"
+    if not(count_all):
+        result = sum(1 for x in iglob(dir_str) if os.path.isdir(x))
+    else:
+        result = sum(1 for x in iglob(dir_str))
+    return result
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
@@ -39,3 +47,24 @@ def create_dictionary(keys, values):
     for key, value in zip(keys, values):
         result[key] = value
     return result
+
+
+def get_size(start_path = '.', unit='M'):
+    """Gives size in bytes"""
+    if unit=='':
+        divider = 1
+    elif unit=='M':
+        divider = 1000
+    elif unit=='G':
+        divider = 1e6
+    else:
+        print(f"unit {unit} unknown")
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            # skip if it is symbolic link
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+    return total_size/divider
+
