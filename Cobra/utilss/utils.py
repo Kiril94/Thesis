@@ -7,6 +7,7 @@ Created on Mon Aug 30 17:21:34 2021
 import os
 import json
 from glob import iglob
+import datetime as dt
 
 
 def count_subdirectories(dir_, level=1, count_all=True):

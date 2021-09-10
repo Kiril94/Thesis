@@ -14,6 +14,7 @@ from stats_tools import vis as svis
 from glob import iglob
 from vis import vis
 import itertools
+import datetime
 
 
 # In[Define some helper functions]
@@ -69,8 +70,20 @@ pos_tab_dir = f"{table_dir}/pos.csv"
 df_p = pd.read_csv(pos_tab_dir, encoding= 'unicode_escape')
 keys = df_p.keys()
 p(keys)
-
-
+# In[Convert time and date to datetime for efficient access]
+time_k = 'InstanceCreationTime'
+date_k = 'InstanceCreationDate'
+df_p['DateTime'] = df_p[date_k] + ' ' +  df_p[time_k]
+date_time_m = ~df_p['DateTime'].isnull()
+df_p['DateTime'] = pd.to_datetime(df_p['DateTime'], format='%Y%m%d %H:%M:%S')
+p(df_p.groupby('PatientID')['DateTime'])
+# In[Get number of studies (more than2 hourse apart)]
+#print([time.time() for time in pd.to_datetime(
+#     df_p['InstanceCreationTime'], format='%H:%M:%S') \
+#        if (not(time is None) and not(time=='NaT'))])
+#p(df_p.InstanceCreationTime[0])
+#p(df_p.InstanceCreationDate[0])
+p(df_p[date_time_m]['DateTime'])
 
 # In[Get number of scans per patient]
 scans_per_patient = df_p.groupby('PatientID').size()
@@ -103,6 +116,7 @@ vis.bar_plot(manufacturers_unq, counts, xlabel='Manufacturer',
 
 
 # In[Model Name]
+
 
 philips_m = check_tags(df_p, philips_t, 'Manufacturer')
 siemens_m = mask_sequence_type(df_p, 'SIEMENS', 'Manufacturer')
@@ -260,17 +274,26 @@ T1_mask = df_p['SeriesDescription'].str.contains('MP2RAGE', na=False)
 print(df_p[T1_mask].SeriesDescription)
 # In[Extract dates from series description if not present in InstanceCreationData]
 
-p(keys)
-p(df_p['InstanceCreationDate'].dropna())
-p(df_p['InstanceCreationDate'].isnull().count())
+#p(df_p['InstanceCreationDate'].dropna())
+p(f"number of scans without date {df_p['InstanceCreationDate'].isnull().sum()}\
+  out of {len(df_p)}")
 date_mask = df_p['SeriesDescription'].str.contains('2020', na=False)
-p(df_p[date_mask]['SeriesDescription'].count())
+#p(df_p[date_mask]['SeriesDescription'].count())
 # these are not that many
+# In[]
+
+
+
+
+
+
 
 # In[Search for combinations of FLAIR, SWI, T1]
 
 flair_swi_t1_m = flair_m | swi_m | t1_m
-p(df_p[flair_swi_t1_m].groupby(['PatientID']).count())
+p(f"{len(df_p[flair_swi_t1_m]['PatientID'].unique())} patients have\
+  the sequences flair, swi and t1")
+
 
 # In[when where the scans performed]
 scan_months = np.array([int(date[5:7]) for date in df_p['InstanceCreationDate'].dropna()])
