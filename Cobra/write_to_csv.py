@@ -64,8 +64,8 @@ print(f"the conversion took {stop-start}")
 print(healthy_dirs)
 # In[Convert files for healthy dirs]
 csv_folder = "D:/Thesis/Cobra/tables"
-for month, subdir in enumerate(healthy_dirs[1:]):
-    csv_file = f"healthy_{month+2}.csv"
+for month, subdir in enumerate(healthy_dirs[4:]):
+    csv_file = f"healthy_{month+5}.csv"
     csv_path = os.path.join(csv_folder, csv_file)
     patient_list = sorted(utils.list_subdir(subdir))
     with open(csv_path, 'w', newline='') as csvfile:

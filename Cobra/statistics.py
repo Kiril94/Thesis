@@ -29,8 +29,9 @@ def only_first_true(a, b):
     return a&np.logical_not(a&b)
 
 def mask_sequence_type(df, str_, key='SeriesDescription'):
-    """Checks in series description if it
-    contains str_"""
+    """Checks all the values in df
+    in the column key (SeriesDescription by default),
+    if they contain the string str_. Returns a mask."""
     mask = df[key].str.contains(str_, na=False)
     return mask
 
@@ -46,6 +47,8 @@ def check_tags(df, tags, key='SeriesDescription'):
     return mask
 
 def group_small(dict_, threshold, keyword='other'):
+    """Takes a dictionary and sums all values that are smaller than threshold
+    the result is stored under the key keyword. Useful for pie charts."""
     newdic={}
     for key, group in itertools.groupby(dict_, lambda k: keyword \
                                         if (dict_[k]<threshold) else k):
@@ -59,6 +62,7 @@ mask = masks[0]
 for i in range(1, len(masks)):
     mask = mask | masks[i]
 print(mask)
+
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
@@ -69,14 +73,21 @@ table_dir = f"{base_dir}/tables"
 pos_tab_dir = f"{table_dir}/pos.csv" 
 df_p = pd.read_csv(pos_tab_dir, encoding= 'unicode_escape')
 keys = df_p.keys()
+ppatient_df = pd.DataFrame({'PatientId':[], 'NumStudies':[]})#storing results
 p(keys)
+
+
 # In[Convert time and date to datetime for efficient access]
 time_k = 'InstanceCreationTime'
 date_k = 'InstanceCreationDate'
 df_p['DateTime'] = df_p[date_k] + ' ' +  df_p[time_k]
 date_time_m = ~df_p['DateTime'].isnull()
 df_p['DateTime'] = pd.to_datetime(df_p['DateTime'], format='%Y%m%d %H:%M:%S')
-p(df_p.groupby('PatientID')['DateTime'])
+
+# In[Sort the the scans by time and count those that are less than 2 hours apart]
+df_p_sorted
+p(df_p.groupby('PatientID').apply(lambda x: (x.sort_values(by=['DateTime'], ascending=False))
+                                     .head(3)))
 # In[Get number of studies (more than2 hourse apart)]
 #print([time.time() for time in pd.to_datetime(
 #     df_p['InstanceCreationTime'], format='%H:%M:%S') \
@@ -122,9 +133,10 @@ philips_m = check_tags(df_p, philips_t, 'Manufacturer')
 siemens_m = mask_sequence_type(df_p, 'SIEMENS', 'Manufacturer')
 gms_m = mask_sequence_type(df_p, 'GE MEDICAL SYSTEMS', 'Manufacturer')
 
-philips_models_vc = df_p[philips_m]['ManufacturerModelName'].value_counts().to_dict()
-siemens_models_vc = df_p[siemens_m]['ManufacturerModelName'].value_counts().to_dict()
-gms_models_vc = df_p[gms_m]['ManufacturerModelName'].value_counts().to_dict()
+model_k = 'ManufacturerModelName'
+philips_models_vc = df_p[philips_m][model_k].value_counts().to_dict()
+siemens_models_vc = df_p[siemens_m][model_k].value_counts().to_dict()
+gms_models_vc = df_p[gms_m][model_k].value_counts().to_dict()
 
 # In[summarize small groups]
 philips_models_vc_new = group_small(philips_models_vc, 1000)
