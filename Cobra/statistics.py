@@ -15,6 +15,7 @@ from glob import iglob
 from vis import vis
 import itertools
 import datetime
+import time
 
 
 # In[Define some helper functions]
@@ -73,9 +74,7 @@ table_dir = f"{base_dir}/tables"
 pos_tab_dir = f"{table_dir}/pos.csv" 
 df_p = pd.read_csv(pos_tab_dir, encoding= 'unicode_escape')
 keys = df_p.keys()
-ppatient_df = pd.DataFrame({'PatientId':[], 'NumStudies':[]})#storing results
 p(keys)
-
 
 # In[Convert time and date to datetime for efficient access]
 time_k = 'InstanceCreationTime'
@@ -85,23 +84,50 @@ date_time_m = ~df_p['DateTime'].isnull()
 df_p['DateTime'] = pd.to_datetime(df_p['DateTime'], format='%Y%m%d %H:%M:%S')
 
 # In[Sort the the scans by time and count those that are less than 2 hours apart]
-df_p_sorted
-p(df_p.groupby('PatientID').apply(lambda x: (x.sort_values(by=['DateTime'], ascending=False))
-                                     .head(3)))
-# In[Get number of studies (more than2 hourse apart)]
-#print([time.time() for time in pd.to_datetime(
-#     df_p['InstanceCreationTime'], format='%H:%M:%S') \
-#        if (not(time is None) and not(time=='NaT'))])
-#p(df_p.InstanceCreationTime[0])
-#p(df_p.InstanceCreationDate[0])
-p(df_p[date_time_m]['DateTime'])
+df_p_sorted = df_p.groupby('PatientID').apply(
+    lambda x: (x.sort_values(by=['DateTime'], ascending=True)))
+# In[Count the number of studies]
+start = time.time()
+patient_ids = df_p_sorted['PatientID'].unique()
+num_studies_l = []
+for patient in patient_ids:
+    patient_mask = df_p_sorted['PatientID']==patient
+    date_times = df_p_sorted[patient_mask]['DateTime']
+    date_time0 = date_times[0]
+    study_counter = 0
+    for date_time in date_times[1:]:
+        try:
+            time_diff = date_time-date_time0
+            if time_diff.total_seconds()/3600>2:
+                study_counter += 1
+                date_time0 = date_time
+            else:
+                pass
+        except:
+            print('NaT')
+    num_studies_l.append(study_counter)
+stop = time.time()
+
+# In[Store the results]
+
+ppatient_df = pd.DataFrame({'PatientId':[], 'NumStudies':[]})#storing results
+ppatient_df['PatientID'] = patient_ids
+ppatient_df['NumStudies'] =  num_studies_l   
+
+# In[Show distribution of the studies]
+num_studies_a = np.array(num_studies_l)
+max_studies = max(num_studies_a)
+svis.nice_histogram(num_studies_a, np.arange(-.5, max_studies+.5),
+                    show_plot=True, xlabel='Number of studies',
+                    save=True, 
+                    figname=f"{fig_dir}/pos/num_studies.png")
 
 # In[Get number of scans per patient]
 scans_per_patient = df_p.groupby('PatientID').size()
 figure = svis.nice_histogram(
     scans_per_patient, np.arange(1,110,2), 
-    show_plot=True, xlabel='# scans per patient',
-    save=True, figname = f"{fig_dir}/pos/scans_per_patient.png")
+    show_plot=True, xlabel='# volums per patient',
+    save=True, figname = f"{fig_dir}/pos/volumes_per_patient.png")
 
 
 
