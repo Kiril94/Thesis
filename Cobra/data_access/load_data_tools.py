@@ -77,7 +77,7 @@ def get_scan_key_list():
                 ('PixelBandwith','float'),
                 ('PixelPresentation', 'str'),
                 ('PulseSequenceName', 'str'),
-                ('RepititionTime', 'float'),
+                ('RepetitionTime', 'float'),
                 ('ScanningSequence', 'str'), 
                 ('SequenceVariant','str'),
                 ('SequenceName', 'str'),

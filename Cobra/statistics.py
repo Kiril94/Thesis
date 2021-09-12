@@ -16,6 +16,7 @@ from vis import vis
 import itertools
 import datetime
 import time
+import seaborn as sns
 
 
 # In[Define some helper functions]
@@ -263,6 +264,7 @@ none_m = df_p['SeriesDescription'].isnull()
 all_m = t1_m | flair_m | t2_noflair_m | t2s_m | dwi_m | dti_m | swi_m | angio_m | none_m 
 other_m = ~all_m
 # In[Look at 'other' group] combine all the relevant masks to get others
+
 p(df_p[other_m].SeriesDescription)
 other_seq_series = df_p[other_m].SeriesDescription
 other_seq_series_sort = other_seq_series.sort_values(axis=0, ascending=True).unique()
@@ -303,8 +305,21 @@ vis.bar_plot(sequences_basic, seq_counts, figsize=(13,6), xlabel='Sequence',
 # In[Does smartbrain occer only for certain scaners?]
 p(df_p[smartbrain_m].Manufacturer.unique())
 # Yes only for philips
+p(keys)
+p(df_p[TR_k])
+# In[Look at the distributions of TE and TR for different seq]
+TE_k = 'EchoTime'
+TR_k = 'RepititionTime'
+df_p.loc[t1_m, 'Sequence'] = 'T1'
+df_p.loc[t2_noflair_m,'Sequence'] = 'T2'
+df_p.loc[t2s_m,'Sequence'] = 'T2S'
+df_p.loc[flair_m,'Sequence'] = 'FLAIR'
+df_p_clean =  df_p.dropna(subset=[TE_k, TR_k])
+print(df_p_clean.Sequence)
+# In[]
 
-
+sns.scatterplot(df_p, x=TE_k, y=TR_k, 
+                hue=df_p.Sequence.to_list())
 
 # In[tests]
 T1_mask = df_p['SeriesDescription'].str.contains('MP2RAGE', na=False)
