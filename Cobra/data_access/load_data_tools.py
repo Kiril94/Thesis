@@ -54,6 +54,7 @@ def get_scan_key_list():
                 ('AngioFlag', 'str'),
                 ('AcquisitionContrast', 'str'),
                 ('AcquisitionDuration', 'float'),
+                ('AcquisitionMatrix','list'),
                 ('EchoTime','float'),
                 ('EchoTrainLength', 'int'),
                 ('EchoNumbers', 'int'),
@@ -74,6 +75,7 @@ def get_scan_key_list():
                 ('NumberOfEchoes', 'int'),
                 ('NumberofPhaseEncodingSteps', 'int'),
                 ('PatientPosition','str'),
+                ('PixelSpacing','list')
                 ('PixelBandwith','float'),
                 ('PixelPresentation', 'str'),
                 ('PulseSequenceName', 'str'),
