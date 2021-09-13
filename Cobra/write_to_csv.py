@@ -155,7 +155,8 @@ csv_columns = [x[0] for x in ld.get_scan_key_list()]
 csv_folder = "D:/Thesis/Cobra/tables"
 for month, subdir in enumerate(healthy_dirs[9:]):
     print(f"converting files from {subdir}")
-    csv_file = f"healthy_{month+10}_n.csv"
+    #csv_file = f"healthy_{month+10}_n.csv"
+    csv_file = "test.csv"
     csv_path = os.path.join(csv_folder, csv_file)
     patient_list = sorted(utils.list_subdir(subdir))
     pat_counter = 0
@@ -188,6 +189,17 @@ for month, subdir in enumerate(healthy_dirs[9:]):
         stop = time.time()
         print(f"the conversion took {stop-start}")
     print(f"all patients in {subdir} converted")
+    
+# In[Which scan causes the problems]
+last_patient = os.path.join(healthy_dirs[9],'2e37ee7ec1b9ab50e90e949b13686e98')
+last_patient_ind = patient_list.index(last_patient)
+problem_pat = patient_list[last_patient_ind+1]
+print(problem_pat)
+# In[]
+subdir = utils.list_subdir(problem_pat)
+for dir_ in subdir:
+    dcm = pydicom.dcmread(os.listdir(dir_)[0])
+    print(dcm)
 # In[]
 df = pd.read_csv(csv_path)
 print(df['EchoTime'])
