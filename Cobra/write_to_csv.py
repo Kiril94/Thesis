@@ -151,18 +151,20 @@ print(f"the conversion took {stop-start}")
 
 
 # In[Write neg to csv]
-
+csv_columns = [x[0] for x in ld.get_scan_key_list()]
 csv_folder = "D:/Thesis/Cobra/tables"
 for month, subdir in enumerate(healthy_dirs[9:]):
     print(f"converting files from {subdir}")
-    csv_file = f"healthy_{month+10}.csv"
+    csv_file = f"healthy_{month+10}_n.csv"
     csv_path = os.path.join(csv_folder, csv_file)
     patient_list = sorted(utils.list_subdir(subdir))
+    pat_counter = 0
     with open(csv_path, 'w', newline='') as csvfile:
         start = time.time()
         writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
         writer.writeheader()    
         for pat in patient_list:
+            print(f"Writing {os.path.split(pat)[1]} to csv")
             scan_directories = ld.Patient(pat).get_scan_directories()
             for scan_dir in scan_directories:
                 try:
@@ -179,7 +181,6 @@ for month, subdir in enumerate(healthy_dirs[9:]):
                 except IOError:
                     print("I/O error")
                 print('.', end='')
-            print(f"{os.path.split(pat)[1]} stored to csv")
             pat_counter+=1
             if pat_counter%100==0:
                 print(f"{pat_counter} patients written")

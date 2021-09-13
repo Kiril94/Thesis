@@ -90,10 +90,10 @@ def get_scan_key_list():
                 ]
     return key_list
 
-def get_scan_dictionary(scan_dir, reconstruct_3d=True):
+def get_scan_dictionary(scan_dir, reconstruct_3d=True, file_num=0):
     """Returns a dictionary for scan at scan_dir"""
     
-    dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
+    dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[file_num])
     dicom = dcmread(dicom_file_dir)
     key_list = get_scan_key_list()
     
