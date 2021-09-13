@@ -75,8 +75,11 @@ p(level3)
 #patient = ld.Patient(pos_patients_list[100])
 #scan_dirs = patient.get_scan_directories()
 #scan_path = utils.list_subdir("D:\\Thesis\\Cobra\\data\\test_compression\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\26b082d69057e5884eb3ac0634966629")
-utils.list_subdir(healthy_dirs[4])
-dicom = pydicom.dcmread(scan_path[0])
+
+
+dir_ = "D:\\Thesis\\Cobra\\data\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\5a4e9aa404ceb1f3995850b6e3ea246c"
+subdir = utils.list_subdir(dir_)
+dicom = pydicom.dcmread(subdir[0])
 with open("D:/Thesis/Cobra/dicom.txt", "w") as f:
     f.write(str(dicom))
 

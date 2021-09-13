@@ -203,5 +203,6 @@ last_patient_ind = patient_list.index(last_patient)
 problem_pat = patient_list[last_patient_ind+1]
 print(problem_pat)
 # In[]
-
+a = str('[1,2]')
+print(str(a))
 

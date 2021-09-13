@@ -76,6 +76,7 @@ def get_scan_key_list():
                 ('PatientPosition','str'),
                 ('PixelBandwith','float'),
                 ('PixelPresentation', 'str'),
+                ('PixelSpacing', 'arr')
                 ('PulseSequenceName', 'str'),
                 ('RepetitionTime', 'float'),
                 ('ScanningSequence', 'str'), 
