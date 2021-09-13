@@ -27,11 +27,7 @@ healthy_dirs = sorted([f"{base_data_dir}/{x}" for x \
     
 # In[Specify csv path]
 csv_folder = "D:/Thesis/Cobra/tables"
-csv_file = "pos_n.csv"
-csv_path = os.path.join(csv_folder, csv_file)
 csv_columns = [x[0] for x in ld.get_scan_key_list()]
-
-
 
 # In[delete last patient from ]
 last_csv_file = "healthy_9.csv"
@@ -116,8 +112,8 @@ df_pos.rename(columns={'RepititionTime': 'RepetitionTime'},
 print(len(RT_list))
 print(len(df_pos))
 # In[write positive to csv]
-
-csv_columns = [x[0] for x in ld.get_scan_key_list()]
+csv_file = "pos_n.csv"
+csv_path = os.path.join(csv_folder, csv_file)
 with open(csv_path, 'w', newline='') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
     writer.writeheader()
@@ -191,17 +187,23 @@ for month, subdir in enumerate(healthy_dirs[9:]):
     print(f"all patients in {subdir} converted")
     
 # In[Which scan causes the problems]
+patient_list = sorted(utils.list_subdir(healthy_dirs[9]))
+# In[]
 last_patient = os.path.join(healthy_dirs[9],'2e37ee7ec1b9ab50e90e949b13686e98')
 last_patient_ind = patient_list.index(last_patient)
 problem_pat = patient_list[last_patient_ind+1]
 print(problem_pat)
 # In[]
-subdir = utils.list_subdir(problem_pat)
-for dir_ in subdir:
-    dcm = pydicom.dcmread(os.listdir(dir_)[0])
-    print(dcm)
+scan_directories = ld.Patient(problem_pat).get_scan_directories()
+
+for scan_dir in scan_directories:
+    try:
+        data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
+    except:
+        print("Sleep for 5s, maybe connection is lost, check that dir is not empty")
+        time.sleep(5)
+        data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
+    print(f"{scan_dir}")
 # In[]
-df = pd.read_csv(csv_path)
-print(df['EchoTime'])
-# In[]
-print(os.path.split("D:/as/as")[1])
+getattr({}, 'a')
+

@@ -72,7 +72,7 @@ fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/tables"
 
 # In[load positive csv]
-pos_tab_dir = f"{table_dir}/pos.csv" 
+pos_tab_dir = f"{table_dir}/pos_n.csv" 
 df_p = pd.read_csv(pos_tab_dir, encoding= 'unicode_escape')
 keys = df_p.keys()
 p(keys)
@@ -95,7 +95,7 @@ for patient in patient_ids:
     patient_mask = df_p_sorted['PatientID']==patient
     date_times = df_p_sorted[patient_mask]['DateTime']
     date_time0 = date_times[0]
-    study_counter = 0
+    study_counter = 1
     for date_time in date_times[1:]:
         try:
             time_diff = date_time-date_time0
@@ -118,17 +118,18 @@ ppatient_df['NumStudies'] =  num_studies_l
 # In[Show distribution of the studies]
 num_studies_a = np.array(num_studies_l)
 max_studies = max(num_studies_a)
-svis.nice_histogram(num_studies_a, np.arange(-.5, max_studies+.5),
+svis.nice_histogram(num_studies_a, np.arange(.5, max_studies+.5),
                     show_plot=True, xlabel='Number of studies',
-                    save=True, 
+                    save=True, title='Positive Patients',
                     figname=f"{fig_dir}/pos/num_studies.png")
 
 # In[Get number of scans per patient]
 scans_per_patient = df_p.groupby('PatientID').size()
 figure = svis.nice_histogram(
     scans_per_patient, np.arange(1,110,2), 
-    show_plot=True, xlabel='# volums per patient',
-    save=True, figname = f"{fig_dir}/pos/volumes_per_patient.png")
+    show_plot=True, xlabel='# volumes per patient',
+    save=True, figname = f"{fig_dir}/pos/volumes_per_patient.png",
+    title='Positive Patients')
 
 
 
@@ -149,7 +150,8 @@ fig, ax = plt.subplots(1,figsize = (10,6))
 manufacturers_unq = ['Philips', 'SIEMENS', 'GEMS', 'Agfa', 'none']
 counts = np.array([philips_c, siemens_c, gms_c, agfa_c, none_c])
 vis.bar_plot(manufacturers_unq, counts, xlabel='Manufacturer', 
-             save_plot=True, figname=f"{fig_dir}/pos/manufacturers_count.png")
+             save_plot=True, figname=f"{fig_dir}/pos/manufacturers_count.png",
+             title='Positive Patients')
 
 
 
@@ -195,6 +197,7 @@ ax[2].axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 ax[2].set_title('GMS', fontsize=20)
 ax[-1].axis('off')
 
+fig.suptitle('Positive Patients', fontsize=20)
 fig.tight_layout()
 plt.subplots_adjust(wspace=.5, hspace=None)
 plt.show()
@@ -298,7 +301,7 @@ sequences_basic = ['T1+MPR', 'T2', 'FLAIR', 'T2*', 'DTI', 'SWI', 'DWI', 'angio',
 seq_counts = np.array([t1_c, t2noflair_c, flair_c, t2s_c, 
                        dti_c, swi_c, dwi_c, angio_c, other_c, none_c])
 vis.bar_plot(sequences_basic, seq_counts, figsize=(13,6), xlabel='Sequence',
-             xtickparams_ls=18, save_plot=True, 
+             xtickparams_ls=18, save_plot=True, title='Positive Patients',
              figname=f"{fig_dir}/pos/basic_sequences_count.png")
 
 
@@ -335,12 +338,6 @@ date_mask = df_p['SeriesDescription'].str.contains('2020', na=False)
 # these are not that many
 # In[]
 
-
-
-
-
-
-
 # In[Search for combinations of FLAIR, SWI, T1]
 
 flair_swi_t1_m = flair_m | swi_m | t1_m
@@ -351,7 +348,7 @@ p(f"{len(df_p[flair_swi_t1_m]['PatientID'].unique())} patients have\
 # In[when where the scans performed]
 scan_months = np.array([int(date[5:7]) for date in df_p['InstanceCreationDate'].dropna()])
 svis.nice_histogram(scan_months, np.arange(.5,13.5), show_plot=(True), 
-                    xlabel='month', save=(True), 
+                    xlabel='month', save=(True), title='Number of acquired volumes for positive patients',
                     figname=f"{fig_dir}/pos/scan_months.png" )
 # Notes: time and data are sometimes given in the series description
 #p(scan_months[10])

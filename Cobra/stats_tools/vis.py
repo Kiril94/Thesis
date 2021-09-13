@@ -123,7 +123,8 @@ def nice_histogram(
     xlog_scale = False, ylog_scale = False, axis = None, figure = None, 
     dpi = 80, ecolor = 'deepskyblue', capsize = 3, capthick = 0.3, 
     markersize = 6, elinewidth = .9, hist_alpha = .9, hist_linestyle = 'solid', 
-    hist_linewidth = 2, plot_style = 'ggplot'):
+    hist_linewidth = 2, plot_style = 'ggplot', caption='', caption_fs=18,
+    title='', title_fs=18):
 
     """Produce a nice histogram.
     Returns: dictionary with x, y, sy, binwidth, fig, ax."""
@@ -178,7 +179,10 @@ def nice_histogram(
         legend = ax.legend(loc=legend_loc, fontsize = legend_fs, 
                            shadow = True, ncol = legend_ncol)
         legend.get_frame().set_facecolor(legend_color)
-        
+    if caption!='':
+        fig.text(.5, -.05, caption, ha='center', wrap=True, fontsize=caption_fs)
+    if title!='':
+        ax.set_title(title, fontsize=title_fs)
     if save:
         fig.tight_layout()
         fig.savefig(figname, dpi = dpi)
