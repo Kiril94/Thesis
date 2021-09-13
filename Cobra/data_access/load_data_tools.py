@@ -149,8 +149,6 @@ def get_scan_dictionary(scan_dir, reconstruct_3d=True):
     return dotdict(scan_dict)
 
 
-
-
 class Patient():
 
     def __init__(self, patient_dir):
@@ -209,8 +207,24 @@ class Patient():
         """Returns a dictionary for scan with scan_number, if reconstruct """
         scan_directories = self.get_scan_directories()
         scan_dir = scan_directories[scan_number]
-        dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
-        dicom = dcmread(dicom_file_dir)
+        if len(os.listdir(scan_dir))!=0:
+            try:
+                dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
+                dicom = dcmread(dicom_file_dir)
+            except:
+                print('Dicom file non readable')
+                dicom = None
+                for file_num in range(len(os.listdir(scan_dir))):
+                    try:
+                        dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[file_num])
+                        dicom = dcmread(dicom_file_dir)
+                        break
+                    except:
+                        print('Dicom file non readable')
+                        continue
+        else:
+            dicom = None
+            print(f"{scan_dir} is empty")
         key_list = get_scan_key_list()
         
         if reconstruct_3d:
