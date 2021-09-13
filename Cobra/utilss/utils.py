@@ -10,6 +10,7 @@ from glob import iglob
 import pandas as pd
 from data_access import load_data_tools as ld
 import time
+import csv
 
 
 def write_csv(csv_path, patient_list, append=False):
@@ -17,9 +18,9 @@ def write_csv(csv_path, patient_list, append=False):
     and writes the relevant tags of the dicom header to csv_path
     if append==False existing csv files are overwritten."""
     if append:
-        mode == 'a'
+        mode = 'a'
     else:
-        mode == 'w'
+        mode = 'w'
     csv_columns = [x[0] for x in ld.get_scan_key_list()]
     pat_counter = 0 
     with open(csv_path, mode, newline='') as csvfile:
@@ -47,10 +48,10 @@ def write_csv(csv_path, patient_list, append=False):
                 print('.', end='')
             if pat_counter%100==0:
                 print(f"{pat_counter} patients written")
-                print(f"{(time.time()-start)/60 min passed}")
+                print(f"{(time.time()-start)/60} min passed")
             print(f"{pat} stored to csv")
         stop = time.time()
-        print(f"the conversion took {(stop-start)/3600 h}")
+    print(f"the conversion took {(stop-start)/3600} h")
 
         
 def literal_converter(val):

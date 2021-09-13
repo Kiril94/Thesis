@@ -6,7 +6,6 @@ Created on Tue Sep  7 13:05:11 2021
 """
 
 import os
-import csv
 import numpy as np
 from data_access import load_data_tools as ld
 import utilss.utils as utils
@@ -14,6 +13,7 @@ import pandas as pd
 import importlib
 import time
 import pydicom
+importlib.reload(utils)
 importlib.reload(ld)
 
 
@@ -24,10 +24,7 @@ data_dirs = os.listdir(base_data_dir)
 positive_dir = f"{base_data_dir}/positive" 
 healthy_dirs = sorted([f"{base_data_dir}/{x}" for x \
                        in data_dirs if x.startswith('2019')])
-    
-# In[Specify csv path]
-csv_folder = "D:/Thesis/Cobra/tables"
-csv_columns = [x[0] for x in ld.get_scan_key_list()]
+csv_folder = "D:/Thesis/Cobra/tables"    
 
 # In[delete last patient from ]
 last_csv_file = "healthy_9.csv"
@@ -43,7 +40,6 @@ df_new = df_last[last_patient_mask]
 num_patients_written = len(df_new['PatientID'].unique())
 print(last_patient_value)
 # In[list patients from the last written patient]
-csv_columns = [x[0] for x in ld.get_scan_key_list()]
 subdir = healthy_dirs[8]
 patient_list = sorted(utils.list_subdir(subdir))[num_patients_written:]
 
@@ -92,21 +88,15 @@ utils.write_csv(csv_path, patient_list)
 # In[Write neg to csv]
 csv_columns = [x[0] for x in ld.get_scan_key_list()]
 csv_folder = "D:/Thesis/Cobra/tables"
-for month, subdir in enumerate(healthy_dirs[9:]):
+starting_month = 11
+for month, subdir in enumerate(healthy_dirs[starting_month-1:]):
     print(f"converting files from {subdir}")
-    #csv_file = f"healthy_{month+10}_n.csv"
-    csv_file = "test.csv"
+    csv_file = f"healthy_{month+starting_month}_nn.csv"
+    #csv_file = f"test.csv"
     csv_path = os.path.join(csv_folder, csv_file)
     patient_list = sorted(utils.list_subdir(subdir))
     utils.write_csv(csv_path, patient_list)
     
-# In[Which scan causes the problems]
-patient_list = sorted(utils.list_subdir(healthy_dirs[9]))
-# In[]
-last_patient = os.path.join(healthy_dirs[9],'2e37ee7ec1b9ab50e90e949b13686e98')
-last_patient_ind = patient_list.index(last_patient)
-problem_pat = patient_list[last_patient_ind+1]
-print(problem_pat)
 # In[]
 a = str('[1,2]')
 print(str(a))
