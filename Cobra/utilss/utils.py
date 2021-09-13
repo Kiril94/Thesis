@@ -8,7 +8,35 @@ import os
 import json
 from glob import iglob
 import datetime as dt
+import pandas as pd
 
+
+def literal_converter(val):
+    # replace first val with '' or some other null identifier if required
+    try:
+        result = None if (val == '' or val=='NONE') else eval(val)
+    except:
+        result = [val]
+    return result
+
+def load_scan_csv(csv_path):
+    """Returns a dataframe
+    Takes into account that some columns store lists."""
+    try:
+        df = pd.read_csv(
+            csv_path, encoding='unicode_escape',
+            converters={
+                k: literal_converter for k in\
+                    ['ImageType', 'SequenceVariant', 'ScanOptions',
+                     'PixelSpacing']})
+    except: 
+        df = pd.read_csv(
+            csv_path, encoding='unicode_escape',
+            converters={
+                k: literal_converter for k in\
+                    ['ImageType', 'SequenceVariant, ScanOptions']})
+        print('Once PixelSpacing is added the try-except statement should be removed')
+    return df
 
 def count_subdirectories(dir_, level=1, count_all=True):
     """Counts all folders on the specified level.

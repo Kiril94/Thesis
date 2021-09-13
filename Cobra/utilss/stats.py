@@ -16,10 +16,14 @@ def only_first_true(a, b):
     return a&np.logical_not(a&b)
 
 def mask_sequence_type(df, str_, key='SeriesDescription'):
-    """Checks all the values in df
+    """Checks all the values in df/groupby
     in the column key (SeriesDescription by default),
-    if they contain the string str_. Returns a mask."""
-    mask = df[key].str.contains(str_, na=False)
+    if they contain the string str_. Returns a mask.
+    """
+    try:
+        mask = df[key].str.contains(str_, na=False)
+    except:
+        mask = df.apply(lambda x: x[key].str.contains(str_, na=False))
     return mask
 
 def check_tags(df, tags, key='SeriesDescription'):

@@ -17,6 +17,10 @@ import datetime
 import time
 import seaborn as sns
 from utilss import stats
+from utilss import utils
+from data_access import load_data_tools as ld
+import pydicom
+
 
 # In[Define some helper functions]
 def p(x):
@@ -34,21 +38,26 @@ script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/tables"
-
 # In[load positive csv]
-pos_tab_dir = f"{table_dir}/pos_n.csv" 
+pos_tab_dir = f"{table_dir}/pos_n.csv"  
 df_p = pd.read_csv(pos_tab_dir, encoding= 'unicode_escape')
 keys = df_p.keys()
 p(keys)
-
-# In[Convert time and date to datetime for efficient access]
+p(f"Number of patients = {len(df_p.PatientID.unique())}")
+# In[Usefule keys]
+TE_k = 'EchoTime'
+TR_k = 'RepetitionTime'
+IR_k = 'InversionTime'
+FA_k = 'FlipAngle'
+SD_k = 'SeriesDescription'
+PID_k = 'PatientID'
 time_k = 'InstanceCreationTime'
 date_k = 'InstanceCreationDate'
+
+# In[Convert time and date to datetime for efficient access]
 df_p['DateTime'] = df_p[date_k] + ' ' +  df_p[time_k]
 date_time_m = ~df_p['DateTime'].isnull()
 df_p['DateTime'] = pd.to_datetime(df_p['DateTime'], format='%Y%m%d %H:%M:%S')
-
-
 
 # In[Sort the the scans by time and count those that are less than 2 hours apart]
 df_p_sorted = df_p.groupby('PatientID').apply(
@@ -73,8 +82,7 @@ for patient in patient_ids:
         except:
             print('NaT')
     num_studies_l.append(study_counter)
-stop = time.time()
-
+print(f"The nunmber of studies is {sum(num_studies_l)}")
 # In[Store the results]
 ppatient_df = pd.DataFrame({'PatientId':[], 'NumStudies':[]})#storing results
 ppatient_df['PatientID'] = patient_ids
@@ -165,7 +173,7 @@ plt.show()
 fig.savefig(f"{fig_dir}/pos/model_name_pie_chart.png")
 
 
-# In[Sequence Types]
+# In[Sequence Types, define tags]
 t1_t = ['T1', 't1']
 mpr_t = ['mprage', 'MPRAGE']
 tfe_t = ['tfe', 'TFE']
@@ -254,7 +262,7 @@ none_c = none_m.sum()
 other_c = other_m.sum()
 
 # In[visualize basic sequences]
-sequences_basic = ['T1+MPR', 'T2', 'FLAIR', 'T2*', 'DTI', 'SWI', 'DWI', 'angio',
+sequences_basic = ['T1+MPRAGE', 'T2', 'FLAIR', 'T2*', 'DTI', 'SWI', 'DWI', 'angio',
                    'Other',
                    'None']
 seq_counts = np.array([t1_c, t2noflair_c, flair_c, t2s_c, 
@@ -271,21 +279,14 @@ p(keys)
 
 
 # In[Look at the distributions of TE and TR for different seq]
-TE_k = 'EchoTime'
-TR_k = 'RepetitionTime'
-IR_k = 'InversionTime'
-FA_k = 'FlipAngle'
-df_p.loc[t1_m, 'Sequence'] = 'T1'
+
+df_p.loc[t1mpr_m, 'Sequence'] = 'T1'
 df_p.loc[t2_noflair_m,'Sequence'] = 'T2'
 df_p.loc[t2s_m,'Sequence'] = 'T2S'
 df_p.loc[flair_m,'Sequence'] = 'FLAIR'
 df_p_clean = df_p.dropna(subset=[TE_k, TR_k])
 
-print(df_p.Sequence.dropna())
-# In[]
-print(df_p_clean[TR_k])
-
-# In[]
+# In[visualize sequences scatter]
 fig, ax = plt.subplots(2,2,figsize=(10,10))
 ax = ax.flatten()
 sns.scatterplot(x=TE_k, y=TR_k, 
@@ -300,10 +301,7 @@ sns.scatterplot(x=IR_k, y=FA_k,
                 hue='Sequence', data= df_p_clean,
                 ax=ax[3])
 plt.show()
-# In[tests]
-T1_mask = df_p['SeriesDescription'].str.contains('MP2RAGE', na=False)
-#FLAIR_mask = df_p['SeriesDescription'].str.contains('FLAIR', na=False)
-print(df_p[T1_mask].SeriesDescription)
+
 # In[Extract dates from series description if not present in InstanceCreationData]
 
 #p(df_p['InstanceCreationDate'].dropna())
@@ -312,15 +310,21 @@ p(f"number of scans without date {df_p['InstanceCreationDate'].isnull().sum()}\
 date_mask = df_p['SeriesDescription'].str.contains('2020', na=False)
 #p(df_p[date_mask]['SeriesDescription'].count())
 # these are not that many
-# In[]
 
 # In[Search for combinations of FLAIR, SWI, T1]
+gb_pat = df_p.groupby(PID_k)
+#grouped masks followd by
+flair_m = stats.check_tags(gb_pat, flair_t).groupby(PID_k).any()
+swi_m = stats.check_tags(gb_pat, swi_t).groupby(PID_k).any()
+t1_m = stats.check_tags(gb_pat, t1_t).groupby(PID_k).any()
+t2_m = stats.check_tags(gb_pat, t2_t).groupby(PID_k).any()
 
-flair_swi_t1_m = flair_m | swi_m | t1_m
-p(f"{len(df_p[flair_swi_t1_m]['PatientID'].unique())} patients have\
+flair_swi_t1_m = flair_m & swi_m & t1_m 
+p(f"{flair_swi_t1_m.sum()} patients have\
   the sequences flair, swi and t1")
-
-
+flair_swi_t1_t2_m = flair_m & swi_m & t1_m & t2_m
+p(f"{flair_swi_t1_t2_m.sum()} patients have\
+  the sequences flair, swi,t1 and t2")
 # In[when where the scans performed]
 scan_months = np.array([int(date[5:7]) for date in df_p['InstanceCreationDate'].dropna()])
 svis.nice_histogram(scan_months, np.arange(.5,13.5), show_plot=(True), 
