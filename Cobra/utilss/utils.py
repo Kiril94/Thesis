@@ -13,7 +13,9 @@ import time
 
 
 def write_csv(csv_path, patient_list, append=False):
-    
+    """This function takes a patient list with patient directories
+    and writes the relevant tags of the dicom header to csv_path
+    if append==False existing csv files are overwritten."""
     if append:
         mode == 'a'
     else:
