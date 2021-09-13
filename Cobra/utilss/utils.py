@@ -8,10 +8,51 @@ import os
 import json
 from glob import iglob
 import pandas as pd
+from data_access import load_data_tools as ld
+import time
 
 
+def write_csv(csv_path, patient_list, append=False):
+    
+    if append:
+        mode == 'a'
+    else:
+        mode == 'w'
+    csv_columns = [x[0] for x in ld.get_scan_key_list()]
+    pat_counter = 0 
+    with open(csv_path, mode, newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        if mode == 'w': 
+            writer.writeheader()
+        start = time.time()
+        print('Start writing')
+        for pat in patient_list:
+            pat_counter += 1
+            scan_directories = ld.Patient(pat).get_scan_directories()
+            for scan_dir in scan_directories:
+                try:
+                    data = ld.get_scan_dictionary(scan_dir, 
+                                                  reconstruct_3d=False)    
+                except:
+                    print("Sleep for 5s, maybe connection is lost")
+                    time.sleep(5)
+                    data = ld.get_scan_dictionary(scan_dir, 
+                                                  reconstruct_3d=False)
+                try:
+                    writer.writerow(data)  
+                except IOError:
+                    print("I/O error")
+                print('.', end='')
+            if pat_counter%100==0:
+                print(f"{pat_counter} patients written")
+                print(f"{(time.time()-start)/60 min passed}")
+            print(f"{pat} stored to csv")
+        stop = time.time()
+        print(f"the conversion took {(stop-start)/3600 h}")
+
+        
 def literal_converter(val):
-    # replace first val with '' or some other null identifier if required
+    """Helper function for load_scan_csv"""
     try:
         result = None if (val == '' or val=='NONE') else eval(val)
     except:

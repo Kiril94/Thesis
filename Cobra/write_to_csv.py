@@ -56,34 +56,7 @@ num_patients = len(df_last['PatientID'].unique())
 # In[]
 pat_counter = 0
 patient_list = sorted(utils.list_subdir(healthy_dirs[9]))[num_patients:]
-
-with open(csv_path_10, 'a', newline='') as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-    start = time.time()
-    for pat in patient_list:
-        pat_counter += 1
-        scan_directories = ld.Patient(pat).get_scan_directories()
-        for scan_dir in scan_directories:
-            try:
-                data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)    
-            except:
-                print("Sleep for 5s, maybe connection is lost")
-                time.sleep(5)
-                data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
-            try:
-                writer.writerow(data)  
-            except IOError:
-                print("I/O error")
-            print('.', end='')
-        if pat_counter%100==0:
-            print(f"{pat_counter} patients written")
-        print(f"{pat} stored to csv")
-    stop = time.time()
-    print(f"the conversion took {stop-start}")
-
-
-
-
+utils.write_csv(csv_path_10, patient_list)
 
 # In[Select patients]
 patient_list = sorted(utils.list_subdir(positive_dir))    
@@ -111,49 +84,10 @@ stop = time.time()
 print(f"the conversion took {stop-start}")
 
 
-
-# In[]
-df_pos = pd.read_csv(csv_path, encoding= 'unicode_escape')
-df_pos.rename(columns={'RepititionTime': 'RepetitionTime'},
-          inplace=True, errors='raise')
-#df_pos['RepetitionTime'] = RT_list
-#print(df_pos['RepititionTime'])
-print(len(RT_list))
-print(len(df_pos))
 # In[write positive to csv]
 csv_file = "pos_n.csv"
 csv_path = os.path.join(csv_folder, csv_file)
-with open(csv_path, 'w', newline='') as csvfile:
-    writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-    writer.writeheader()
-    start = time.time()
-    pat_counter = 0
-    for pat in patient_list:
-        scan_directories = ld.Patient(pat).get_scan_directories()
-        for scan_dir in scan_directories:
-            try:
-                data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
-            except:
-                print(f"Sleep for 5s, director {scan_dir} not found")
-                time.sleep(5)
-                if len(os.listdir(scan_dir))==0:
-                    print(f"{scan_dir} is empty")
-                    continue
-                data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
-            try:
-                writer.writerow(data)
-            except IOError:
-                print("I/O error")
-            print('.', end='')
-        pat_counter+=1
-        if pat_counter%100==0:
-            print(f"{pat_counter} patients written")
-            print(f"time passed {time.time()-start}")
-        print(f"{pat} stored to csv")
-        
-    stop = time.time()
-print(f"the conversion took {stop-start}")
-
+utils.write_csv(csv_path, patient_list)
 
 # In[Write neg to csv]
 csv_columns = [x[0] for x in ld.get_scan_key_list()]
@@ -164,36 +98,7 @@ for month, subdir in enumerate(healthy_dirs[9:]):
     csv_file = "test.csv"
     csv_path = os.path.join(csv_folder, csv_file)
     patient_list = sorted(utils.list_subdir(subdir))
-    pat_counter = 0
-    with open(csv_path, 'w', newline='') as csvfile:
-        start = time.time()
-        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-        writer.writeheader()    
-        for pat in patient_list:
-            print(f"Writing {os.path.split(pat)[1]} to csv")
-            scan_directories = ld.Patient(pat).get_scan_directories()
-            for scan_dir in scan_directories:
-                try:
-                    data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
-                except:
-                    print("Sleep for 5s, maybe connection is lost, check that dir is not empty")
-                    time.sleep(5)
-                    if len(os.listdir(scan_dir))==0:
-                        print(f"{scan_dir} is empty")
-                        continue
-                    data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
-                try:
-                    writer.writerow(data)
-                except IOError:
-                    print("I/O error")
-                print('.', end='')
-            pat_counter+=1
-            if pat_counter%100==0:
-                print(f"{pat_counter} patients written")
-                print(f"time passed: {time.time()-start}")
-        stop = time.time()
-        print(f"the conversion took {stop-start}")
-    print(f"all patients in {subdir} converted")
+    utils.write_csv(csv_path, patient_list)
     
 # In[Which scan causes the problems]
 patient_list = sorted(utils.list_subdir(healthy_dirs[9]))
