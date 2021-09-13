@@ -97,6 +97,7 @@ def get_scan_dictionary(scan_dir, reconstruct_3d=True):
             dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
             dicom = dcmread(dicom_file_dir)
         except:
+            print('Dicom file non readable')
             dicom = None
             for file_num in range(len(os.listdir(scan_dir))):
                 try:
@@ -104,9 +105,11 @@ def get_scan_dictionary(scan_dir, reconstruct_3d=True):
                     dicom = dcmread(dicom_file_dir)
                     break
                 except:
+                    print('Dicom file non readable')
                     continue
     else:
         dicom = None
+        print(f"{scan_dir} is empty")
         
     key_list = get_scan_key_list()
     

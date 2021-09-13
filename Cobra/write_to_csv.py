@@ -48,26 +48,35 @@ subdir = healthy_dirs[8]
 patient_list = sorted(utils.list_subdir(subdir))[num_patients_written:]
 
 # In[write from the last written patient]
-with open(last_csv_path, 'a', newline='') as csvfile:
+
+csv_path_10 = os.path.join(csv_folder, "healthy_10_n.csv")
+df_last = pd.read_csv(csv_path_10, encoding= 'unicode_escape')
+num_patients = len(df_last['PatientID'].unique())
+
+# In[]
+pat_counter = 0
+patient_list = sorted(utils.list_subdir(healthy_dirs[9]))[num_patients:]
+
+with open(csv_path_10, 'a', newline='') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
     start = time.time()
     for pat in patient_list:
+        pat_counter += 1
         scan_directories = ld.Patient(pat).get_scan_directories()
-        for scan_dir in scan_directories[10:]:
+        for scan_dir in scan_directories:
             try:
-                data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
+                data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)    
             except:
-                print(f"Sleep for 5s, maybe connection is lost, check that dir is not empty")
+                print("Sleep for 5s, maybe connection is lost")
                 time.sleep(5)
-                if len(os.listdir(scan_dir))==0:
-                    print(f"{scan_dir} is empty")
-                    continue
                 data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
             try:
                 writer.writerow(data)  
             except IOError:
                 print("I/O error")
             print('.', end='')
+        if pat_counter%100==0:
+            print(f"{pat_counter} patients written")
         print(f"{pat} stored to csv")
     stop = time.time()
     print(f"the conversion took {stop-start}")
@@ -194,16 +203,5 @@ last_patient_ind = patient_list.index(last_patient)
 problem_pat = patient_list[last_patient_ind+1]
 print(problem_pat)
 # In[]
-scan_directories = ld.Patient(problem_pat).get_scan_directories()
 
-for scan_dir in scan_directories:
-    try:
-        data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
-    except:
-        print("Sleep for 5s, maybe connection is lost, check that dir is not empty")
-        time.sleep(5)
-        data = ld.get_scan_dictionary(scan_dir, reconstruct_3d=False)
-    print(f"{scan_dir}")
-# In[]
-getattr({}, 'a')
 
