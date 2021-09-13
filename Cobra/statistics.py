@@ -40,7 +40,7 @@ fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/tables"
 # In[load positive csv]
 pos_tab_dir = f"{table_dir}/pos_n.csv"  
-df_p = pd.read_csv(pos_tab_dir, encoding= 'unicode_escape')
+df_p = utils.load_scan_csv(pos_tab_dir)
 keys = df_p.keys()
 p(keys)
 p(f"Number of patients = {len(df_p.PatientID.unique())}")
