@@ -8,6 +8,7 @@ import os
 import json
 import time
 from glob import iglob
+import datetime as dt
 
 
 def count_subdirectories(dir_, level=1, count_all=True):
@@ -67,4 +68,3 @@ def get_size(start_path = '.', unit='M'):
             if not os.path.islink(fp):
                 total_size += os.path.getsize(fp)
     return total_size/divider
-
