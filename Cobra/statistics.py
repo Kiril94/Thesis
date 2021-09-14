@@ -181,11 +181,13 @@ fig.savefig(f"{fig_dir}/pos/model_name_pie_chart.png")
 tag_dict = {}
 tag_dict['t1'] = ['T1', 't1']
 tag_dict['mpr'] = ['mprage', 'MPRAGE']
+print('MPRAGE is always T1w')
 tag_dict['tfe'] = ['tfe', 'TFE']
 tag_dict['spgr'] = ['FSPGR']
+print("The smartbrain protocol occurs only for philips")
 tag_dict['smartbrain'] = ['SmartBrain']
 
-tag_dict['flair'] = ['FLAIR','flair']
+tag_dict['flair'] = ['FLAIR','flair', 'Flair']
 
 tag_dict['t2'] = ['T2', 't2']
 tag_dict['fse'] = ['FSE', 'fse', '']
@@ -194,12 +196,18 @@ tag_dict['t2s'] = ['T2\*', 't2\*']
 tag_dict['gre']  = ['GRE', 'gre']
 
 tag_dict['dti']= ['DTI', 'dti']
-
+print("There is one perfusion weighted image (PWI)")
 tag_dict['swi'] = ['SWI', 'swi']
 tag_dict['dwi'] = ['DWI', 'dwi']
+tag_dict['adc'] = ['ADC', 'Apparent Diffusion Coefficient']
 tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium']
-
-tag_dict['angio'] = ['TOF', 'ToF', 'angio', 'Angio', 'ANGIO']
+tag_dict['stir'] = ['STIR']
+tag_dict['tracew'] = ['TRACEW']
+tag_dict['asl'] = ['ASL']
+tag_dict['cest'] = ['CEST']
+tag_dict['survey'] = ['SURVEY', 'Survey', 'survey']
+tag_dict['angio'] = ['TOF', 'ToF', 'tof','angio', 'Angio', 'ANGIO', 'SWAN']
+print("TOF:time of flight angriography, SWAN: susceptibility-weighted angiography")
 tag_dict = dotdict(tag_dict)
 # Look up: MIP (maximum intensity projection), SmartBrain, 
 # TOF (time of flight angriography), ADC?, STIR (Short Tau Inversion Recovery),
@@ -221,7 +229,8 @@ print("we are interested in t1, t2_noflair, flair, swi, dwi, dti, angio")
 print("combine all masks with an or and take complement")
 mask_dict.all = mask_dict.t1 | mask_dict.flair | mask_dict.t2_noflair \
     | mask_dict.t2s | mask_dict.dwi | mask_dict.dti | mask_dict.swi \
-        | mask_dict.angio | mask_dict.none
+        | mask_dict.angio | mask_dict.adc | mask_dict.stir \
+            |mask_dict.survey | mask_dict.none
 mask_dict.other = ~mask_dict.all
 # In[Look at 'other' group] combine all the relevant masks to get others
 
@@ -236,31 +245,24 @@ counts_dict = dotdict({key : mask.sum() for key, mask in mask_dict.items()})
 print(counts_dict)
 
 # In[visualize basic sequences]
-sequences_basic = ['T1+MPRAGE', 'T2', 'FLAIR', 'T2*', 'DTI', 'SWI', 'DWI', 
-                   'angio', 'Other','None']
+sequences_names = ['T1+\nMPRAGE', 'T2', 'FLAIR', 'T2*', 'SWI', 'DWI', 
+                   'angio', 'ADC', 'survey','TRACEW', 'Other','None']
 seq_counts = np.array([counts_dict.t1, counts_dict.t2_noflair, counts_dict.flair,
-                       counts_dict.t2s, counts_dict.dti, counts_dict.swi, 
-                       counts_dict.dwi, counts_dict.angio, counts_dict.other, 
+                       counts_dict.t2s, counts_dict.swi, 
+                       counts_dict.dwi, counts_dict.angio, 
+                       counts_dict.adc, counts_dict.survey, counts_dict.tracew,
+                       counts_dict.other, 
                        counts_dict.none])
-vis.bar_plot(sequences_basic, seq_counts, figsize=(13,6), xlabel='Sequence',
-             xtickparams_ls=18, save_plot=True, title='Positive Patients',
+vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
+             xtickparams_ls=16, save_plot=True, title='Positive Patients',
              figname=f"{fig_dir}/pos/basic_sequences_count.png")
-# In[]
-maps = utils.DotDict()
-maps.a = 2
-print(maps.g)
-# In[Does smartbrain occur only for certain scaners?]
-p(df_p[smartbrain_m].Manufacturer.unique())
-# Yes only for philips
-p(keys)
-
 
 # In[Look at the distributions of TE and TR for different seq]
 
-df_p.loc[t1mpr_m, 'Sequence'] = 'T1'
-df_p.loc[t2_noflair_m,'Sequence'] = 'T2'
-df_p.loc[t2s_m,'Sequence'] = 'T2S'
-df_p.loc[flair_m,'Sequence'] = 'FLAIR'
+df_p.loc[mask_dict.t1, 'Sequence'] = 'T1'
+df_p.loc[mask_dict.t2_noflair,'Sequence'] = 'T2'
+df_p.loc[mask_dict.t2s,'Sequence'] = 'T2S'
+df_p.loc[mask_dict.flair,'Sequence'] = 'FLAIR'
 df_p_clean = df_p.dropna(subset=[TE_k, TR_k])
 
 # In[visualize sequences scatter]
