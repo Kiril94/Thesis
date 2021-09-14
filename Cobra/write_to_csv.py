@@ -43,47 +43,11 @@ print(last_patient_value)
 subdir = healthy_dirs[8]
 patient_list = sorted(utils.list_subdir(subdir))[num_patients_written:]
 
-# In[write from the last written patient]
-
-csv_path_10 = os.path.join(csv_folder, "healthy_10_n.csv")
-df_last = pd.read_csv(csv_path_10, encoding= 'unicode_escape')
-num_patients = len(df_last['PatientID'].unique())
-
-# In[]
-pat_counter = 0
-patient_list = sorted(utils.list_subdir(healthy_dirs[9]))[num_patients:]
-utils.write_csv(csv_path_10, patient_list)
-
-# In[Select patients]
-patient_list = sorted(utils.list_subdir(positive_dir))    
-
-# In[Get Repetition Times only]
-RT_list = []
-start = time.time()
-for pat in patient_list:
-    scan_directories = ld.Patient(pat).get_scan_directories()
-    for scan_dir in scan_directories:
-        try:
-            dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
-            dicom = pydicom.dcmread(dicom_file_dir)
-            try:
-                RT_list.append(float(dicom.RepetitionTime))
-            except:
-                RT_list.append(dicom.RepetitionTime)
-        except:
-            if len(os.listdir(scan_dir))==0:
-                print(f"{scan_dir} is empty")
-                continue
-        print('.', end='')
-    print(f"Patient {pat} stored")
-stop = time.time()
-print(f"the conversion took {stop-start}")
-
-
 # In[write positive to csv]
-csv_file = "pos_n.csv"
+pos_patient_list = sorted(utils.list_subdir(positive_dir))      
+csv_file = "pos_nn.csv"
 csv_path = os.path.join(csv_folder, csv_file)
-utils.write_csv(csv_path, patient_list)
+utils.write_csv(csv_path, pos_patient_list)
 
 # In[Write neg to csv]
 csv_columns = [x[0] for x in ld.get_scan_key_list()]
