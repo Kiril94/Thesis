@@ -6,10 +6,10 @@ Created on Mon Aug 30 17:21:34 2021
 """
 import os
 import json
+import time
 from glob import iglob
 import pandas as pd
 from data_access import load_data_tools as ld
-import time
 import csv
 
 
@@ -107,6 +107,11 @@ def get_json(path):
     with open(path, 'r') as f:
     	data = json.load(f)
     return data
+
+def get_running_time(start):
+    m, s = divmod(time.time()-start , 60)
+    h, m = divmod(m, 60)
+    return f'[{h:2.0f}h{m:2.0f}m{s:2.0f}s]' 
 
 def create_dictionary(keys, values):
     result = {} # empty dictionary
