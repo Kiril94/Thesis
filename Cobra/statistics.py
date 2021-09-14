@@ -20,7 +20,11 @@ from utilss import stats
 from utilss import utils
 from data_access import load_data_tools as ld
 import pydicom
-
+from utilss.utils import dotdict
+import utilss.utils as utils
+from dotmap import DotMap
+import importlib
+importlib.reload(utils)
 
 # In[Define some helper functions]
 def p(x):
@@ -174,105 +178,78 @@ fig.savefig(f"{fig_dir}/pos/model_name_pie_chart.png")
 
 
 # In[Sequence Types, define tags]
-t1_t = ['T1', 't1']
-mpr_t = ['mprage', 'MPRAGE']
-tfe_t = ['tfe', 'TFE']
-spgr_t = ['FSPGR']
-smartbrain_t = ['SmartBrain']
+tag_dict = {}
+tag_dict['t1'] = ['T1', 't1']
+tag_dict['mpr'] = ['mprage', 'MPRAGE']
+tag_dict['tfe'] = ['tfe', 'TFE']
+tag_dict['spgr'] = ['FSPGR']
+tag_dict['smartbrain'] = ['SmartBrain']
 
-flair_t = ['FLAIR','flair']
+tag_dict['flair'] = ['FLAIR','flair']
 
-t2_t = ['T2', 't2']
-fse_t = ['FSE', 'fse', '']
+tag_dict['t2'] = ['T2', 't2']
+tag_dict['fse'] = ['FSE', 'fse', '']
 
-t2s_t = ['T2\*', 't2\*']
-gre_t  = ['GRE', 'gre']
+tag_dict['t2s'] = ['T2\*', 't2\*']
+tag_dict['gre']  = ['GRE', 'gre']
 
-dti_t = ['DTI', 'dti']
+tag_dict['dti']= ['DTI', 'dti']
 
-swi_t = ['SWI', 'swi']
-dwi_t = ['DWI', 'dwi']
-gd_t = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium']
+tag_dict['swi'] = ['SWI', 'swi']
+tag_dict['dwi'] = ['DWI', 'dwi']
+tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium']
 
-angio_t = ['TOF', 'ToF', 'angio', 'Angio', 'ANGIO']
+tag_dict['angio'] = ['TOF', 'ToF', 'angio', 'Angio', 'ANGIO']
+tag_dict = dotdict(tag_dict)
 # Look up: MIP (maximum intensity projection), SmartBrain, 
 # TOF (time of flight angriography), ADC?, STIR (Short Tau Inversion Recovery),
 # angio, Dynamic Contrast-Enhanced Magnetic Resonance Imaging (DCE-MRI) 
 # In[Get corresponding masks]
 # take mprage to the t1
-t1_m = stats.check_tags(df_p, t1_t) | stats.check_tags(df_p, mpr_t)
+mask_dict = dotdict({key : stats.check_tags(df_p, tag) for key, tag in tag_dict.items()})
+#mprage is always t1 https://pubmed.ncbi.nlm.nih.gov/1535892/
+mask_dict['t1'] = stats.check_tags(df_p, tag_dict.t1) \
+    | stats.check_tags(df_p, tag_dict.mpr)
+mask_dict['t1tfe'] = mask_dict.t1 & mask_dict.tfe
+mask_dict['t1spgr'] = mask_dict.t1 & mask_dict.spgr
+mask_dict['t2_flair'] = stats.only_first_true(
+    stats.check_tags(df_p, tag_dict.t2), mask_dict.t2s)
+mask_dict['t2_noflair'] = stats.only_first_true(mask_dict.t2_flair, mask_dict.flair)# real t2
+mask_dict.none = df_p['SeriesDescription'].isnull()
 
-mpr_m = stats.check_tags(df_p, mpr_t)
-t1mpr_m = t1_m & mpr_m
-tfe_m = stats.check_tags(df_p, tfe_t)
-t1tfe_m = t1_m & tfe_m
-spgr_m = stats.check_tags(df_p, spgr_t)
-t1spgr_m = t1_m & spgr_m
-
-flair_m = stats.check_tags(df_p, flair_t)
-
-fse_m = stats.check_tags(df_p, fse_t)
-
-t2s_m = stats.check_tags(df_p, t2s_t)
-gre_m  = stats.check_tags(df_p, gre_t)
-
-dwi_m = stats.check_tags(df_p, dwi_t)
-gd_m = stats.check_tags(df_p, gd_t)
-
-t2_flair_m = stats.only_first_true(stats.check_tags(df_p, t2_t), t2s_m)
-t2_noflair_m = stats.only_first_true(t2_flair_m, flair_m)# real t2
-dti_m = stats.check_tags(df_p, dti_t)
-
-swi_m = stats.check_tags(df_p, swi_t) 
-
-angio_m = stats.check_tags(df_p, angio_t)
-smartbrain_m  = stats.check_tags(df_p, smartbrain_t)
-
-none_m = df_p['SeriesDescription'].isnull()
-# we are interested in t1, t2_noflair, flair, swi, dwi, dti
-# combine all masks with an or and take complement
-all_m = t1_m | flair_m | t2_noflair_m | t2s_m | dwi_m | dti_m | swi_m | angio_m | none_m 
-other_m = ~all_m
+print("we are interested in t1, t2_noflair, flair, swi, dwi, dti, angio")
+print("combine all masks with an or and take complement")
+mask_dict.all = mask_dict.t1 | mask_dict.flair | mask_dict.t2_noflair \
+    | mask_dict.t2s | mask_dict.dwi | mask_dict.dti | mask_dict.swi \
+        | mask_dict.angio | mask_dict.none
+mask_dict.other = ~mask_dict.all
 # In[Look at 'other' group] combine all the relevant masks to get others
 
-p(df_p[other_m].SeriesDescription)
-other_seq_series = df_p[other_m].SeriesDescription
+p(df_p[mask_dict.other].SeriesDescription)
+other_seq_series = df_p[mask_dict.other].SeriesDescription
 other_seq_series_sort = other_seq_series.sort_values(axis=0, ascending=True).unique()
 pd.DataFrame(other_seq_series_sort).to_csv(f"{base_dir}/tables/other_sequences.csv")
 
 
 # In[Get counts]
-
-t1mpr_c = t1mpr_m.sum()
-t1tfe_c = t1tfe_m.sum()
-t1spgr_c = t1spgr_m.sum()
-
-# counts we are interested in
-flair_c = flair_m.sum()
-t1_c = t1_m.sum()
-t2_c = t2_flair_m.sum()
-t2noflair_c = t2_noflair_m.sum()
-t2s_c = t2s_m.sum()
-dti_c = dti_m.sum()
-swi_c = swi_m.sum()
-dwi_c = dwi_m.sum()
-angio_c = angio_m.sum()
-
-none_c = none_m.sum()
-other_c = other_m.sum()
+counts_dict = dotdict({key : mask.sum() for key, mask in mask_dict.items()})
+print(counts_dict)
 
 # In[visualize basic sequences]
-sequences_basic = ['T1+MPRAGE', 'T2', 'FLAIR', 'T2*', 'DTI', 'SWI', 'DWI', 'angio',
-                   'Other',
-                   'None']
-seq_counts = np.array([t1_c, t2noflair_c, flair_c, t2s_c, 
-                       dti_c, swi_c, dwi_c, angio_c, other_c, none_c])
+sequences_basic = ['T1+MPRAGE', 'T2', 'FLAIR', 'T2*', 'DTI', 'SWI', 'DWI', 
+                   'angio', 'Other','None']
+seq_counts = np.array([counts_dict.t1, counts_dict.t2_noflair, counts_dict.flair,
+                       counts_dict.t2s, counts_dict.dti, counts_dict.swi, 
+                       counts_dict.dwi, counts_dict.angio, counts_dict.other, 
+                       counts_dict.none])
 vis.bar_plot(sequences_basic, seq_counts, figsize=(13,6), xlabel='Sequence',
              xtickparams_ls=18, save_plot=True, title='Positive Patients',
              figname=f"{fig_dir}/pos/basic_sequences_count.png")
-
-
-# In[Does smartbrain occer only for certain scaners?]
+# In[]
+maps = utils.DotDict()
+maps.a = 2
+print(maps.g)
+# In[Does smartbrain occur only for certain scaners?]
 p(df_p[smartbrain_m].Manufacturer.unique())
 # Yes only for philips
 p(keys)
