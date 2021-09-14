@@ -42,3 +42,17 @@ plot_n_scans(column_names,data,fig_dir=fig_dir,file_name=file_name)
 plot_manufacturers(column_names,data,fig_dir=fig_dir,file_name=file_name)
 plot_models(column_names,data,fig_dir=fig_dir,file_name=file_name)
 plot_seq(column_names,data,fig_dir=fig_dir,file_name=file_name)
+
+# In[]
+
+df = pd.DataFrame(data,columns=column_names)
+scan_months = np.array([int(date[5:7]) for date in df['InstanceCreationDate'].dropna()])
+svis.nice_histogram(scan_months, np.arange(.5,13.5), show_plot=(True), 
+                    xlabel='month', save=(True), 
+                    figname=f"{fig_dir}/{file_name}/scan_months.png" )
+
+unique_studies = df.drop_duplicates(subset='StudyInstanceUID')
+studies_months = np.array([int(date[5:7]) for date in unique_studies['InstanceCreationDate'].dropna()])
+svis.nice_histogram(scan_months, np.arange(.5,13.5), show_plot=(True), 
+                    xlabel='month', save=(True), 
+                    figname=f"{fig_dir}/{file_name}/studies_months.png" )
