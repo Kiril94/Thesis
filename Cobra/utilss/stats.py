@@ -6,7 +6,11 @@ Created on Mon Sep 13 11:41:20 2021
 """
 import numpy as np
 import itertools
+import pandas as pd
 
+
+time_k = 'InstanceCreationTime'
+date_k = 'InstanceCreationDate'
 
 def only_first_true(a, b):
     """takes two binary arrays
@@ -45,3 +49,63 @@ def group_small(dict_, threshold, keyword='other'):
                                         if (dict_[k]<threshold) else k):
          newdic[key] = sum([dict_[k] for k in list(group)]) 
     return newdic
+
+def count_number_of_studies(df, threshold=2):
+    """Counts the number of studies in a dataframe, studies are considered
+    separate if they are at least threshold (default 2) hours apart
+    returns a list with the number of studies where every entry represents a
+    patient"""
+    
+    df_sorted = df.groupby('PatientID').apply(
+        lambda x: (x.sort_values(by=['DateTime'], ascending=True)))
+    
+    patient_ids = df_sorted['PatientID'].unique()
+    num_studies_l = []
+    for patient in patient_ids:
+        patient_mask = df_sorted['PatientID']==patient
+        date_times = df_sorted[patient_mask]['DateTime']
+        date_time0 = date_times[0]
+        study_counter = 1
+        for date_time in date_times[1:]:
+            if pd.isnull(date_time):
+                continue
+            try:
+                time_diff = date_time-date_time0
+                if time_diff.total_seconds()/3600>threshold:
+                    study_counter += 1
+                    date_time0 = date_time
+                else:
+                    pass
+            except:
+                print('An error occured')
+        num_studies_l.append(study_counter)
+    return num_studies_l
+
+def time_between_studies(df, threshold=2):
+    """Returns a list with the times between consecutive studies in a dataframe, 
+    studies are considered separate if they are at least threshold (default 2) 
+    hours apart
+    """
+    df_sorted = df.groupby('PatientID').apply(
+        lambda x: (x.sort_values(by=['DateTime'], ascending=True)))
+    patient_ids = df_sorted['PatientID'].unique()
+    time_diff_l = []
+    for patient in patient_ids[:20]:
+        patient_mask = df_sorted['PatientID']==patient
+        date_times = df_sorted[patient_mask]['DateTime']
+        date_time0 = date_times[0]
+        print(date_time0)
+        for date_time in date_times[1:]:
+            if pd.isnull(date_time):
+                print('isnull')
+                continue
+            time_diff = date_time-date_time0
+            if time_diff.total_seconds()/3600>threshold:
+                time_diff_l.append(time_diff.total_seconds()/3600)
+                date_time0 = date_time
+    return time_diff_l
+
+def add_datetime(df):
+    df['DateTime'] = df[date_k] + ' ' +  df[time_k]
+    df['DateTime'] = pd.to_datetime(df['DateTime'], format='%Y%m%d %H:%M:%S')
+    return df

@@ -52,6 +52,7 @@ def get_scan_key_list():
                 ('StudyInstanceUID','str'),
                 ('PatientID', 'str'), 
                 ('AngioFlag', 'str'),
+                ('AcquisitionMatrix','str'),
                 ('AcquisitionContrast', 'str'),
                 ('AcquisitionDuration', 'float'),
                 ('dBdt','float'),

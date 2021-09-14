@@ -21,10 +21,9 @@ from utilss import utils
 from data_access import load_data_tools as ld
 import pydicom
 from utilss.utils import dotdict
-import utilss.utils as utils
-from dotmap import DotMap
 import importlib
-importlib.reload(utils)
+import math
+#importlib.reload(utils)
 
 # In[Define some helper functions]
 def p(x):
@@ -43,10 +42,11 @@ base_dir = Path(script_dir).parent
 fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/tables"
 # In[load positive csv]
-pos_tab_dir = f"{table_dir}/pos_n.csv"  
+pos_tab_dir = f"{table_dir}/pos_nn.csv"
+neg_tab_dir = f"{table_dir}/all2019.csv"
 df_p = utils.load_scan_csv(pos_tab_dir)
+#df_n = utils.load_scan_csv(neg_tab_dir)
 keys = df_p.keys()
-p(keys)
 p(f"Number of patients = {len(df_p.PatientID.unique())}")
 # In[Usefule keys]
 TE_k = 'EchoTime'
@@ -58,35 +58,24 @@ PID_k = 'PatientID'
 time_k = 'InstanceCreationTime'
 date_k = 'InstanceCreationDate'
 
-# In[Convert time and date to datetime for efficient access]
-df_p['DateTime'] = df_p[date_k] + ' ' +  df_p[time_k]
-date_time_m = ~df_p['DateTime'].isnull()
-df_p['DateTime'] = pd.to_datetime(df_p['DateTime'], format='%Y%m%d %H:%M:%S')
-
-# In[Sort the the scans by time and count those that are less than 2 hours apart]
-df_p_sorted = df_p.groupby('PatientID').apply(
-    lambda x: (x.sort_values(by=['DateTime'], ascending=True)))
 # In[Count the number of studies]
-start = time.time()
-patient_ids = df_p_sorted['PatientID'].unique()
-num_studies_l = []
-for patient in patient_ids:
-    patient_mask = df_p_sorted['PatientID']==patient
-    date_times = df_p_sorted[patient_mask]['DateTime']
-    date_time0 = date_times[0]
-    study_counter = 1
-    for date_time in date_times[1:]:
-        try:
-            time_diff = date_time-date_time0
-            if time_diff.total_seconds()/3600>2:
-                study_counter += 1
-                date_time0 = date_time
-            else:
-                pass
-        except:
-            print('NaT')
-    num_studies_l.append(study_counter)
-print(f"The nunmber of studies is {sum(num_studies_l)}")
+num_studies_l = stats.count_number_of_studies(df_p)
+
+# In[Convert time and date to datetime for efficient access]
+df_p = stats.add_datetime(df_p)
+#df_p.to_csv(pos_tab_dir, index = False, header = True)
+# In[]
+p(type(df_p.DateTime[300]))
+# In[Sort the the scans by time and count those that are less than 2 hours apart]
+time_diff_studies_pos = stats.time_between_studies(df_p)
+
+# In[]
+
+svis.nice_histogram(np.array(time_diff_studies_pos)/24, 100, ylog_scale=(True),
+                    show_plot=True, xlabel='Days between studies',
+                    save=True, title='Positive Patients',
+                    figname=f"{fig_dir}/pos/time_between_studies.png")
+
 # In[Store the results]
 ppatient_df = pd.DataFrame({'PatientId':[], 'NumStudies':[]})#storing results
 ppatient_df['PatientID'] = patient_ids
@@ -293,10 +282,10 @@ date_mask = df_p['SeriesDescription'].str.contains('2020', na=False)
 # In[Search for combinations of FLAIR, SWI, T1]
 gb_pat = df_p.groupby(PID_k)
 #grouped masks followd by
-flair_m = stats.check_tags(gb_pat, flair_t).groupby(PID_k).any()
-swi_m = stats.check_tags(gb_pat, swi_t).groupby(PID_k).any()
-t1_m = stats.check_tags(gb_pat, t1_t).groupby(PID_k).any()
-t2_m = stats.check_tags(gb_pat, t2_t).groupby(PID_k).any()
+flair_m = stats.check_tags(gb_pat, tag_dict.flair).groupby(PID_k).any()
+swi_m = stats.check_tags(gb_pat, tag_dict.swi).groupby(PID_k).any()
+t1_m = stats.check_tags(gb_pat, tag_dict.t1).groupby(PID_k).any()
+t2_m = stats.check_tags(gb_pat, tag_dict.t2).groupby(PID_k).any()
 
 flair_swi_t1_m = flair_m & swi_m & t1_m 
 p(f"{flair_swi_t1_m.sum()} patients have\

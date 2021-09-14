@@ -61,7 +61,12 @@ for month, subdir in enumerate(healthy_dirs[starting_month-1:]):
     patient_list = sorted(utils.list_subdir(subdir))
     utils.write_csv(csv_path, patient_list)
     
-# In[]
-a = str('[1,2]')
-print(str(a))
+# In[Create one csv for all 2019]
+neg_tab_dirs = sorted([f"{csv_folder}/{x}" for x \
+                       in os.listdir(csv_folder) if x.startswith('healthy')])  
+df_neg_list = [utils.load_scan_csv(csv_path) for csv_path in \
+               neg_tab_dirs]
+df_all_2019 = pd.concat(df_neg_list, axis=0, join="outer") 
 
+# In[Write it to a csv]
+df_all_2019.to_csv(f"{csv_folder}/all2019.csv", index = False, header = True)

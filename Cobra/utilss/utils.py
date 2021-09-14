@@ -11,6 +11,8 @@ from glob import iglob
 import pandas as pd
 from data_access import load_data_tools as ld
 import csv
+import datetime
+
 
 
 def write_csv(csv_path, patient_list, append=False):
@@ -62,16 +64,24 @@ def literal_converter(val):
         result = [val]
     return result
 
+def date_time_converter(val):
+    try:
+        result = None if (val == '' or val=='NONE') \
+            else datetime.datetime.strptime(val,'%Y-%m-%d %H:%M:%S')
+    except:
+        result = val
+    return result
+
 def load_scan_csv(csv_path):
     """Returns a dataframe
     Takes into account that some columns store lists."""
     try:
         df = pd.read_csv(
             csv_path, encoding='unicode_escape',
-            converters={
+            converters={**{
                 k: literal_converter for k in\
                     ['ImageType', 'SequenceVariant', 'ScanOptions',
-                     'PixelSpacing']})
+                     'PixelSpacing']},**{'DateTime':date_time_converter}})
     except: 
         df = pd.read_csv(
             csv_path, encoding='unicode_escape',
