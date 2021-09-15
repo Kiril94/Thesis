@@ -101,7 +101,6 @@ def time_between_studies(df, threshold=2):
         date_times = df_sorted[patient_mask]['DateTime']
         nat_mask = pd.isnull(date_times) #remove NaTs
         date_times = date_times[~nat_mask]
-        print(date_times)
         if len(date_times)==0:
             continue
         date_time0 = date_times[0]
