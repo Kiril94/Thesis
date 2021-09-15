@@ -103,11 +103,6 @@ def count_subdirectories(dir_, level=1, count_all=True):
         result = sum(1 for x in iglob(dir_str))
     return result
 
-class dotdict(dict):
-    """dot.notation access to dictionary attributes"""
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
     
 def list_subdir(dir_):
     return [os.path.join(dir_, x) for x in os.listdir(dir_)]
@@ -122,12 +117,6 @@ def get_running_time(start):
     m, s = divmod(time.time()-start , 60)
     h, m = divmod(m, 60)
     return f'[{h:2.0f}h{m:2.0f}m{s:2.0f}s]' 
-
-def create_dictionary(keys, values):
-    result = {} # empty dictionary
-    for key, value in zip(keys, values):
-        result[key] = value
-    return result
 
 def get_size(start_path = '.', unit='M'):
     """Gives size in bytes"""

@@ -8,7 +8,7 @@ import vis
 from glob import iglob
 from pathlib import Path
 import datetime as dt
-from utilss.utils import dotdict
+from utilss.basic import dotdict
 
 
 

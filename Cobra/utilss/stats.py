@@ -90,18 +90,20 @@ def time_between_studies(df, threshold=2):
         lambda x: (x.sort_values(by=['DateTime'], ascending=True)))
     patient_ids = df_sorted['PatientID'].unique()
     time_diff_l = []
-    for patient in patient_ids[:20]:
+    for patient in patient_ids:
         patient_mask = df_sorted['PatientID']==patient
         date_times = df_sorted[patient_mask]['DateTime']
         date_time0 = date_times[0]
-        print(date_time0)
         for date_time in date_times[1:]:
             if pd.isnull(date_time):
-                print('isnull')
                 continue
-            time_diff = date_time-date_time0
-            if time_diff.total_seconds()/3600>threshold:
-                time_diff_l.append(time_diff.total_seconds()/3600)
+            else:
+                try:
+                    time_diff = date_time-date_time0
+                    if time_diff.total_seconds()/3600>threshold:
+                        time_diff_l.append(time_diff.total_seconds()/3600)
+                except:
+                    print('An error occured')
                 date_time0 = date_time
     return time_diff_l
 

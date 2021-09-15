@@ -65,18 +65,21 @@ num_studies_l = stats.count_number_of_studies(df_p)
 df_p = stats.add_datetime(df_p)
 #df_p.to_csv(pos_tab_dir, index = False, header = True)
 # In[]
-p(type(df_p.DateTime[300]))
+p(f"first study {df_p.DateTime.min()}")
+p(f"last study {df_p.DateTime.max()}")
+studies_2021 = stats.check_tags(df_p, '2021', date_k).sum()
+print(f"Number of scans in 2021 {studies_2021}")
 # In[Sort the the scans by time and count those that are less than 2 hours apart]
 time_diff_studies_pos = stats.time_between_studies(df_p)
 
 # In[]
-
 svis.nice_histogram(np.array(time_diff_studies_pos)/24, 100, ylog_scale=(True),
                     show_plot=True, xlabel='Days between studies',
                     save=True, title='Positive Patients',
                     figname=f"{fig_dir}/pos/time_between_studies.png")
 
 # In[Store the results]
+patient_ids = df_p['PatientID'].unique()
 ppatient_df = pd.DataFrame({'PatientId':[], 'NumStudies':[]})#storing results
 ppatient_df['PatientID'] = patient_ids
 ppatient_df['NumStudies'] =  num_studies_l   
