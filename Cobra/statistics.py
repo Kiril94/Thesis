@@ -20,7 +20,7 @@ from utilss import stats
 from utilss import utils
 from data_access import load_data_tools as ld
 import pydicom
-from utilss.utils import dotdict
+from utilss.basic import DotDict 
 import importlib
 import math
 #importlib.reload(utils)
@@ -41,6 +41,7 @@ script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/tables"
+
 # In[load positive csv]
 pos_tab_dir = f"{table_dir}/pos_nn.csv"
 neg_tab_dir = f"{table_dir}/all2019.csv"
@@ -57,6 +58,8 @@ SD_k = 'SeriesDescription'
 PID_k = 'PatientID'
 time_k = 'InstanceCreationTime'
 date_k = 'InstanceCreationDate'
+DT_k = 'DateTime'
+SID_k = 'SeriesInstanceUID'
 
 # In[Count the number of studies]
 num_studies_l = stats.count_number_of_studies(df_p)
@@ -70,7 +73,7 @@ p(f"last study {df_p.DateTime.max()}")
 studies_2021 = stats.check_tags(df_p, '2021', date_k).sum()
 print(f"Number of scans in 2021 {studies_2021}")
 # In[Sort the the scans by time and count those that are less than 2 hours apart]
-time_diff_studies_pos = stats.time_between_studies(df_p)
+time_diff_studies_pos, _ = stats.time_between_studies(df_p)
 
 # In[]
 svis.nice_histogram(np.array(time_diff_studies_pos)/24, 100, ylog_scale=(True),
@@ -200,13 +203,13 @@ tag_dict['cest'] = ['CEST']
 tag_dict['survey'] = ['SURVEY', 'Survey', 'survey']
 tag_dict['angio'] = ['TOF', 'ToF', 'tof','angio', 'Angio', 'ANGIO', 'SWAN']
 print("TOF:time of flight angriography, SWAN: susceptibility-weighted angiography")
-tag_dict = dotdict(tag_dict)
+tag_dict = DotDict(tag_dict)
 # Look up: MIP (maximum intensity projection), SmartBrain, 
 # TOF (time of flight angriography), ADC?, STIR (Short Tau Inversion Recovery),
 # angio, Dynamic Contrast-Enhanced Magnetic Resonance Imaging (DCE-MRI) 
 # In[Get corresponding masks]
 # take mprage to the t1
-mask_dict = dotdict({key : stats.check_tags(df_p, tag) for key, tag in tag_dict.items()})
+mask_dict = DotDict({key : stats.check_tags(df_p, tag) for key, tag in tag_dict.items()})
 #mprage is always t1 https://pubmed.ncbi.nlm.nih.gov/1535892/
 mask_dict['t1'] = stats.check_tags(df_p, tag_dict.t1) \
     | stats.check_tags(df_p, tag_dict.mpr)
@@ -233,7 +236,7 @@ pd.DataFrame(other_seq_series_sort).to_csv(f"{base_dir}/tables/other_sequences.c
 
 
 # In[Get counts]
-counts_dict = dotdict({key : mask.sum() for key, mask in mask_dict.items()})
+counts_dict = DotDict({key : mask.sum() for key, mask in mask_dict.items()})
 print(counts_dict)
 
 # In[visualize basic sequences]
@@ -296,16 +299,23 @@ p(f"{flair_swi_t1_m.sum()} patients have\
 flair_swi_t1_t2_m = flair_m & swi_m & t1_m & t2_m
 p(f"{flair_swi_t1_t2_m.sum()} patients have\
   the sequences flair, swi,t1 and t2")
-# In[when where the scans performed]
-scan_months = np.array([int(date[5:7]) for date in df_p['InstanceCreationDate'].dropna()])
-svis.nice_histogram(scan_months, np.arange(.5,13.5), show_plot=(True), 
-                    xlabel='month', save=(True), title='Number of acquired volumes for positive patients',
-                    figname=f"{fig_dir}/pos/scan_months.png" )
-# Notes: time and data are sometimes given in the series description
-#p(scan_months[10])
-# In[Check number os studies per patient]
 
-p(df_p.groupby(['PatientID', 'InstanceCreationDate', 'InstanceCreationTime']).count())#['SeriesInstanceUID'])
-#svis.nice_histogram(scan_months, np.arange(.5,13.5), show_plot=(True), 
-#                    xlabel='month', save=(True), 
-#                    figname=f"{fig_dir}/pos/scan_months.png" )
+
+# In[Number of studies per month/year]
+
+ps_datetime_count = df_p.groupby([df_p[DT_k].dt.year, df_p[DT_k].dt.month]).count()[SID_k]
+year_month_keys = [str(int(key[1]))+'/'+str(key[0])[:4] for key in ps_datetime_count.keys()]
+year_month_keys.insert(-1,'5/2021') # this month is missing
+year_month_counts = ps_datetime_count.values
+year_month_counts = np.insert(year_month_counts, -1, 0)
+vis.bar_plot(year_month_keys[:-3], year_month_counts[:-3], figsize=(13,7),
+             xtickparams_rot=70, 
+                    xlabel='month/year', save_plot=(True), ylabel='Frequency',
+                    title='Number of acquired volumes for positive patients',
+                    figname=f"{fig_dir}/pos/scans_months_years.png" )
+# In[when is the date present but not a time]
+p(f"{pd.isnull(df_p[date_k]).sum()} scans dont have a time or date")
+
+# In[]
+importlib.reload(stats)
+stats.time_between_studies(df_p)

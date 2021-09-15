@@ -64,11 +64,11 @@ def count_number_of_studies(df, threshold=2):
     for patient in patient_ids:
         patient_mask = df_sorted['PatientID']==patient
         date_times = df_sorted[patient_mask]['DateTime']
+        nat_mask = pd.isnull(date_times) #remove NaTs
+        date_times = date_times[~nat_mask]
         date_time0 = date_times[0]
         study_counter = 1
         for date_time in date_times[1:]:
-            if pd.isnull(date_time):
-                continue
             try:
                 time_diff = date_time-date_time0
                 if time_diff.total_seconds()/3600>threshold:
@@ -82,30 +82,34 @@ def count_number_of_studies(df, threshold=2):
     return num_studies_l
 
 def time_between_studies(df, threshold=2):
-    """Returns a list with the times between consecutive studies in a dataframe, 
-    studies are considered separate if they are at least threshold (default 2) 
-    hours apart
+    """Returns:
+        -list with the times between consecutive studies in a dataframe, 
+        studies are considered separate if they are at least threshold (default 2) 
+        hours apart
+        -list with study dates
     """
     df_sorted = df.groupby('PatientID').apply(
         lambda x: (x.sort_values(by=['DateTime'], ascending=True)))
     patient_ids = df_sorted['PatientID'].unique()
     time_diff_l = []
+    study_dates_l = []
     for patient in patient_ids:
         patient_mask = df_sorted['PatientID']==patient
         date_times = df_sorted[patient_mask]['DateTime']
+        nat_mask = pd.isnull(date_times) #remove NaTs
+        date_times = date_times[~nat_mask]
         date_time0 = date_times[0]
+        study_dates_l.append(date_time0)
         for date_time in date_times[1:]:
-            if pd.isnull(date_time):
-                continue
-            else:
-                try:
+                try:    
                     time_diff = date_time-date_time0
                     if time_diff.total_seconds()/3600>threshold:
                         time_diff_l.append(time_diff.total_seconds()/3600)
+                        study_dates_l.append(date_time)
                 except:
                     print('An error occured')
                 date_time0 = date_time
-    return time_diff_l
+    return time_diff_l, study_dates_l
 
 def add_datetime(df):
     df['DateTime'] = df[date_k] + ' ' +  df[time_k]
