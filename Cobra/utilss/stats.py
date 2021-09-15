@@ -66,6 +66,9 @@ def count_number_of_studies(df, threshold=2):
         date_times = df_sorted[patient_mask]['DateTime']
         nat_mask = pd.isnull(date_times) #remove NaTs
         date_times = date_times[~nat_mask]
+        if len(date_times)==0:
+            num_studies_l.append(1)
+            continue
         date_time0 = date_times[0]
         study_counter = 1
         for date_time in date_times[1:]:
@@ -98,6 +101,8 @@ def time_between_studies(df, threshold=2):
         date_times = df_sorted[patient_mask]['DateTime']
         nat_mask = pd.isnull(date_times) #remove NaTs
         date_times = date_times[~nat_mask]
+        if len(date_times)==0:
+            continue
         date_time0 = date_times[0]
         study_dates_l.append(date_time0)
         for date_time in date_times[1:]:

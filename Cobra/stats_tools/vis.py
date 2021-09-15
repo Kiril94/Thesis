@@ -26,7 +26,8 @@ def nice_plot(
     dpi = 80, xlogscale = False, ylogscale = False, color = 'skyblue', 
     plot_style = 'ggplot', linestyle = 'solid', ecolor = 'deepskyblue', 
     capsize = 3, capthick = 0.3, err_markersize = 6,  elinewidth = .9, 
-    alpha = 1, scr_markersize = 30, scr_markerstyle = 'o', linewidth = 3, fill_under_curve = False, 
+    alpha = 1, scr_markersize = 30, scr_markerstyle = 'o', linewidth = 3, 
+    fill_under_curve = False, 
     fill_color = 'skyblue', drawstyle = 'default'):
     r"""
     Simple x-y plot. 
