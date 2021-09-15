@@ -316,6 +316,13 @@ vis.bar_plot(year_month_keys[:-3], year_month_counts[:-3], figsize=(13,7),
 # In[when is the date present but not a time]
 p(f"{pd.isnull(df_p[date_k]).sum()} scans dont have a time or date")
 
-# In[]
+# In[Study months distribution]
 importlib.reload(stats)
-stats.time_between_studies(df_p)
+_, dates = stats.time_between_studies(df_p)
+# In[]
+print(dates[0].month)
+vis.bar_plot(year_month_keys[:-3], year_month_counts[:-3], figsize=(13,7),
+             xtickparams_rot=70, 
+                    xlabel='month/year', save_plot=(True), ylabel='Frequency',
+                    title='Number of acquired volumes for positive patients',
+                    figname=f"{fig_dir}/pos/studies_months_years.png" )
