@@ -32,6 +32,3 @@ def dcm2nii(dcm_path, out_path, compression=3,verbose=0,op_sys=0):
         os.system(f'dcm2niix -w 0 -{compression} -a y -l y -v {verbose} -z y -f -f %f_%p_%z -o {out_path} {dcm_path}')
     else: 
         raise Exception('Non valid op_sys. Available options are 0 for Windows or 1 for Linux')
-
-
-

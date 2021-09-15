@@ -43,9 +43,10 @@ def bar_plot(labels, counts, figsize=(10,6), width=.8,
              title='', title_fs=25,
              ylabel='count', ylabel_fs=25,
              xlabel='x', xlabel_fs=25,
-             xtickparams_ls=25, ytickparams_ls=25, logscale=False,
-             save_plot=False, figname=None, dpi=80):
+             xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25, logscale=False,
+             save_plot=False, figname=None, dpi=80, plot_style='ggplot'):
     fig, ax = plt.subplots(1,figsize = figsize)
+    plt.style.use(plot_style)
     ax.bar(np.arange(len(counts)), counts, width, label = lgd_label)
     x = np.arange(len(counts))  # the label locations
     ax.set_xticks(x)
@@ -56,8 +57,10 @@ def bar_plot(labels, counts, figsize=(10,6), width=.8,
         ax.set_title(title, fontsize=title_fs)
     ax.set_ylabel(ylabel, fontsize=ylabel_fs)
     ax.set_xlabel(xlabel, fontsize=xlabel_fs)
-    ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls)
+    ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls,
+                   rotation=xtickparams_rot)
     ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls)
+    ax.tick_params(axis='x', )
     if logscale:
         ax.set_yscale('log')
     fig.tight_layout()

@@ -8,7 +8,7 @@ import vis
 from glob import iglob
 from pathlib import Path
 import datetime as dt
-from utilss.utils import dotdict
+from utilss.basic import DotDict
 
 
 
@@ -52,9 +52,11 @@ def get_scan_key_list():
                 ('StudyInstanceUID','str'),
                 ('PatientID', 'str'), 
                 ('AngioFlag', 'str'),
+                ('AcquisitionMatrix','str'),
                 ('AcquisitionContrast', 'str'),
                 ('AcquisitionDuration', 'float'),
                 ('AcquisitionMatrix','list'),
+                ('dBdt','float'),
                 ('EchoTime','float'),
                 ('EchoTrainLength', 'int'),
                 ('EchoNumbers', 'int'),
@@ -78,25 +80,48 @@ def get_scan_key_list():
                 ('PixelSpacing','list'),
                 ('PixelBandwith','float'),
                 ('PixelPresentation', 'str'),
+                ('PixelSpacing', 'str'),
+                ('PhotometricInterpretation','str'),
                 ('PulseSequenceName', 'str'),
                 ('RepetitionTime', 'float'),
+                ('Rows', 'int'),
+                ('Columns', 'int'),
                 ('ScanningSequence', 'str'), 
                 ('SequenceVariant','str'),
                 ('SequenceName', 'str'),
                 ('ScanOptions','str'), 
                 ('SeriesDescription', 'str'),
+                ('SoftwareVersions','str'),
                 ('SliceThickness', 'float'),
+                ('StudyPriorityID', 'str'), 
+                ('PatientPosition', 'str'),
                 ('SpacingBetweenSlices','float'),
                 ('SecondEcho', 'float'),
                 ('VariableFlipAngleFlag', 'str')
                 ]
     return key_list
 
-def get_scan_dictionary(scan_dir, reconstruct_3d=True, file_num=0):
+def get_scan_dictionary(scan_dir, reconstruct_3d=True):
     """Returns a dictionary for scan at scan_dir"""
-    
-    dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[file_num])
-    dicom = dcmread(dicom_file_dir)
+    if len(os.listdir(scan_dir))!=0:
+        try:
+            dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
+            dicom = dcmread(dicom_file_dir)
+        except:
+            print('Dicom file non readable')
+            dicom = None
+            for file_num in range(len(os.listdir(scan_dir))):
+                try:
+                    dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[file_num])
+                    dicom = dcmread(dicom_file_dir)
+                    break
+                except:
+                    print('Dicom file non readable')
+                    continue
+    else:
+        dicom = None
+        print(f"{scan_dir} is empty")
+        
     key_list = get_scan_key_list()
     
     if reconstruct_3d:
@@ -125,8 +150,6 @@ def get_scan_dictionary(scan_dir, reconstruct_3d=True, file_num=0):
 
         scan_dict[k[0]] = value
     return dotdict(scan_dict)
-
-
 
 
 class Patient():
@@ -187,8 +210,24 @@ class Patient():
         """Returns a dictionary for scan with scan_number, if reconstruct """
         scan_directories = self.get_scan_directories()
         scan_dir = scan_directories[scan_number]
-        dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
-        dicom = dcmread(dicom_file_dir)
+        if len(os.listdir(scan_dir))!=0:
+            try:
+                dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
+                dicom = dcmread(dicom_file_dir)
+            except:
+                print('Dicom file non readable')
+                dicom = None
+                for file_num in range(len(os.listdir(scan_dir))):
+                    try:
+                        dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[file_num])
+                        dicom = dcmread(dicom_file_dir)
+                        break
+                    except:
+                        print('Dicom file non readable')
+                        continue
+        else:
+            dicom = None
+            print(f"{scan_dir} is empty")
         key_list = get_scan_key_list()
         
         if reconstruct_3d:
