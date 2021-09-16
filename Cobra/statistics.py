@@ -46,9 +46,10 @@ table_dir = f"{base_dir}/tables"
 pos_tab_dir = f"{table_dir}/pos_nn.csv"
 neg_tab_dir = f"{table_dir}/all2019.csv"
 df_p = utils.load_scan_csv(pos_tab_dir)
-#df_n = utils.load_scan_csv(neg_tab_dir)
+df_n = utils.load_scan_csv(neg_tab_dir)
 keys = df_p.keys()
 p(f"Number of patients = {len(df_p.PatientID.unique())}")
+
 # In[Usefule keys]
 TE_k = 'EchoTime'
 TR_k = 'RepetitionTime'
@@ -60,6 +61,12 @@ time_k = 'InstanceCreationTime'
 date_k = 'InstanceCreationDate'
 DT_k = 'DateTime'
 SID_k = 'SeriesInstanceUID'
+
+# In[Write Patient IDs to text]
+neg_pat_ids = list(df_n[PID_k].unique())
+with open(f'{base_dir}/results/neg_ids.txt', 'w') as filehandle:
+    for listitem in neg_pat_ids:
+        filehandle.write('%s\n' % listitem)
 
 # In[Count the number of studies]
 num_studies_l = stats.count_number_of_studies(df_p)
@@ -185,7 +192,7 @@ tag_dict['smartbrain'] = ['SmartBrain']
 tag_dict['flair'] = ['FLAIR','flair', 'Flair']
 
 tag_dict['t2'] = ['T2', 't2']
-tag_dict['fse'] = ['FSE', 'fse', '']
+tag_dict['fse'] = ['FSE', 'fse']
 
 tag_dict['t2s'] = ['T2\*', 't2\*']
 tag_dict['gre']  = ['GRE', 'gre']
@@ -218,15 +225,26 @@ mask_dict['t1spgr'] = mask_dict.t1 & mask_dict.spgr
 mask_dict['t2_flair'] = stats.only_first_true(
     stats.check_tags(df_p, tag_dict.t2), mask_dict.t2s)
 mask_dict['t2_noflair'] = stats.only_first_true(mask_dict.t2_flair, mask_dict.flair)# real t2
-mask_dict.none = df_p['SeriesDescription'].isnull()
-
+mask_dict.fse_only = stats.only_first_true(
+    stats.only_first_true(mask_dict.fse, mask_dict.t1), mask_dict.t2)
 print("we are interested in t1, t2_noflair, flair, swi, dwi, dti, angio")
 print("combine all masks with an or and take complement")
-mask_dict.all = mask_dict.t1 | mask_dict.flair | mask_dict.t2_noflair \
-    | mask_dict.t2s | mask_dict.dwi | mask_dict.dti | mask_dict.swi \
-        | mask_dict.angio | mask_dict.adc | mask_dict.stir \
-            |mask_dict.survey | mask_dict.none
-mask_dict.other = ~mask_dict.all
+
+mask_identified = mask_dict.t1
+for mask in mask_dict.values():
+    mask_identified = mask_identified | mask
+mask_dict.identified = mask_identified
+
+mask_dict.relevant = mask_dict.t1 | mask_dict.flair | mask_dict.t2_noflair \
+    | mask_dict.t2s | mask_dict.dwi | mask_dict.swi \
+        | mask_dict.angio | mask_dict.adc 
+
+mask_dict.none = df_p['SeriesDescription'].isnull()       
+mask_dict.none_nid = mask_dict.none | ~mask_dict.identified #either non or not identified
+mask_dict.other = ~mask_dict.none_nid & ~mask_dict.relevant# nont none identified and non relevant
+
+# In[]
+print(df_p[SD_k][mask_dict.spgr])
 # In[Look at 'other' group] combine all the relevant masks to get others
 
 p(df_p[mask_dict.other].SeriesDescription)
@@ -235,22 +253,31 @@ other_seq_series_sort = other_seq_series.sort_values(axis=0, ascending=True).uni
 pd.DataFrame(other_seq_series_sort).to_csv(f"{base_dir}/tables/other_sequences.csv")
 
 
+
 # In[Get counts]
 counts_dict = DotDict({key : mask.sum() for key, mask in mask_dict.items()})
 print(counts_dict)
 
 # In[visualize basic sequences]
-sequences_names = ['T1+\nMPRAGE', 'T2', 'FLAIR', 'T2*', 'SWI', 'DWI', 
-                   'angio', 'ADC', 'survey','TRACEW', 'Other','None']
-seq_counts = np.array([counts_dict.t1, counts_dict.t2_noflair, counts_dict.flair,
-                       counts_dict.t2s, counts_dict.swi, 
-                       counts_dict.dwi, counts_dict.angio, 
-                       counts_dict.adc, counts_dict.survey, counts_dict.tracew,
-                       counts_dict.other, 
-                       counts_dict.none])
+sequences_names = ['T1+\nMPRAGE', 'FLAIR', 'T2', 'T2*', 'DWI', 'SWI', 
+                   'angio', 'ADC', 'Other','None or \n not identified']
+seq_counts = np.array([counts_dict.t1, counts_dict.flair, counts_dict.t2_noflair, 
+                       counts_dict.t2s, counts_dict.dwi, 
+                       counts_dict.swi, counts_dict.angio, counts_dict.adc,
+                       counts_dict.other, counts_dict.none_nid])
 vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
              xtickparams_ls=16, save_plot=True, title='Positive Patients',
              figname=f"{fig_dir}/pos/basic_sequences_count.png")
+
+# In[Visualize other sequences]
+sequences_names = ['DTI', 'TRACEW', 'ASL', 'CEST', 'Survey', 'STIR', 'GRE', 
+                   'SMARTBRAIN']
+seq_counts = np.array([counts_dict.dti, counts_dict.tracew, counts_dict.asl, 
+                       counts_dict.cest, counts_dict.survey, 
+                       counts_dict.stir, counts_dict.gre, counts_dict.smartbrain])
+vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
+             xtickparams_ls=16, save_plot=True, title='Positive Patients',
+             figname=f"{fig_dir}/pos/other_sequences_count.png")
 
 # In[Look at the distributions of TE and TR for different seq]
 
@@ -260,21 +287,26 @@ df_p.loc[mask_dict.t2s,'Sequence'] = 'T2S'
 df_p.loc[mask_dict.flair,'Sequence'] = 'FLAIR'
 df_p_clean = df_p.dropna(subset=[TE_k, TR_k])
 
+
+
 # In[visualize sequences scatter]
 fig, ax = plt.subplots(2,2,figsize=(10,10))
 ax = ax.flatten()
-sns.scatterplot(x=TE_k, y=TR_k, 
+sns.scatterplot(x=TE_k, y=TR_k,
                 hue='Sequence', data=df_p_clean,ax=ax[0])
-sns.scatterplot(x=TE_k, y=IR_k, 
+sns.scatterplot(x=TE_k, y=IR_k, legend=None,
                 hue='Sequence', data= df_p_clean,
                 ax=ax[1])
-sns.scatterplot(x=IR_k, y=TR_k, 
+sns.scatterplot(x=IR_k, y=TR_k, legend=None,
                 hue='Sequence', data= df_p_clean,
                 ax=ax[2])
-sns.scatterplot(x=IR_k, y=FA_k, 
+sns.scatterplot(x=IR_k, y=FA_k, legend=None,
                 hue='Sequence', data= df_p_clean,
                 ax=ax[3])
+fig.suptitle('Identified Sequences (positive patients)', fontsize=20)
+fig.tight_layout()
 plt.show()
+fig.savefig(f"{fig_dir}/pos/scatter_training.png")
 
 # In[Extract dates from series description if not present in InstanceCreationData]
 

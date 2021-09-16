@@ -52,7 +52,7 @@ utils.write_csv(csv_path, pos_patient_list)
 # In[Write neg to csv]
 csv_columns = [x[0] for x in ld.get_scan_key_list()]
 csv_folder = "D:/Thesis/Cobra/tables"
-starting_month = 11
+starting_month = 1
 for month, subdir in enumerate(healthy_dirs[starting_month-1:]):
     print(f"converting files from {subdir}")
     csv_file = f"healthy_{month+starting_month}_nn.csv"

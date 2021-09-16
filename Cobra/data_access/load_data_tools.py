@@ -147,7 +147,7 @@ def get_scan_dictionary(scan_dir, reconstruct_3d=True):
             value = None
 
         scan_dict[k[0]] = value
-    return dotdict(scan_dict)
+    return DotDict(scan_dict)
 
 
 class Patient():
@@ -253,7 +253,7 @@ class Patient():
                 value = None
 
             scan_dict[k[0]] = value
-        return dotdict(scan_dict)
+        return DotDict(scan_dict)
     
     def all_scan_dicts(self, reconstruct_3d=True):
         """Returns list with all scan dictionaries for a patient."""

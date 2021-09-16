@@ -12,6 +12,7 @@ import pandas as pd
 from data_access import load_data_tools as ld
 import csv
 import datetime
+from .basic import DotDict
 
 
 def write_csv(csv_path, patient_list, append=False):
