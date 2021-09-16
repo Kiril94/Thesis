@@ -44,16 +44,16 @@ table_dir = f"{base_dir}/tables"
 
 # In[load positive csv]
 pos_tab_dir = f"{table_dir}/pos_nn.csv"
-neg_tab_dir = f"{table_dir}/all2019.csv"
+#neg_tab_dir = f"{table_dir}/all2019.csv"
 df_p = utils.load_scan_csv(pos_tab_dir)
-df_n = utils.load_scan_csv(neg_tab_dir)
+#df_n = utils.load_scan_csv(neg_tab_dir)
 keys = df_p.keys()
 p(f"Number of patients = {len(df_p.PatientID.unique())}")
 
 # In[Usefule keys]
 TE_k = 'EchoTime'
 TR_k = 'RepetitionTime'
-IR_k = 'InversionTime'
+TI_k = 'InversionTime'
 FA_k = 'FlipAngle'
 SD_k = 'SeriesDescription'
 PID_k = 'PatientID'
@@ -61,7 +61,11 @@ time_k = 'InstanceCreationTime'
 date_k = 'InstanceCreationDate'
 DT_k = 'DateTime'
 SID_k = 'SeriesInstanceUID'
-
+SS_k = 'ScanningSequence'
+SV_k = 'SequenceVariant'
+SN_k = 'SequenceName'
+SO_k = 'ScanOptions'
+ETL_k = 'EchoTrainLength'
 # In[Write Patient IDs to text]
 neg_pat_ids = list(df_n[PID_k].unique())
 with open(f'{base_dir}/results/neg_ids.txt', 'w') as filehandle:
@@ -182,51 +186,64 @@ fig.savefig(f"{fig_dir}/pos/model_name_pie_chart.png")
 # In[Sequence Types, define tags]
 tag_dict = {}
 tag_dict['t1'] = ['T1', 't1']
-tag_dict['mpr'] = ['mprage', 'MPRAGE']
+tag_dict['mpr'] = ['mprage', 'MPRAGE'] # Mostly T1
 print('MPRAGE is always T1w')
-tag_dict['tfe'] = ['tfe', 'TFE']
-tag_dict['spgr'] = ['FSPGR']
+#tag_dict['tfe'] = ['tfe', 'TFE'] can be acquired with or without T1/ T2
+tag_dict['spgr'] = ['SPGR', 'spgr'] #primarily T1 or PD
 print("The smartbrain protocol occurs only for philips")
-tag_dict['smartbrain'] = ['SmartBrain']
+# tag_dict['smartbrain'] = ['SmartBrain']
 
 tag_dict['flair'] = ['FLAIR','flair', 'Flair']
 
 tag_dict['t2'] = ['T2', 't2']
-tag_dict['fse'] = ['FSE', 'fse']
+#tag_dict['fse'] = ['FSE', 'fse', 'TSE', 'tse']    
 
 tag_dict['t2s'] = ['T2\*', 't2\*']
-tag_dict['gre']  = ['GRE', 'gre']
+#tag_dict['gre']  = ['GRE', 'gre'] # can be t2*, t1 or pd
 
-tag_dict['dti']= ['DTI', 'dti']
+tag_dict['dti']= ['DTI', 'dti'] 
+tag_dict['pwi'] = ['Perfusion_Weighted']
 print("There is one perfusion weighted image (PWI)")
 tag_dict['swi'] = ['SWI', 'swi']
 tag_dict['dwi'] = ['DWI', 'dwi']
 tag_dict['adc'] = ['ADC', 'Apparent Diffusion Coefficient']
-tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium']
+tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium', 'T1\+', 't1\+']
 tag_dict['stir'] = ['STIR']
-tag_dict['tracew'] = ['TRACEW']
+tag_dict['tracew'] = ['TRACEW'] #
 tag_dict['asl'] = ['ASL']
 tag_dict['cest'] = ['CEST']
 tag_dict['survey'] = ['SURVEY', 'Survey', 'survey']
 tag_dict['angio'] = ['TOF', 'ToF', 'tof','angio', 'Angio', 'ANGIO', 'SWAN']
+
+# tags that are connected to sequences that are not useful
+tag_dict['screensave'] = ['Screen Save']
+tag_dict['autosave'] = ['3D Saved State - AutoSave']
+tag_dict['b1calib'] = ['B1_Calibration']
 print("TOF:time of flight angriography, SWAN: susceptibility-weighted angiography")
 tag_dict = DotDict(tag_dict)
 # Look up: MIP (maximum intensity projection), SmartBrain, 
 # TOF (time of flight angriography), ADC?, STIR (Short Tau Inversion Recovery),
 # angio, Dynamic Contrast-Enhanced Magnetic Resonance Imaging (DCE-MRI) 
+# In[Test]
+date_mask = df_p[SD_k].str.contains('stir', na=False)
+print(df_p[date_mask][SD_k])
+
 # In[Get corresponding masks]
 # take mprage to the t1
 mask_dict = DotDict({key : stats.check_tags(df_p, tag) for key, tag in tag_dict.items()})
+
 #mprage is always t1 https://pubmed.ncbi.nlm.nih.gov/1535892/
 mask_dict['t1'] = stats.check_tags(df_p, tag_dict.t1) \
     | stats.check_tags(df_p, tag_dict.mpr)
-mask_dict['t1tfe'] = mask_dict.t1 & mask_dict.tfe
+mask_dict['t1'] = stats.only_first_true(mask_dict.t1, mask_dict.gd)
+
+#mask_dict['t1tfe'] = mask_dict.t1 & mask_dict.tfe
 mask_dict['t1spgr'] = mask_dict.t1 & mask_dict.spgr
+
 mask_dict['t2_flair'] = stats.only_first_true(
     stats.check_tags(df_p, tag_dict.t2), mask_dict.t2s)
 mask_dict['t2_noflair'] = stats.only_first_true(mask_dict.t2_flair, mask_dict.flair)# real t2
-mask_dict.fse_only = stats.only_first_true(
-    stats.only_first_true(mask_dict.fse, mask_dict.t1), mask_dict.t2)
+
 print("we are interested in t1, t2_noflair, flair, swi, dwi, dti, angio")
 print("combine all masks with an or and take complement")
 
@@ -244,16 +261,23 @@ mask_dict.none_nid = mask_dict.none | ~mask_dict.identified #either non or not i
 mask_dict.other = ~mask_dict.none_nid & ~mask_dict.relevant# nont none identified and non relevant
 
 # In[]
-print(df_p[SD_k][mask_dict.spgr])
+
+p(mask_dict.b1calib.sum())
+#p(6*1e6/4/3600/24)
+p(df_p.keys())
 # In[Look at 'other' group] combine all the relevant masks to get others
-
+seq_vars = [SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k ]
 p(df_p[mask_dict.other].SeriesDescription)
-other_seq_series = df_p[mask_dict.other].SeriesDescription
-other_seq_series_sort = other_seq_series.sort_values(axis=0, ascending=True).unique()
-pd.DataFrame(other_seq_series_sort).to_csv(f"{base_dir}/tables/other_sequences.csv")
-
-
-
+nid_seq = df_p[mask_dict.none_nid]
+nid_seq_sort = nid_seq[seq_vars].dropna(how='all').sort_values(by=SD_k, axis=0, ascending=True)
+nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
+nid_seq_sort.to_csv(f"{base_dir}/tables/non_identified_seq.csv", index=False)
+p(nid_seq_sort)
+# In[]
+p(df_p.keys())
+#mask = df_p.SequenceName.dropna().str.contains('e')
+#p(df_p.SequenceName.dropna()[mask].unique())
+p(df_p.ScanningSequence[0])
 # In[Get counts]
 counts_dict = DotDict({key : mask.sum() for key, mask in mask_dict.items()})
 print(counts_dict)
@@ -270,15 +294,18 @@ vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
              figname=f"{fig_dir}/pos/basic_sequences_count.png")
 
 # In[Visualize other sequences]
-sequences_names = ['DTI', 'TRACEW', 'ASL', 'CEST', 'Survey', 'STIR', 'GRE', 
-                   'SMARTBRAIN']
+sequences_names = ['DTI', 'TRACEW', 'ASL', 'CEST', 'Survey', 'STIR',
+                   'screensave', 'autosave']
 seq_counts = np.array([counts_dict.dti, counts_dict.tracew, counts_dict.asl, 
                        counts_dict.cest, counts_dict.survey, 
-                       counts_dict.stir, counts_dict.gre, counts_dict.smartbrain])
+                       counts_dict.stir, 
+                       counts_dict.screensave, counts_dict.autosave,
+                       ])
 vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
              xtickparams_ls=16, save_plot=True, title='Positive Patients',
              figname=f"{fig_dir}/pos/other_sequences_count.png")
-
+# In[]
+p(seq_counts)
 # In[Look at the distributions of TE and TR for different seq]
 
 df_p.loc[mask_dict.t1, 'Sequence'] = 'T1'
@@ -297,10 +324,10 @@ sns.scatterplot(x=TE_k, y=TR_k,
 sns.scatterplot(x=TE_k, y=IR_k, legend=None,
                 hue='Sequence', data= df_p_clean,
                 ax=ax[1])
-sns.scatterplot(x=IR_k, y=TR_k, legend=None,
+sns.scatterplot(x=TI_k, y=TR_k, legend=None,
                 hue='Sequence', data= df_p_clean,
                 ax=ax[2])
-sns.scatterplot(x=IR_k, y=FA_k, legend=None,
+sns.scatterplot(x=TI_k, y=FA_k, legend=None,
                 hue='Sequence', data= df_p_clean,
                 ax=ax[3])
 fig.suptitle('Identified Sequences (positive patients)', fontsize=20)

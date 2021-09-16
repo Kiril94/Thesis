@@ -80,14 +80,14 @@ def load_scan_csv(csv_path):
             csv_path, encoding='unicode_escape',
             converters={**{
                 k: literal_converter for k in\
-                    ['ImageType', 'SequenceVariant', 'ScanOptions',
+                    ['ScanningSequence','ImageType', 'SequenceVariant', 'ScanOptions',
                      'PixelSpacing']},**{'DateTime':date_time_converter}})
     except: 
         df = pd.read_csv(
             csv_path, encoding='unicode_escape',
             converters={
                 k: literal_converter for k in\
-                    ['ImageType', 'SequenceVariant, ScanOptions']})
+                    ['ScanningSequence', 'ImageType', 'SequenceVariant, ScanOptions']})
         print('Once PixelSpacing is added the try-except statement should be removed')
     return df
 
