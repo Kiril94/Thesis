@@ -6,7 +6,7 @@ from pydicom import dcmread
 import os
 import vis
 from glob import iglob
-from pathlib import PurePath as Path
+from pathlib import Path
 import datetime as dt
 from utilss.basic import DotDict
 import nibabel as nib

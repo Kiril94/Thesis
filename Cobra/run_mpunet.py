@@ -7,7 +7,7 @@ Created on Thu Sep 16 16:15:47 2021
 
 from utilss import call_mpunet
 import os
-from pathlib import PurePath as Path
+from pathlib import Path
 from utilss import utils
 from data_access import load_data_tools as ld
 
