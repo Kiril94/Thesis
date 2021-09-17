@@ -8,7 +8,7 @@ Created on Thu Sep  9 11:06:00 2021
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-from pathlib import Path
+from pathlib import PurePath as Path
 import numpy as np
 from stats_tools import vis as svis
 from glob import iglob

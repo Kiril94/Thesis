@@ -17,7 +17,7 @@ import datetime
 import pydicom
 import numpy as np
 import matplotlib.pyplot as plt
-from pathlib import Path
+from pathlib import PurePath as Path
 importlib.reload(ld)
 importlib.reload(vis)
 importlib.reload(dicom2nifti)
