@@ -1,0 +1,58 @@
+"""
+Created on Mon Aug 30 10:32:43 2021
+@author: Neus Rodeja 
+"""
+
+import data_access.load_data_tools as ld
+import os
+from utilss import utils
+import time
+from utilss import dicom2nifti
+from utilss.utils import get_running_time 
+import sys
+
+#Read arguments
+try:
+    folder = sys.argv[1]
+except IndexError:
+    folder = '2019_01'
+
+#Make paths    
+base_data_dir = "/home/neus/sif/"
+data_dirs = os.listdir(base_data_dir)
+target_dir = f"{base_data_dir}/{folder}" 
+out_target_path = f"{base_data_dir}/nii/{folder}"
+
+#Get patients list
+target_patients_list = utils.list_subdir(target_dir)
+
+#Convert patients
+start = time.time()
+n_total_patients = len(target_patients_list)
+i=1
+
+for patient_dir in target_patients_list[i:]:
+  
+    print(f'Patient {i:d} out of {n_total_patients:d} {get_running_time(start):s}')
+    
+    start_patient = time.time()
+    patient = ld.Patient(patient_dir)
+    patient_id = patient.get_id()
+    scan_dirs = patient.get_scan_directories()
+    out_patient_dir = os.path.join(out_target_path, patient_id)
+    
+    if not os.path.exists(out_patient_dir):
+        os.makedirs(out_patient_dir)
+        print(f"{out_patient_dir} created")
+    
+    for scan_dir in scan_dirs:
+        _, scan_id = os.path.split(scan_dir)
+        out_path = os.path.join(out_patient_dir)
+        dicom2nifti.dcm2nii(scan_dir, out_path, op_sys=1)
+        print('|||||||||||||||||||||||||',end=(''))   
+    
+    print(f"The patient conversion took: {get_running_time(start_patient):s}") 
+    i+=1
+    
+
+

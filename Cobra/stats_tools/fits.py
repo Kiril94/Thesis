@@ -4,16 +4,20 @@ Created on Sat Jan 16 15:18:15 2021
 
 @author: klein
 """
-from .ExternalFunctions import NLLH, BinnedLH, Chi2Regression
+from ExternalFunctions import NLLH, BinnedLH, Chi2Regression
 from iminuit import Minuit
 import numpy as np
 import matplotlib.pyplot as plt
-from .ExternalFunctions import nice_string_output
+from ExternalFunctions import nice_string_output
 from scipy.optimize import curve_fit
 from scipy import stats
-from . import as_toolbox
-from . import vis
+import as_toolbox
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+import sys
+sys.path.append('../vis/')
+import vis
+
 #import importlib
 #importlib.reload(vis)
 

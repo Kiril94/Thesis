@@ -9,10 +9,19 @@ Created on Mon Sep 13 11:06:16 2021
 import numpy as np
 import pandas as pd
 import itertools
-from stats_tools import vis as svis
-from vis import vis
+
 import matplotlib.pyplot as plt
 
+
+import sys 
+import vis as svis
+
+sys.path.append('../vis/')
+import vis
+
+
+sys.path.append('../utilss/')
+import stats
 main_path = '/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/'
 file_name = 'healthy_1'
 
@@ -218,94 +227,79 @@ def plot_models(column_names,data,fig_dir=fig_dir,file_name=file_name,fig_name='
 def group_by_seq(data,column_names):
     
     df = pd.DataFrame(data=data,columns=column_names)
-    #n[Sequence Types]
-    t1_t = ['T1', 't1']
-    mpr_t = ['mprage', 'MPRAGE']
-    tfe_t = ['tfe', 'TFE']
-    spgr_t = ['FSPGR']
-    smartbrain_t = ['SmartBrain']
+    tag_dict = {}
+    tag_dict['t1'] = ['T1', 't1']
+    tag_dict['mpr'] = ['mprage', 'MPRAGE']
+    tag_dict['tfe'] = ['tfe', 'TFE']
+    tag_dict['spgr'] = ['FSPGR']
+    tag_dict['smartbrain'] = ['SmartBrain']
     
-    flair_t = ['FLAIR','flair']
+    tag_dict['flair'] = ['FLAIR','flair', 'Flair']
     
-    t2_t = ['T2', 't2']
-    fse_t = ['FSE', 'fse', '']
+    tag_dict['t2'] = ['T2', 't2']
+    tag_dict['fse'] = ['FSE', 'fse', '']
     
-    t2s_t = ['T2\*', 't2\*']
-    gre_t  = ['GRE', 'gre']
+    tag_dict['t2s'] = ['T2\*', 't2\*']
+    tag_dict['gre']  = ['GRE', 'gre']
     
-    dti_t = ['DTI', 'dti']
-    
-    swi_t = ['SWI', 'swi']
-    dwi_t = ['DWI', 'dwi']
-    gd_t = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium']
-    
-    angio_t = ['TOF', 'ToF', 'angio', 'Angio', 'ANGIO']
+    tag_dict['dti']= ['DTI', 'dti']
+    tag_dict['swi'] = ['SWI', 'swi']
+    tag_dict['dwi'] = ['DWI', 'dwi']
+    tag_dict['adc'] = ['ADC', 'Apparent Diffusion Coefficient']
+    tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium']
+    tag_dict['stir'] = ['STIR']
+    tag_dict['tracew'] = ['TRACEW']
+    tag_dict['asl'] = ['ASL']
+    tag_dict['cest'] = ['CEST']
+    tag_dict['survey'] = ['SURVEY', 'Survey', 'survey']
+    tag_dict['angio'] = ['TOF', 'ToF', 'tof','angio', 'Angio', 'ANGIO', 'SWAN']
+    tag_dict = DotDict(tag_dict)
     # Look up: MIP (maximum intensity projection), SmartBrain, 
     # TOF (time of flight angriography), ADC?, STIR (Short Tau Inversion Recovery),
     # angio, Dynamic Contrast-Enhanced Magnetic Resonance Imaging (DCE-MRI) 
-    #In[Get corresponding masks]
+    # In[Get corresponding masks]
     # take mprage to the t1
-    t1_m = check_tags(df, t1_t) | check_tags(df, mpr_t)
+    mask_dict = DotDict({key : stats.check_tags(df, tag) for key, tag in tag_dict.items()})
+    #mprage is always t1 https://pubmed.ncbi.nlm.nih.gov/1535892/
+    mask_dict['t1'] = stats.check_tags(df, tag_dict.t1) \
+        | stats.check_tags(df, tag_dict.mpr)
+    mask_dict['t1tfe'] = mask_dict.t1 & mask_dict.tfe
+    mask_dict['t1spgr'] = mask_dict.t1 & mask_dict.spgr
+    mask_dict['t2_flair'] = stats.only_first_true(
+        stats.check_tags(df, tag_dict.t2), mask_dict.t2s)
+    mask_dict['t2_noflair'] = stats.only_first_true(mask_dict.t2_flair, mask_dict.flair)# real t2
+    mask_dict.none = df['SeriesDescription'].isnull()
     
-    mpr_m = check_tags(df, mpr_t)
-    t1mpr_m = t1_m & mpr_m
-    tfe_m = check_tags(df, tfe_t)
-    t1tfe_m = t1_m & tfe_m
-    spgr_m = check_tags(df, spgr_t)
-    t1spgr_m = t1_m & spgr_m
+    mask_dict.all = mask_dict.t1 | mask_dict.flair | mask_dict.t2_noflair \
+        | mask_dict.t2s | mask_dict.dwi | mask_dict.dti | mask_dict.swi \
+            | mask_dict.angio | mask_dict.adc | mask_dict.stir \
+                |mask_dict.survey | mask_dict.none
+    mask_dict.other = ~mask_dict.all
+    # In[Look at 'other' group] combine all the relevant masks to get others
     
-    flair_m = check_tags(df, flair_t)
+    p(df[mask_dict.other].SeriesDescription)
+    other_seq_series = df[mask_dict.other].SeriesDescription
+    other_seq_series_sort = other_seq_series.sort_values(axis=0, ascending=True).unique()
+    pd.DataFrame(other_seq_series_sort).to_csv(f"{tab_dir}/other_sequences.csv")
     
-    fse_m = check_tags(df, fse_t)
     
-    t2s_m = check_tags(df, t2s_t)
-    gre_m  = check_tags(df, gre_t)
+    # In[Get counts]
+    counts_dict = DotDict({key : mask.sum() for key, mask in mask_dict.items()})
     
-    dwi_m = check_tags(df, dwi_t)
-    gd_m = check_tags(df, gd_t)
-    
-    t2_flair_m = only_first_true(check_tags(df, t2_t), t2s_m)
-    t2_noflair_m = only_first_true(t2_flair_m, flair_m)# real t2
-    dti_m = check_tags(df, dti_t)
-    
-    swi_m = check_tags(df, swi_t) 
-    
-    angio_m = check_tags(df, angio_t)
-    smartbrain_m  = check_tags(df, smartbrain_t)
-    
-    none_m = df['SeriesDescription'].isnull()
-    # we are interested in t1, t2_noflair, flair, swi, dwi, dti
-    # combine all masks with an or and take complement
-    all_m = t1_m | flair_m | t2_noflair_m | t2s_m | dwi_m | dti_m | swi_m | angio_m | none_m 
-    other_m = ~all_m
-    
-    #In[Get counts]
+    # In[visualize basic sequences]
+    sequences_names = ['T1+\nMPRAGE', 'T2', 'FLAIR', 'T2*', 'SWI', 'DWI', 
+                       'angio', 'ADC', 'survey','TRACEW', 'Other','None']
+    seq_counts = np.array([counts_dict.t1, counts_dict.t2_noflair, counts_dict.flair,
+                           counts_dict.t2s, counts_dict.swi, 
+                           counts_dict.dwi, counts_dict.angio, 
+                           counts_dict.adc, counts_dict.survey, counts_dict.tracew,
+                           counts_dict.other, 
+                           counts_dict.none])
+    vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
+                 xtickparams_ls=16, save_plot=True, title='Positive Patients',
+                 figname=f"{fig_dir}/{file_name}/{fig_name}.png")
 
-    t1mpr_c = t1mpr_m.sum()
-    t1tfe_c = t1tfe_m.sum()
-    t1spgr_c = t1spgr_m.sum()
-    
-    # counts we are interested in
-    flair_c = flair_m.sum()
-    t1_c = t1_m.sum()
-    t2_c = t2_flair_m.sum()
-    t2noflair_c = t2_noflair_m.sum()
-    t2s_c = t2s_m.sum()
-    dti_c = dti_m.sum()
-    swi_c = swi_m.sum()
-    dwi_c = dwi_m.sum()
-    angio_c = angio_m.sum()
-    
-    none_c = none_m.sum()
-    other_c = other_m.sum()
-    
-    sequences_basic = ['T1+MPR', 'T2', 'FLAIR', 'T2*', 'DTI', 'SWI', 'DWI', 'angio',
-                   'Other',
-                   'None']
-    seq_counts = np.array([t1_c, t2noflair_c, flair_c, t2s_c, 
-                       dti_c, swi_c, dwi_c, angio_c, other_c, none_c])
-
-    return sequences_basic,seq_counts
+    return sequences_names,seq_counts
 
 def plot_seq(column_names,data,fig_dir=fig_dir,file_name=file_name,fig_name='basic_sequences_count'):
     sequences_basic, seq_counts = group_by_seq(data,column_names)

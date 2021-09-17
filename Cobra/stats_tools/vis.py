@@ -9,12 +9,15 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from mlxtend.plotting import plot_decision_regions
 from scipy import stats
-from . import fits
+
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import ticker
 
+import sys
+sys.path.append('../stats_tools/')
+import fits
 
 # In[General plots]
 def nice_plot(
@@ -29,7 +32,7 @@ def nice_plot(
     alpha = 1, scr_markersize = 30, scr_markerstyle = 'o', linewidth = 3, 
     fill_under_curve = False, 
     fill_color = 'skyblue', drawstyle = 'default'):
-    r"""
+    """
     Simple x-y plot. 
     
     Parameters:

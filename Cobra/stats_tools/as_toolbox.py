@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 #import importlib
 #import ExternalFunctions
 #importlib.reload(ExternalFunctions)
-from .ExternalFunctions import Chi2Regression
-from .ExternalFunctions import nice_string_output
-from .ExternalFunctions import compute_f
+from ExternalFunctions import Chi2Regression
+from ExternalFunctions import nice_string_output
+from ExternalFunctions import compute_f
 from iminuit.util import make_func_code
 from iminuit import describe
 from iminuit import Minuit
