@@ -9,6 +9,7 @@ from glob import iglob
 from pathlib import Path
 import datetime as dt
 from utilss.basic import DotDict
+import nibabel as nib
 
 
 
@@ -17,6 +18,16 @@ data_dir = f"{BASE_DIR}/data"
 
 patient_dirs = os.listdir(BASE_DIR)
 patient_dir = f"{data_dir}/patient1"
+
+nib.Nifti1Header.quaternion_threshold = -1e-06
+def nii_data(path_, return_nii=False):
+    """Load numpy array contained in nii file"""
+    img_mat = nib.load(path_)
+    if not(return_nii):
+        return img_mat.get_fdata()
+    else:
+        return img_mat.get_fdata(), img_mat
+
 
 def get_docs_path_list(scan_dir):
     reports = iglob(f"{scan_dir}/*/*/*/DOC/*/*.pdf")
