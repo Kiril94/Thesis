@@ -18,6 +18,7 @@ import time
 import seaborn as sns
 from utilss import stats
 from utilss import utils
+from utilss import mri_stats
 from data_access import load_data_tools as ld
 import pydicom
 from utilss.basic import DotDict 
@@ -128,7 +129,7 @@ agfa_c = stats.mask_sequence_type(df_p, 'Agfa', 'Manufacturer').sum()
 none_c = df_p['Manufacturer'].isnull().sum()
 
 # In[visualize scanner manufacturer counts]
-fig, ax = plt.subplots(1,figsize = (10,6))
+fig, ax = plt.subplots(1, figsize = (10,6))
 manufacturers_unq = ['Philips', 'SIEMENS', 'GEMS', 'Agfa', 'none']
 counts = np.array([philips_c, siemens_c, gms_c, agfa_c, none_c])
 vis.bar_plot(manufacturers_unq, counts, xlabel='Manufacturer', 
@@ -218,15 +219,20 @@ tag_dict['angio'] = ['TOF', 'ToF', 'tof','angio', 'Angio', 'ANGIO', 'SWAN']
 # tags that are connected to sequences that are not useful
 tag_dict['screensave'] = ['Screen Save']
 tag_dict['autosave'] = ['3D Saved State - AutoSave']
-tag_dict['b1calib'] = ['B1_Calibration']
+tag_dict['b1calib'] = ['B1_Calibration', 'calib', 'Calib', 'cal', 'Cal']
+tag_dict['loc'] = ['Loc', 'loc', 'Scout', 'LOC']
+tag_dict['bold'] = ['BOLD']
+#tag_dict['x'] = ['IMPAX Volume Viewing', 'MIP - Sinus Thrombose 3D PC',
+#                 'BFFECranienerver', ]
 print("TOF:time of flight angriography, SWAN: susceptibility-weighted angiography")
 tag_dict = DotDict(tag_dict)
 # Look up: MIP (maximum intensity projection), SmartBrain, 
 # TOF (time of flight angriography), ADC?, STIR (Short Tau Inversion Recovery),
 # angio, Dynamic Contrast-Enhanced Magnetic Resonance Imaging (DCE-MRI) 
+
 # In[Test]
-date_mask = df_p[SD_k].str.contains('stir', na=False)
-print(df_p[date_mask][SD_k])
+mask = df_p[SD_k].str.contains('stir', na=False)
+print(df_p[mask][SD_k])
 
 # In[Get corresponding masks]
 # take mprage to the t1
@@ -259,25 +265,44 @@ mask_dict.relevant = mask_dict.t1 | mask_dict.flair | mask_dict.t2_noflair \
 mask_dict.none = df_p['SeriesDescription'].isnull()       
 mask_dict.none_nid = mask_dict.none | ~mask_dict.identified #either non or not identified
 mask_dict.other = ~mask_dict.none_nid & ~mask_dict.relevant# nont none identified and non relevant
+mask
+# In[Save Patient IDs]
+posids_dict = DotDict({key : df_p[mask][PID_k] for key, mask in mask_dict.items()})
+rel_key_list = ['t1', 'gd', 't2_noflair', 't2s', 't2_flair', 'swi']
+for key in rel_key_list:
+    print(key)
+    pat_ids = list(posids_dict[key])
+    print(len(pat_ids))
+    with open(f"{base_dir}/results/pos_IDs_{key}.txt", "w") as f:
+        for pat_id in pat_ids:
+            f.write("%s\n" % pat_id)
+        
 
-# In[]
-
-p(mask_dict.b1calib.sum())
-#p(6*1e6/4/3600/24)
-p(df_p.keys())
+# In[test]
+p(df_p[mask_dict.t2_noflair & mask_dict.swi][SD_k])
 # In[Look at 'other' group] combine all the relevant masks to get others
-seq_vars = [SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k ]
-p(df_p[mask_dict.other].SeriesDescription)
+seq_vars = [SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k]
+ids_vars = [PID_k, SID_k]
+comb_vars = seq_vars + ids_vars
 nid_seq = df_p[mask_dict.none_nid]
-nid_seq_sort = nid_seq[seq_vars].dropna(how='all').sort_values(by=SD_k, axis=0, ascending=True)
+nid_seq_sort = nid_seq[comb_vars].dropna(thresh=3).sort_values(by=SD_k, 
+                                                               axis=0, ascending=True)
 nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
-nid_seq_sort.to_csv(f"{base_dir}/tables/non_identified_seq.csv", index=False)
+
+nid_seq_sort_ids = nid_seq_sort[ids_vars]
+nid_seq_sort_ids.to_csv(f"{base_dir}/tables/non_identified_seq_ids.csv", index=False)
+nid_seq_sort[seq_vars].to_csv(f"{base_dir}/tables/non_identified_seq.csv", index=False)
 p(nid_seq_sort)
-# In[]
-p(df_p.keys())
-#mask = df_p.SequenceName.dropna().str.contains('e')
-#p(df_p.SequenceName.dropna()[mask].unique())
-p(df_p.ScanningSequence[0])
+
+# In[Save corresponding patient and scan ids]
+ids_vars = [PID_k, SID_k]
+nid_seq = df_p[mask_dict.none_nid]
+nid_seq_sort = nid_seq[ids_vars].sort_values(by=PID_k, 
+                                                               axis=0, ascending=True)
+nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
+nid_seq_sort.to_csv(f"{base_dir}/tables/non_identified_seq_pid.csv", index=False)
+p(nid_seq_sort)
+
 # In[Get counts]
 counts_dict = DotDict({key : mask.sum() for key, mask in mask_dict.items()})
 print(counts_dict)
@@ -304,17 +329,13 @@ seq_counts = np.array([counts_dict.dti, counts_dict.tracew, counts_dict.asl,
 vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
              xtickparams_ls=16, save_plot=True, title='Positive Patients',
              figname=f"{fig_dir}/pos/other_sequences_count.png")
-# In[]
-p(seq_counts)
-# In[Look at the distributions of TE and TR for different seq]
 
+# In[Look at the distributions of TE and TR for different seq]
 df_p.loc[mask_dict.t1, 'Sequence'] = 'T1'
 df_p.loc[mask_dict.t2_noflair,'Sequence'] = 'T2'
 df_p.loc[mask_dict.t2s,'Sequence'] = 'T2S'
 df_p.loc[mask_dict.flair,'Sequence'] = 'FLAIR'
 df_p_clean = df_p.dropna(subset=[TE_k, TR_k])
-
-
 
 # In[visualize sequences scatter]
 fig, ax = plt.subplots(2,2,figsize=(10,10))
@@ -336,7 +357,6 @@ plt.show()
 fig.savefig(f"{fig_dir}/pos/scatter_training.png")
 
 # In[Extract dates from series description if not present in InstanceCreationData]
-
 #p(df_p['InstanceCreationDate'].dropna())
 p(f"number of scans without date {df_p['InstanceCreationDate'].isnull().sum()}\
   out of {len(df_p)}")
@@ -372,18 +392,20 @@ vis.bar_plot(year_month_keys[:-3], year_month_counts[:-3], figsize=(13,7),
                     xlabel='month/year', save_plot=(True), ylabel='Frequency',
                     title='Number of acquired volumes for positive patients',
                     figname=f"{fig_dir}/pos/scans_months_years.png" )
+
 # In[when is the date present but not a time]
 p(f"{pd.isnull(df_p[date_k]).sum()} scans dont have a time or date")
 
 # In[Study months distribution]
 importlib.reload(stats)
 _, study_dates = stats.time_between_studies(df_p)
-# In[]
+
+# In[Studies distr]
 year_month_study_dates = [str(date.year)+'/'+str(date.month)for date in study_dates]
 year_month_unique, year_month_counts = np.unique(
     np.array(year_month_study_dates), return_counts=True)
 vis.bar_plot(year_month_unique[:-2], year_month_counts[:-2], figsize=(13,7),
-             xtickparams_rot=70, 
-                    xlabel='study month/year', save_plot=(True), ylabel='Frequency',
-                    title='Studies for positive patients',
-                    figname=f"{fig_dir}/pos/studies_months_years.png" )
+             xtickparams_rot=70, xlabel='study month/year', save_plot=(True), 
+             ylabel='Frequency', title='Studies for positive patients',
+             figname=f"{fig_dir}/pos/studies_months_years.png" )
+
