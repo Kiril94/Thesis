@@ -8,7 +8,9 @@ from utilss.basic import DotDict
 import utilss.stats as stats
 
 
-def get_masks_dict(df):
+
+def get_masks_dict(df, return_tags=True):
+    
     tag_dict = {}
     tag_dict['t1'] = ['T1', 't1']
     tag_dict['mpr'] = ['mprage', 'MPRAGE'] # Mostly T1
@@ -74,5 +76,7 @@ def get_masks_dict(df):
     mask_dict.none = df['SeriesDescription'].isnull()       
     mask_dict.none_nid = mask_dict.none | ~mask_dict.identified #either non or not identified
     mask_dict.other = ~mask_dict.none_nid & ~mask_dict.relevant# nont none identified and non relevant
-
-    return mask_dict
+    if return_tags:
+        return mask_dict, tag_dict
+    else:
+        return mask_dict
