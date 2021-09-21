@@ -89,3 +89,8 @@ df_neg_list = [utils.load_scan_csv(csv_path) for csv_path in \
 df_all_neg_2019 = pd.concat(df_neg_list, axis=0, join="outer") 
 # In[Write it to a csv]
 df_all_neg_2019.to_csv(f"{csv_folder}/neg_all.csv", index = False, header = True)
+# In[Combine pos and negative into one csv]
+df_all_neg = utils.load_scan_csv(f"{csv_folder}/neg_all.csv")
+df_p = utils.load_scan_csv(f"{csv_folder}/pos_nn.csv")
+df_all = pd.concat([df_all_neg, df_p], axis=0, join="outer") 
+df_all.to_csv(f"{csv_folder}/neg_pos.csv", index = False, header = True)

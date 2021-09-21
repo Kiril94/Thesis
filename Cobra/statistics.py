@@ -60,12 +60,14 @@ fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/tables"
 
 # In[load positive csv]
-pos_tab_dir = f"{table_dir}/pos_nn.csv"
-neg_tab_dir = f"{table_dir}/all2019.csv"
-df_p = utils.load_scan_csv(pos_tab_dir)
-df_n = utils.load_scan_csv(neg_tab_dir)
-keys = df_p.keys()
-p(f"Number of patients = {len(df_p.PatientID.unique())}")
+#pos_tab_dir = f"{table_dir}/pos_nn.csv"
+#neg_tab_dir = f"{table_dir}/all2019.csv"
+#df_p = utils.load_scan_csv(pos_tab_dir)
+#df_n = utils.load_scan_csv(neg_tab_dir)
+all_tab_dir = f"{table_dir}/neg_pos.csv"
+df_all = utils.load_scan_csv(all_tab_dir)
+#keys = df_p.keys()
+#p(f"Number of patients = {len(df_p.PatientID.unique())}")
 
 # In[Remove those where patient id and series description is none]
 df_n = df_n[df_n[PID_k].notna()]
@@ -217,12 +219,30 @@ ids_vars = [PID_k, SID_k]
 comb_vars = seq_vars + ids_vars
 nid_seq = df_p[mask_dict_p.none_nid]
 nid_seq_sort = nid_seq[comb_vars].dropna(thresh=3).sort_values(by=SD_k, 
-                                                               axis=0, ascending=True)
+                                                               axis=0, 
+                                                               ascending=True)
 nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
 
 nid_seq_sort_ids = nid_seq_sort[ids_vars]
-nid_seq_sort_ids.to_csv(f"{base_dir}/tables/non_identified_seq_ids.csv", index=False)
-nid_seq_sort[seq_vars].to_csv(f"{base_dir}/tables/non_identified_seq.csv", index=False)
+nid_seq_sort_ids.to_csv(f"{base_dir}/tables/non_identified_seq_ids.csv", 
+                        index=False)
+nid_seq_sort[seq_vars].to_csv(f"{base_dir}/tables/non_identified_seq.csv", 
+                              index=False)
+p(nid_seq_sort)
+
+# In[Look at 'other' group for all mris]
+mask_dict_all = mri_stats.get_masks_dict(df_all, False)
+seq_vars = [SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k, PID_k, SID_k]
+
+nid_seq = df_all[mask_dict_all.none_nid]
+nid_seq_sort = nid_seq[seq_vars].dropna(thresh=3).sort_values(by=SD_k, 
+                                                               axis=0, 
+                                                               ascending=True)
+nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
+nid_seq_sort = nid_seq_sort.drop_duplicates(subset = [SD_k])
+nid_seq_sort.to_csv(f"{base_dir}/tables/non_identified_seq_ids_all.csv", 
+                        index=False)
+
 p(nid_seq_sort)
 
 # In[Save corresponding patient and scan ids]
