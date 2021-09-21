@@ -30,27 +30,6 @@ import math
 def p(x):
     print(x)
 
-# In[Test functions]
-masks = [np.array([1, 0, 0]), np.array([0, 0, 0]), np.array([1, 1, 0])]
-mask = masks[0]
-for i in range(1, len(masks)):
-    mask = mask | masks[i]
-print(mask)
-
-# In[tables directories]
-script_dir = os.path.realpath(__file__)
-base_dir = Path(script_dir).parent
-fig_dir = f"{base_dir}/figs/basic_stats"
-table_dir = f"{base_dir}/tables"
-
-# In[load positive csv]
-pos_tab_dir = f"{table_dir}/pos_nn.csv"
-#neg_tab_dir = f"{table_dir}/all2019.csv"
-df_p = utils.load_scan_csv(pos_tab_dir)
-#df_n = utils.load_scan_csv(neg_tab_dir)
-keys = df_p.keys()
-p(f"Number of patients = {len(df_p.PatientID.unique())}")
-
 # In[Usefule keys]
 TE_k = 'EchoTime'
 TR_k = 'RepetitionTime'
@@ -67,6 +46,30 @@ SV_k = 'SequenceVariant'
 SN_k = 'SequenceName'
 SO_k = 'ScanOptions'
 ETL_k = 'EchoTrainLength'
+# In[Test functions]
+masks = [np.array([1, 0, 0]), np.array([0, 0, 0]), np.array([1, 1, 0])]
+mask = masks[0]
+for i in range(1, len(masks)):
+    mask = mask | masks[i]
+print(mask)
+
+# In[tables directories]
+script_dir = os.path.realpath(__file__)
+base_dir = Path(script_dir).parent
+fig_dir = f"{base_dir}/figs/basic_stats"
+table_dir = f"{base_dir}/tables"
+
+# In[load positive csv]
+pos_tab_dir = f"{table_dir}/pos_nn.csv"
+neg_tab_dir = f"{table_dir}/all2019.csv"
+df_p = utils.load_scan_csv(pos_tab_dir)
+df_n = utils.load_scan_csv(neg_tab_dir)
+keys = df_p.keys()
+p(f"Number of patients = {len(df_p.PatientID.unique())}")
+
+# In[Remove those where patient id and series description is none]
+df_n = df_n[df_n[PID_k].notna()]
+df_n = df_n[df_n[SD_k].notna()]
 # In[Write Patient IDs to text]
 neg_pat_ids = list(df_n[PID_k].unique())
 with open(f'{base_dir}/results/neg_ids.txt', 'w') as filehandle:
@@ -183,108 +186,36 @@ plt.subplots_adjust(wspace=.5, hspace=None)
 plt.show()
 fig.savefig(f"{fig_dir}/pos/model_name_pie_chart.png")
 
-
-# In[Sequence Types, define tags]
-tag_dict = {}
-tag_dict['t1'] = ['T1', 't1']
-tag_dict['mpr'] = ['mprage', 'MPRAGE'] # Mostly T1
-print('MPRAGE is always T1w')
-#tag_dict['tfe'] = ['tfe', 'TFE'] can be acquired with or without T1/ T2
-tag_dict['spgr'] = ['SPGR', 'spgr'] #primarily T1 or PD
-print("The smartbrain protocol occurs only for philips")
-# tag_dict['smartbrain'] = ['SmartBrain']
-
-tag_dict['flair'] = ['FLAIR','flair', 'Flair']
-
-tag_dict['t2'] = ['T2', 't2']
-#tag_dict['fse'] = ['FSE', 'fse', 'TSE', 'tse']    
-
-tag_dict['t2s'] = ['T2\*', 't2\*']
-#tag_dict['gre']  = ['GRE', 'gre'] # can be t2*, t1 or pd
-
-tag_dict['dti']= ['DTI', 'dti'] 
-tag_dict['pwi'] = ['Perfusion_Weighted']
-print("There is one perfusion weighted image (PWI)")
-tag_dict['swi'] = ['SWI', 'swi']
-tag_dict['dwi'] = ['DWI', 'dwi']
-tag_dict['adc'] = ['ADC', 'Apparent Diffusion Coefficient']
-tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium', 'T1\+', 't1\+']
-tag_dict['stir'] = ['STIR']
-tag_dict['tracew'] = ['TRACEW'] #
-tag_dict['asl'] = ['ASL']
-tag_dict['cest'] = ['CEST']
-tag_dict['survey'] = ['SURVEY', 'Survey', 'survey']
-tag_dict['angio'] = ['TOF', 'ToF', 'tof','angio', 'Angio', 'ANGIO', 'SWAN']
-
-# tags that are connected to sequences that are not useful
-tag_dict['screensave'] = ['Screen Save']
-tag_dict['autosave'] = ['3D Saved State - AutoSave']
-tag_dict['b1calib'] = ['B1_Calibration', 'calib', 'Calib', 'cal', 'Cal']
-tag_dict['loc'] = ['Loc', 'loc', 'Scout', 'LOC']
-tag_dict['bold'] = ['BOLD']
-#tag_dict['x'] = ['IMPAX Volume Viewing', 'MIP - Sinus Thrombose 3D PC',
-#                 'BFFECranienerver', ]
-print("TOF:time of flight angriography, SWAN: susceptibility-weighted angiography")
-tag_dict = DotDict(tag_dict)
-# Look up: MIP (maximum intensity projection), SmartBrain, 
-# TOF (time of flight angriography), ADC?, STIR (Short Tau Inversion Recovery),
-# angio, Dynamic Contrast-Enhanced Magnetic Resonance Imaging (DCE-MRI) 
-
-# In[Test]
-mask = df_p[SD_k].str.contains('stir', na=False)
-print(df_p[mask][SD_k])
-
-# In[Get corresponding masks]
-# take mprage to the t1
-mask_dict = DotDict({key : stats.check_tags(df_p, tag) for key, tag in tag_dict.items()})
-
-#mprage is always t1 https://pubmed.ncbi.nlm.nih.gov/1535892/
-mask_dict['t1'] = stats.check_tags(df_p, tag_dict.t1) \
-    | stats.check_tags(df_p, tag_dict.mpr)
-mask_dict['t1'] = stats.only_first_true(mask_dict.t1, mask_dict.gd)
-
-#mask_dict['t1tfe'] = mask_dict.t1 & mask_dict.tfe
-mask_dict['t1spgr'] = mask_dict.t1 & mask_dict.spgr
-
-mask_dict['t2_flair'] = stats.only_first_true(
-    stats.check_tags(df_p, tag_dict.t2), mask_dict.t2s)
-mask_dict['t2_noflair'] = stats.only_first_true(mask_dict.t2_flair, mask_dict.flair)# real t2
-
-print("we are interested in t1, t2_noflair, flair, swi, dwi, dti, angio")
-print("combine all masks with an or and take complement")
-
-mask_identified = mask_dict.t1
-for mask in mask_dict.values():
-    mask_identified = mask_identified | mask
-mask_dict.identified = mask_identified
-
-mask_dict.relevant = mask_dict.t1 | mask_dict.flair | mask_dict.t2_noflair \
-    | mask_dict.t2s | mask_dict.dwi | mask_dict.swi \
-        | mask_dict.angio | mask_dict.adc 
-
-mask_dict.none = df_p['SeriesDescription'].isnull()       
-mask_dict.none_nid = mask_dict.none | ~mask_dict.identified #either non or not identified
-mask_dict.other = ~mask_dict.none_nid & ~mask_dict.relevant# nont none identified and non relevant
-mask
-# In[Save Patient IDs]
-posids_dict = DotDict({key : df_p[mask][PID_k] for key, mask in mask_dict.items()})
+# In[Keys that are relevant]
 rel_key_list = ['t1', 'gd', 't2_noflair', 't2s', 't2_flair', 'swi']
+# In[Save Patient pos IDs]
+mask_dict_p, tag_dict_p = mri_stats.get_masks_dict(df_p)
+posids_dict = DotDict({key : df_p[mask][PID_k] for key, mask \
+                       in mask_dict_p.items()})
 for key in rel_key_list:
     print(key)
     pat_ids = list(posids_dict[key])
     print(len(pat_ids))
     with open(f"{base_dir}/results/pos_IDs_{key}.txt", "w") as f:
         for pat_id in pat_ids:
-            f.write("%s\n" % pat_id)
-        
+            f.write("%s\n" % pat_id)    
 
-# In[test]
-p(df_p[mask_dict.t2_noflair & mask_dict.swi][SD_k])
+# In[Save Patient neg IDs]
+mask_dict_n = mri_stats.get_masks_dict(df_n, return_tags=False)
+negids_dict = DotDict({key : df_n[mask][PID_k] for key, mask \
+                       in mask_dict_n.items()})
+for key in rel_key_list:
+    pat_ids = list(negids_dict[key])
+    with open(f"{base_dir}/results/neg_IDs_{key}.txt", "w") as f:
+        for pat_id in pat_ids:
+            f.write("%s\n" % pat_id)   
+
+
 # In[Look at 'other' group] combine all the relevant masks to get others
 seq_vars = [SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k]
 ids_vars = [PID_k, SID_k]
 comb_vars = seq_vars + ids_vars
-nid_seq = df_p[mask_dict.none_nid]
+nid_seq = df_p[mask_dict_p.none_nid]
 nid_seq_sort = nid_seq[comb_vars].dropna(thresh=3).sort_values(by=SD_k, 
                                                                axis=0, ascending=True)
 nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
@@ -296,15 +227,14 @@ p(nid_seq_sort)
 
 # In[Save corresponding patient and scan ids]
 ids_vars = [PID_k, SID_k]
-nid_seq = df_p[mask_dict.none_nid]
-nid_seq_sort = nid_seq[ids_vars].sort_values(by=PID_k, 
-                                                               axis=0, ascending=True)
+nid_seq = df_p[mask_dict_p.none_nid]
+nid_seq_sort = nid_seq[ids_vars].sort_values(by=PID_k, axis=0, ascending=True)
 nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
 nid_seq_sort.to_csv(f"{base_dir}/tables/non_identified_seq_pid.csv", index=False)
 p(nid_seq_sort)
 
 # In[Get counts]
-counts_dict = DotDict({key : mask.sum() for key, mask in mask_dict.items()})
+counts_dict = DotDict({key : mask.sum() for key, mask in mask_dict_p.items()})
 print(counts_dict)
 
 # In[visualize basic sequences]
@@ -331,10 +261,10 @@ vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
              figname=f"{fig_dir}/pos/other_sequences_count.png")
 
 # In[Look at the distributions of TE and TR for different seq]
-df_p.loc[mask_dict.t1, 'Sequence'] = 'T1'
-df_p.loc[mask_dict.t2_noflair,'Sequence'] = 'T2'
-df_p.loc[mask_dict.t2s,'Sequence'] = 'T2S'
-df_p.loc[mask_dict.flair,'Sequence'] = 'FLAIR'
+df_p.loc[mask_dict_p.t1, 'Sequence'] = 'T1'
+df_p.loc[mask_dict_p.t2_noflair,'Sequence'] = 'T2'
+df_p.loc[mask_dict_p.t2s,'Sequence'] = 'T2S'
+df_p.loc[mask_dict_p.flair,'Sequence'] = 'FLAIR'
 df_p_clean = df_p.dropna(subset=[TE_k, TR_k])
 
 # In[visualize sequences scatter]
@@ -342,8 +272,8 @@ fig, ax = plt.subplots(2,2,figsize=(10,10))
 ax = ax.flatten()
 sns.scatterplot(x=TE_k, y=TR_k,
                 hue='Sequence', data=df_p_clean,ax=ax[0])
-sns.scatterplot(x=TE_k, y=IR_k, legend=None,
-                hue='Sequence', data= df_p_clean,
+sns.scatterplot(x=TE_k, y=TI_k, legend=None,
+                hue='Sequence', data=df_p_clean,
                 ax=ax[1])
 sns.scatterplot(x=TI_k, y=TR_k, legend=None,
                 hue='Sequence', data= df_p_clean,
@@ -367,10 +297,10 @@ date_mask = df_p['SeriesDescription'].str.contains('2020', na=False)
 # In[Search for combinations of FLAIR, SWI, T1]
 gb_pat = df_p.groupby(PID_k)
 #grouped masks followd by
-flair_m = stats.check_tags(gb_pat, tag_dict.flair).groupby(PID_k).any()
-swi_m = stats.check_tags(gb_pat, tag_dict.swi).groupby(PID_k).any()
-t1_m = stats.check_tags(gb_pat, tag_dict.t1).groupby(PID_k).any()
-t2_m = stats.check_tags(gb_pat, tag_dict.t2).groupby(PID_k).any()
+flair_m = stats.check_tags(gb_pat, tag_dict_p.flair).groupby(PID_k).any()
+swi_m = stats.check_tags(gb_pat, tag_dict_p.swi).groupby(PID_k).any()
+t1_m = stats.check_tags(gb_pat, tag_dict_p.t1).groupby(PID_k).any()
+t2_m = stats.check_tags(gb_pat, tag_dict_p.t2).groupby(PID_k).any()
 
 flair_swi_t1_m = flair_m & swi_m & t1_m 
 p(f"{flair_swi_t1_m.sum()} patients have\

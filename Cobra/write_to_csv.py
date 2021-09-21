@@ -28,7 +28,7 @@ csv_folder = "D:/Thesis/Cobra/tables"
 
 
 # In[delete last patient from ]
-last_csv_file = "healthy_6_nn.csv"
+last_csv_file = "healthy_10_nn.csv"
 last_csv_path = os.path.join(csv_folder, last_csv_file)
 
 # In[get last patient value]
@@ -49,7 +49,7 @@ last_patient_value = df_last['PatientID'].iloc[-1]
 print(last_patient_value)
 
 # In[list patients from the last written patient]
-subdir = healthy_dirs[5]
+subdir = healthy_dirs[9]
 patient_list = sorted(utils.list_subdir(subdir))
 print(subdir)
 # In[get index]
@@ -71,8 +71,8 @@ utils.write_csv(csv_path, pos_patient_list)
 # In[Write neg to csv]
 csv_columns = [x[0] for x in ld.get_scan_key_list()]
 csv_folder = "D:/Thesis/Cobra/tables"
-starting_month = 7
-for month, subdir in enumerate(healthy_dirs[starting_month-1:]):
+starting_month = 10
+for month, subdir in enumerate(healthy_dirs[starting_month-1:starting_month]):
     print(f"converting files from {subdir}")
     csv_file = f"healthy_{month+starting_month}_nn.csv"
     #csv_file = f"test.csv"
@@ -82,10 +82,10 @@ for month, subdir in enumerate(healthy_dirs[starting_month-1:]):
     
 # In[Create one csv for all 2019]
 neg_tab_dirs = sorted([f"{csv_folder}/{x}" for x \
-                       in os.listdir(csv_folder) if x.startswith('healthy')])  
+                       in os.listdir(csv_folder) if x.startswith('healthy') and 
+                       not('_10_nn' in x)])  
 df_neg_list = [utils.load_scan_csv(csv_path) for csv_path in \
                neg_tab_dirs]
-df_all_2019 = pd.concat(df_neg_list, axis=0, join="outer") 
-
+df_all_neg_2019 = pd.concat(df_neg_list, axis=0, join="outer") 
 # In[Write it to a csv]
-df_all_2019.to_csv(f"{csv_folder}/all2019.csv", index = False, header = True)
+df_all_neg_2019.to_csv(f"{csv_folder}/neg_all.csv", index = False, header = True)
