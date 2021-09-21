@@ -81,3 +81,4 @@ def get_masks_dict(df, return_tags=True):
         return mask_dict, tag_dict
     else:
         return mask_dict
+    

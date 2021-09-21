@@ -94,3 +94,12 @@ df_all_neg = utils.load_scan_csv(f"{csv_folder}/neg_all.csv")
 df_p = utils.load_scan_csv(f"{csv_folder}/pos_nn.csv")
 df_all = pd.concat([df_all_neg, df_p], axis=0, join="outer") 
 df_all.to_csv(f"{csv_folder}/neg_pos.csv", index = False, header = True)
+
+# In[For every series id, store directory to csv]
+
+
+csv_path_ids = os.path.join(csv_folder, 'sid_directories.csv')
+utils.directories_to_csv(csv_path_ids, "Y:/positive")
+for subdir in healthy_dirs:
+    print(f"storing ids from {subdir}")
+    utils.directories_to_csv(csv_path_ids, subdir, append=True)

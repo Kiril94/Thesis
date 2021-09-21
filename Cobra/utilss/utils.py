@@ -13,6 +13,9 @@ from data_access import load_data_tools as ld
 import csv
 import datetime
 from .basic import DotDict
+import csv
+from pathlib import Path
+
 
 
 def write_csv(csv_path, patient_list, append=False):
@@ -55,7 +58,37 @@ def write_csv(csv_path, patient_list, append=False):
         stop = time.time()
     print(f"the conversion took {(stop-start)/3600} h")
 
+def directories_to_csv(csv_path, main_dir, append=False):
+    """This function writes all the series directories in main_dir to csv."""
+    if append:
+        mode = 'a'
+    else:
+        mode = 'w'
+    fieldnames = ['SeriesInstanceUID', 'Directory']
+    with open(csv_path, mode, newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        if mode == 'w': 
+            writer.writeheader()
+        start = time.time()
+        counter = 0
+        print(f'Start writing from {main_dir}')
+        for scan_dir in iglob(f"{main_dir}/*/*/MR/*"):
+            SID = Path(scan_dir).parts[-1]
+            scan_dir_no_drive = os.path.splitdrive(scan_dir)[1][1:]
+            data = {'SeriesInstanceUID':SID,
+                    'Directory':scan_dir_no_drive}
+            try:
+                writer.writerow(data)  
+            except IOError:
+                print("I/O error")
+            print('.', end='')
+            counter+=1
+            if counter%1000==0:
+                print(f"{counter} series directories written")
+        stop = time.time()
+    print(f"the conversion took {(stop-start)/3600} h")
         
+    
 def literal_converter(val):
     """Helper function for load_scan_csv"""
     try:
