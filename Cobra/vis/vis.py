@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import math
 import numpy as np
+from data_access import load_data_tools as ld
+import glob
 
 
 def display3d(arr3d, figsize=(15, 15), start_slice=0, num_slices=None, axis=0):
@@ -37,6 +39,17 @@ def display3d(arr3d, figsize=(15, 15), start_slice=0, num_slices=None, axis=0):
     fig.tight_layout()
     return fig, ax
 
+def show_series(patient_id, series_id, base_data_dir='Y:'):
+    """Shows the series for a series_id"""
+    counter = 0
+    for series_dir in glob.iglob(f"{base_data_dir}/*/{patient_id}/*/*/{series_id}"):
+        if counter>0:
+            break
+        arr3d = ld.reconstruct3d(series_dir)
+        display3d(arr3d)
+        counter += 1
+        
+        
 ##########################################
 def bar_plot(labels, counts, figsize=(10,6), width=.8,
              lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,

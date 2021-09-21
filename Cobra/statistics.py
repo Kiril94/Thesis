@@ -243,7 +243,10 @@ nid_seq_sort = nid_seq_sort.drop_duplicates(subset = [SD_k])
 nid_seq_sort.to_csv(f"{base_dir}/tables/non_identified_seq_ids_all.csv", 
                         index=False)
 
-p(nid_seq_sort)
+# In[Show some scans]
+vis.show_series('a0be3bf699294420053eb3c6ca7d7f6c',
+              '2e2caa22443d04a2d42bfc4e7dc9d6bb')
+#p(nid_seq_sort)
 
 # In[Save corresponding patient and scan ids]
 ids_vars = [PID_k, SID_k]

@@ -43,6 +43,7 @@ def get_masks_dict(df, return_tags=True):
     tag_dict['b1calib'] = ['B1_Calibration', 'calib', 'Calib', 'cal', 'Cal']
     tag_dict['loc'] = ['Loc', 'loc', 'Scout', 'LOC', 'lokal']
     tag_dict['bold'] = ['BOLD']
+    tag_dict['more'] = ['vessel_scout', ]
     #print("TOF:time of flight angriography, SWAN: susceptibility-weighted angiography")
     tag_dict = DotDict(tag_dict)
     
