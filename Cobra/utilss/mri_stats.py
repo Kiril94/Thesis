@@ -71,6 +71,7 @@ def get_masks_dict(df, return_tags=True):
 
     mask_dict['t2'] = stats.only_first_true(mask_dict.t2, mask_dict.flair)# no flair
     mask_dict['t2'] = stats.only_first_true(mask_dict.t2, mask_dict.t2s)# no t2s
+    mask_dict['t1+']
     print("we are interested in t1, t2, flair, swi, dwi, dti, angio, t2s")
     print("combine all masks with an or and take complement")
 

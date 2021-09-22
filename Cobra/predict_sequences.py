@@ -48,7 +48,7 @@ for mask, key in zip(rel_masks, rel_keys):
 # In[check]
 print(df_all[mask_dict.gd]['Sequence'])
 # In[check]
-print(df_all[SD_k][mask_dict.t2_flair])
+print(df_all[SD_k][mask_dict.gd])
 
 # In[]
 
