@@ -24,8 +24,8 @@ fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/tables"
 
 # In[load positive csv]
-pos_tab_dir = f"{table_dir}/pos_nn.csv"  
-df_p = utils.load_scan_csv(pos_tab_dir)
+table_all_dir = f"{table_dir}/all2019.csv"  
+df_all = utils.load_scan_csv(table_all_dir)
 
 # In[Define useful keys]
 TE_k = 'EchoTime'
@@ -37,7 +37,26 @@ PID_k = 'PatientID'
 time_k = 'InstanceCreationTime'
 date_k = 'InstanceCreationDate'
 # In[Define tags]
-mask_dict, tag_dict = mri_stats.get_masks_dict(df_p)
+mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
+
+# In[Add sequence column and set it to one of the relevant values]
+rel_keys = ['t1', 'gd', 't2_noflair', 't2s', 't2', 'swi', 'other']
+rel_masks = [mask_dict[key] for key in rel_keys] 
+df_all['Sequence'] = 0
+for mask, key in zip(rel_masks, rel_keys):
+    df_all['Sequence'][mask] = key
+# In[check]
+print(df_all[mask_dict.gd]['Sequence'])
+# In[check]
+print(df_all[SD_k][mask_dict.t2_flair])
+
+# In[]
+
+fig, ax = plt.subplots()
+sns.scatterplot(x=TE_k, y=TR_k, hue='Sequence', 
+                data=df_all[mask_dict.t1 | mask_dict.gd],
+                ax=ax)
+df_all[mask_dict.t1 | mask_dict.gd]
 
 # In[Data]
 print(f"all the identified sequences {mask_dict.relevant.sum()} out of {len(df_p)}")
