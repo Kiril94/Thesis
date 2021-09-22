@@ -74,7 +74,7 @@ def directories_to_csv(csv_path, main_dir, append=False):
         print(f'Start writing from {main_dir}')
         for scan_dir in iglob(f"{main_dir}/*/*/MR/*"):
             SID = Path(scan_dir).parts[-1]
-            scan_dir_no_drive = os.path.splitdrive(scan_dir)[1][1:]
+            scan_dir_no_drive = os.path.splitdrive(scan_dir)[1][2:]
             data = {'SeriesInstanceUID':SID,
                     'Directory':scan_dir_no_drive}
             try:

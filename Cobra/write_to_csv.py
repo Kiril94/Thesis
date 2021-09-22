@@ -97,9 +97,14 @@ df_all.to_csv(f"{csv_folder}/neg_pos.csv", index = False, header = True)
 
 # In[For every series id, store directory to csv]
 
-
 csv_path_ids = os.path.join(csv_folder, 'sid_directories.csv')
-utils.directories_to_csv(csv_path_ids, "Y:/positive")
+#utils.directories_to_csv(csv_path_ids, "Y://positive")
 for subdir in healthy_dirs:
     print(f"storing ids from {subdir}")
     utils.directories_to_csv(csv_path_ids, subdir, append=True)
+
+# In[]
+df_uids = pd.read_csv(csv_path_ids)
+mask = df_uids['Directory'].str.contains('2019', na=False)
+df_uids = df_uids[~mask]
+df_uids.to_csv(csv_path_ids, index=False, header=True)
