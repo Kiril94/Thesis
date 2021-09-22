@@ -73,8 +73,8 @@ def get_masks_dict(df, return_tags=True):
     mask_dict['t2'] = stats.only_first_true(mask_dict.t2, mask_dict.flair)# no flair
     mask_dict['t2'] = stats.only_first_true(mask_dict.t2, mask_dict.t2s)# no t2s
     mask_dict['t2gd'] = mask_dict.t2 & mask_dict.gd
-    mask_dict['gd'] =  stats.only_first_true(mask_dict.gd, mask_dict.t2)# no t2
-    mask_dict['gd'] =  stats.only_first_true(mask_dict.gd, mask_dict.t1)# no t1
+    mask_dict['gd'] =  stats.only_first_true(mask_dict.gd, mask_dict.t2gd)# no t2
+    mask_dict['gd'] =  stats.only_first_true(mask_dict.gd, mask_dict.t1gd)# no t1
 
     mask_identified = mask_dict.t1
     for mask in mask_dict.values():
