@@ -22,28 +22,31 @@ def get_masks_dict(df, return_tags=True):
     tag_dict['flair'] = ['FLAIR','flair', 'Flair']
     tag_dict['t2'] = ['T2', 't2']
     #tag_dict['fse'] = ['FSE', 'fse', 'TSE', 'tse']    
-    tag_dict['t2s'] = ['T2\*', 't2\*']
+    tag_dict['t2s'] = ['T2\*', 't2\*', 'T 2']
     #tag_dict['gre']  = ['GRE', 'gre'] # can be t2*, t1 or pd
     tag_dict['dti']= ['DTI', 'dti'] 
     tag_dict['pwi'] = ['Perfusion_Weighted']
     #print("There is one perfusion weighted image (PWI)")
     tag_dict['swi'] = ['SWI', 'swi']
     tag_dict['dwi'] = ['DWI', 'dwi']
-    tag_dict['adc'] = ['ADC', 'Apparent Diffusion Coefficient']
+    tag_dict['adc'] = ['ADC', 'Apparent Diffusion Coefficient', 'adc']
     tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium', 'T1\+', 't1\+']
-    tag_dict['stir'] = ['STIR']
-    tag_dict['tracew'] = ['TRACEW'] #
-    tag_dict['asl'] = ['ASL']
+    tag_dict['stir'] = ['STIR','stir']
+    tag_dict['tracew'] = ['TRACEW', 'travew'] #
+    tag_dict['asl'] = ['ASL', 'asl']
     tag_dict['cest'] = ['CEST']
     tag_dict['survey'] = ['SURVEY', 'Survey', 'survey']
-    tag_dict['angio'] = ['TOF', 'ToF', 'tof','angio', 'Angio', 'ANGIO', 'SWAN']
+    tag_dict['angio'] = ['TOF', 'ToF', 'tof','angio', 'Angio', 'ANGIO', 'SWAN',
+                         'PCA','pca','dce','PC','pc']
+    tag_dict['pd'] = ['PDW']
     # tags that are connected to sequences that are not useful
     tag_dict['screensave'] = ['Screen Save']
     tag_dict['autosave'] = ['3D Saved State - AutoSave']
     tag_dict['b1calib'] = ['B1_Calibration', 'calib', 'Calib', 'cal', 'Cal']
     tag_dict['loc'] = ['Loc', 'loc', 'Scout', 'LOC', 'lokal']
     tag_dict['bold'] = ['BOLD']
-    tag_dict['more'] = ['vessel_scout', ]
+    tag_dict['more'] = ['vessel_scout', 'VRT', 'csf_flow', 'WIP',
+                        'svs', 'SVS']
     #print("TOF:time of flight angriography, SWAN: susceptibility-weighted angiography")
     tag_dict = DotDict(tag_dict)
     

@@ -99,7 +99,7 @@ df_all.to_csv(f"{csv_folder}/neg_pos.csv", index = False, header = True)
 
 csv_path_ids = os.path.join(csv_folder, 'sid_directories.csv')
 #utils.directories_to_csv(csv_path_ids, "Y://positive")
-for subdir in healthy_dirs:
+for subdir in healthy_dirs[5:]:
     print(f"storing ids from {subdir}")
     utils.directories_to_csv(csv_path_ids, subdir, append=True)
 
