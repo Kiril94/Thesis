@@ -12,7 +12,7 @@ import utilss.stats as stats
 def get_masks_dict(df, return_tags=True):
     
     tag_dict = {}
-    tag_dict['t1'] = ['T1', 't1']
+    tag_dict['t1'] = ['T1', 't1', 'BRAVO',]
     tag_dict['mpr'] = ['mprage', 'MPRAGE'] # Mostly T1
     #print('MPRAGE is always T1w')
     #tag_dict['tfe'] = ['tfe', 'TFE'] can be acquired with or without T1/ T2
@@ -27,8 +27,8 @@ def get_masks_dict(df, return_tags=True):
     tag_dict['dti']= ['DTI', 'dti'] 
     tag_dict['pwi'] = ['Perfusion_Weighted']
     #print("There is one perfusion weighted image (PWI)")
-    tag_dict['swi'] = ['SWI', 'swi']
-    tag_dict['dwi'] = ['DWI', 'dwi']
+    tag_dict['swi'] = ['SWI', 'swi', 'SUSCEPTABILITET']
+    tag_dict['dwi'] = ['DWI', 'dwi', 'MUSE', 'Diffusion']
     tag_dict['adc'] = ['ADC', 'Apparent Diffusion Coefficient', 'adc']
     tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd','gd', 'GD', 'Gadolinium', 'T1\+', 't1\+']
     tag_dict['stir'] = ['STIR','stir']
@@ -37,16 +37,24 @@ def get_masks_dict(df, return_tags=True):
     tag_dict['cest'] = ['CEST']
     tag_dict['survey'] = ['SURVEY', 'Survey', 'survey']
     tag_dict['angio'] = ['TOF', 'ToF', 'tof','angio', 'Angio', 'ANGIO', 'SWAN',
-                         'PCA','pca','dce','PC','pc']
+                         'PCA','pca','dce','PC','pc', 'TRANCE', 'trance',
+                         'mIP', 'MIP', ]
     tag_dict['pd'] = ['PDW']
     # tags that are connected to sequences that are not useful
     tag_dict['screensave'] = ['Screen Save']
     tag_dict['autosave'] = ['3D Saved State - AutoSave']
-    tag_dict['b1calib'] = ['B1_Calibration', 'calib', 'Calib', 'cal', 'Cal']
-    tag_dict['loc'] = ['Loc', 'loc', 'Scout', 'LOC', 'lokal']
+    tag_dict['b1calib'] = ['B1_Calibration', 'calib', 'Calib', 'cal', 'Cal',
+                           'CAL',]
+    tag_dict['loc'] = ['Loc', 'loc', 'Scout', 'LOC', 'lokal', 'LOKAL']
     tag_dict['bold'] = ['BOLD']
     tag_dict['more'] = ['vessel_scout', 'VRT', 'csf_flow', 'WIP',
-                        'svs', 'SVS']
+                        'svs', 'SVS', 'animation', 'ACOM', 'Verification',
+                        'BA', 'BLACK_BLOOD', 'Batch', 'Cerebral Blood Flow',
+                        'DISPLAY', 'IMPAX Volume', 'MINIP', 'MInimum Intensity',
+                        'Min Intensity Projection', 'Min Intensity ','MYELO', 
+                        'MI Reading', 'MM Oncology Reading', 'SCREENSAVE',
+                        'Minimum Intensity Projection', 'SPINE', 
+                        ]
     #print("TOF:time of flight angriography, SWAN: susceptibility-weighted angiography")
     tag_dict = DotDict(tag_dict)
     
@@ -61,9 +69,7 @@ def get_masks_dict(df, return_tags=True):
     #mask_dict['t1tfe'] = mask_dict.t1 & mask_dict.tfe
     mask_dict['t1spgr'] = mask_dict.t1 & mask_dict.spgr
 
-    mask_dict['t2_flair'] = stats.only_first_true(
-        stats.check_tags(df, tag_dict.t2), mask_dict.t2s)
-    mask_dict['t2_noflair'] = stats.only_first_true(mask_dict.t2_flair, mask_dict.flair)# real t2
+    mask_dict['t2_noflair'] = stats.only_first_true(mask_dict.t2, mask_dict.flair)# real t2
 
     print("we are interested in t1, t2_noflair, flair, swi, dwi, dti, angio")
     print("combine all masks with an or and take complement")

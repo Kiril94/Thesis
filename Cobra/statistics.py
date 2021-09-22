@@ -235,7 +235,7 @@ mask_dict_all = mri_stats.get_masks_dict(df_all, False)
 seq_vars = [SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k, PID_k, SID_k]
 
 nid_seq = df_all[mask_dict_all.none_nid]
-nid_seq_sort = nid_seq[seq_vars].dropna(thresh=3).sort_values(by=SD_k, 
+nid_seq_sort = nid_seq[seq_vars].dropna(thresh=5).sort_values(by=SD_k, 
                                                                axis=0, 
                                                                ascending=True)
 nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
