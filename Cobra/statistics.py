@@ -189,7 +189,7 @@ plt.show()
 fig.savefig(f"{fig_dir}/pos/model_name_pie_chart.png")
 
 # In[Keys that are relevant]
-rel_key_list = ['t1', 'gd', 't2_noflair', 't2s', 't2_flair', 'swi']
+rel_key_list = ['t1', 'gd', 't2', 't2s', 't2_flair', 'swi']
 # In[Save Patient pos IDs]
 mask_dict_p, tag_dict_p = mri_stats.get_masks_dict(df_p)
 posids_dict = DotDict({key : df_p[mask][PID_k] for key, mask \
@@ -263,7 +263,7 @@ print(counts_dict)
 # In[visualize basic sequences]
 sequences_names = ['T1+\nMPRAGE', 'FLAIR', 'T2', 'T2*', 'DWI', 'SWI', 
                    'angio', 'ADC', 'Other','None or \n not identified']
-seq_counts = np.array([counts_dict.t1, counts_dict.flair, counts_dict.t2_noflair, 
+seq_counts = np.array([counts_dict.t1, counts_dict.flair, counts_dict.t2, 
                        counts_dict.t2s, counts_dict.dwi, 
                        counts_dict.swi, counts_dict.angio, counts_dict.adc,
                        counts_dict.other, counts_dict.none_nid])
@@ -285,7 +285,7 @@ vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
 
 # In[Look at the distributions of TE and TR for different seq]
 df_p.loc[mask_dict_p.t1, 'Sequence'] = 'T1'
-df_p.loc[mask_dict_p.t2_noflair,'Sequence'] = 'T2'
+df_p.loc[mask_dict_p.t2,'Sequence'] = 'T2'
 df_p.loc[mask_dict_p.t2s,'Sequence'] = 'T2S'
 df_p.loc[mask_dict_p.flair,'Sequence'] = 'FLAIR'
 df_p_clean = df_p.dropna(subset=[TE_k, TR_k])

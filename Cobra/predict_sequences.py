@@ -40,7 +40,7 @@ date_k = 'InstanceCreationDate'
 mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
 
 # In[Add sequence column and set it to one of the relevant values]
-rel_keys = ['t1', 'gd', 't2_noflair', 't2s', 't2', 'swi', 'other']
+rel_keys = ['t1', 'gd', 't2', 't2s', 't2', 'swi', 'other']
 rel_masks = [mask_dict[key] for key in rel_keys] 
 df_all['Sequence'] = 0
 for mask, key in zip(rel_masks, rel_keys):
