@@ -169,3 +169,23 @@ def get_size(start_path = '.', unit='M'):
             if not os.path.islink(fp):
                 total_size += os.path.getsize(fp)
     return total_size/divider
+
+def convert_to_sparse_pandas(df, exclude_columns=[]):
+    """
+    Converts columns of a data frame into SparseArrays and returns the data frame with transformed columns.
+    Use exclude_columns to specify columns to be excluded from transformation.
+    :param df: pandas data frame
+    :param exclude_columns: list
+        Columns not be converted to sparse
+    :return: pandas data frame
+    https://towardsdatascience.com/working-with-sparse-data-sets-in-pandas-and-sklearn-d26c1cfbe067
+    """
+    df = df.copy()
+    exclude_columns = set(exclude_columns)
+
+    for (columnName, columnData) in df.iteritems():
+        if columnName in exclude_columns:
+            continue
+        df[columnName] = pd.SparseArray(columnData.values, dtype='uint8')
+
+    return df

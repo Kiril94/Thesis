@@ -4,17 +4,18 @@ Created on Mon Sep 13 15:50:50 2021
 
 @author: klein
 """
-import xgboost
+#import xgboost
 import os
 from pathlib import Path
 import pandas as pd
-from utilss import stats
-import ast
+#from utilss import stats
+
 from utilss import utils
 from utilss import mri_stats
 from utilss.basic import DotDict
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 # In[tables directories]
@@ -27,16 +28,48 @@ fig_dir = f"{base_dir}/figs"
 # In[load all csv]
 table_all_dir = f"{table_dir}/neg_pos.csv"  
 df_all = utils.load_scan_csv(table_all_dir)
+# In[]
+columns_list = list(df_all.columns)
+columns_list.remove(SS_k)
+print(columns_list)
 
+# In[]
+print(df_new['IR'])
 # In[Define useful keys]
 TE_k = 'EchoTime'
 TR_k = 'RepetitionTime'
-IR_k = 'InversionTime'
+TI_k = 'InversionTime'
 FA_k = 'FlipAngle'
 SD_k = 'SeriesDescription'
 PID_k = 'PatientID'
 time_k = 'InstanceCreationTime'
 date_k = 'InstanceCreationDate'
+DT_k = 'DateTime'
+SID_k = 'SeriesInstanceUID'
+SS_k = 'ScanningSequence'
+SV_k = 'SequenceVariant'
+SN_k = 'SequenceName'
+SO_k = 'ScanOptions'
+ETL_k = 'EchoTrainLength'
+
+# In[]
+s = df_all[SS_k].explode()
+columns_list = list(df_all.columns)
+columns_list.remove(SS_k)
+df_all = df_all[columns_list].join(pd.crosstab(s.index, s))
+
+# In[]
+print(df_all.columns)
+# In[]
+columns_list = list(df_all.columns)
+sparse_columns = ['EP', 'GR', 'IR', 'RM', 'SE']
+for item in sparse_columns:
+    columns_list.remove(item)
+
+df_all_sparse = utils.convert_to_sparse_pandas(
+    df_all, columns_list)
+print(df_all_sparse.dtypes)
+utils.print_memory_usage_of_sparse_data_frame(df_all_sparse)
 
 # In[Define tags]
 mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
@@ -84,10 +117,25 @@ fig.suptitle('All Sequences', fontsize=20)
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/scatter_for_all.png")
 
+
+# In[Relevant columns for prediction]
+
+seq_vars = [SID_k, SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k]
+df_all2 = df_all[seq_vars]
 # In[tets]
 print(df_all.keys())
 
+# In[]
 # In[encode inputs]
 # Look at a subset of the dataframe 
-multi_hot = df_all[:100]['SequenceType'].pivot_table(
-    index=None, aggfunc=[len], fill_value=0)
+mlb = MultiLabelBinarizer(sparse_output=True)
+
+df_all_mh = df_all2.join(
+            pd.DataFrame.sparse.from_spmatrix(
+                mlb.fit_transform(df_all2.pop(SS_k)),
+                index=df_all2.index,
+                columns=mlb.classes_))
+print(df_all_mh)
+# In[]
+mlb = MultiLabelBinarizer(sparse_output=True)
+print(mlb.fit_transform(df_all2.pop(SS_k)))

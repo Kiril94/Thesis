@@ -235,11 +235,15 @@ mask_dict_all = mri_stats.get_masks_dict(df_all, False)
 seq_vars = [SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k, PID_k, SID_k]
 
 nid_seq = df_all[mask_dict_all.none_nid]
+print(f"All not identified sequences {len(nid_seq)}")
 nid_seq_sort = nid_seq[seq_vars].dropna(thresh=5).sort_values(by=SD_k, 
                                                                axis=0, 
                                                                ascending=True)
+print(f"dropping missing columns {len(nid_seq_sort)}")
 nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
+print(f"drop duplicates {len(nid_seq_sort)}")
 nid_seq_sort = nid_seq_sort.drop_duplicates(subset = [SD_k])
+print(f"drop some more duplicates {len(nid_seq_sort)}")
 nid_seq_sort.to_csv(f"{base_dir}/tables/non_identified_seq_all.csv", 
                         index=False)
 # In[]
