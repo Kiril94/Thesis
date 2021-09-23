@@ -25,16 +25,6 @@ fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/tables"
 fig_dir = f"{base_dir}/figs"
 
-# In[load all csv]
-table_all_dir = f"{table_dir}/neg_pos.csv"  
-df_all = utils.load_scan_csv(table_all_dir)
-# In[]
-columns_list = list(df_all.columns)
-columns_list.remove(SS_k)
-print(columns_list)
-
-# In[]
-print(df_new['IR'])
 # In[Define useful keys]
 TE_k = 'EchoTime'
 TR_k = 'RepetitionTime'
@@ -52,24 +42,39 @@ SN_k = 'SequenceName'
 SO_k = 'ScanOptions'
 ETL_k = 'EchoTrainLength'
 
-# In[]
+# In[load all csv]
+rel_cols = [SID_k, SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k, PID_k]
+table_all_dir = f"{table_dir}/neg_pos.csv"  
+df_all = utils.load_scan_csv(table_all_dir)[rel_cols]
+
+# In[Select only relevant columns]
+print(f"all elements {len(df_all)}")
+df_all = df_all[rel_cols].dropna(subset=[SID_k, PID_k, SS_k, SV_k, TR_k])
+print(f"after dropping nans {len(df_all)}")
+
+# In[Turn ScanningSequence into multi-hot encoded]
 s = df_all[SS_k].explode()
 columns_list = list(df_all.columns)
 columns_list.remove(SS_k)
 df_all = df_all[columns_list].join(pd.crosstab(s.index, s))
-
-# In[]
-print(df_all.columns)
-# In[]
+del s
+# In[Turn SequenceVariant into multi-hot encoded]
+s = df_all[SV_k].explode()
 columns_list = list(df_all.columns)
-sparse_columns = ['EP', 'GR', 'IR', 'RM', 'SE']
+columns_list.remove(SV_k)
+df_all = df_all[columns_list].join(pd.crosstab(s.index, s))
+del s
+
+# In[Turn sparse columns into sparse arrays]
+columns_list = list(df_all.columns)
+sparse_columns = ['EP', 'GR', 'IR', 'RM', 'SE', 'DE', 'MP', 'MTC', 
+                  'OSP', 'SK', 'SP', 'SS', 'TOF']
 for item in sparse_columns:
     columns_list.remove(item)
 
-df_all_sparse = utils.convert_to_sparse_pandas(
+df_all = utils.convert_to_sparse_pandas(
     df_all, columns_list)
-print(df_all_sparse.dtypes)
-utils.print_memory_usage_of_sparse_data_frame(df_all_sparse)
+print(df_all.dtypes)
 
 # In[Define tags]
 mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
@@ -91,7 +96,7 @@ for mask, key in zip(rel_masks, rel_keys):
 df_all[sq][mask_dict.t1gd] = "t1"
 df_all[sq][mask_dict.t2gd] = "t2"
 df_all[sq][mask_dict.gd] = "none_nid"
-
+sequences = ['t1', 't2', 't2s', 'flair','swi', 'dwi', 'other', 'none_nid', ]
 # In[Count number of volumes with a specific sequence]
 seq_count = df_all['Sequence'].value_counts()
 print(seq_count)
