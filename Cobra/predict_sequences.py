@@ -91,9 +91,10 @@ del s
 # In[Fraction of missing values in each column]
 print(df_all.isna().mean(axis=0))
 # In[Lets set missing inversion times, Flip Angles and Echo times to 0]
-df_all[df_all[TI_k].isna()] = 0
-df_all[df_all[FA_k].isna()] = 0
-df_all[df_all[TE_k].isna()] = 0
+df_all[TI_k] = np.where((df_all[TI_k].isna()), 0, df_all[TI_k])
+df_all[FA_k] = np.where((df_all[FA_k].isna()), 0, df_all[FA_k])
+df_all[TE_k] = np.where((df_all[TE_k].isna()), 0, df_all[TE_k])
+
 # In[Now we can show the histograms, except non numeric values]
 columns_list = list(df_all.columns)
 sparse_columns = ['EP', 'GR', 'IR', 'RM', 'SE', 'DE', 'MP', 'MTC', 
