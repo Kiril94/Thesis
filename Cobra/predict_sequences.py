@@ -60,10 +60,11 @@ rel_keys = ['t1', 't1gd', 't2', 't2gd', 't2s', 'swi', 'flair','none_nid',
 rel_masks = [mask_dict[key] for key in rel_keys] 
 df_all[sq] = "other"
 for mask, key in zip(rel_masks, rel_keys):
-    df_all[sq][mask] = key
-df_all[sq][mask_dict.t1gd] = "t1"
-df_all[sq][mask_dict.t2gd] = "t2"
-df_all[sq][mask_dict.gd] = "none_nid"
+    df_all[sq] = np.where((mask), key, df_all[sq])
+df_all[sq] = np.where((mask_dict.t1gd), "t1", df_all[sq])
+df_all[sq] = np.where((mask_dict.t2gd), "t2", df_all[sq])
+df_all[sq] = np.where((mask_dict.gd), "none_nid", df_all[sq])
+print(df_all[sq])
 
 # In[Count number of volumes for every sequence]
 seq_count = df_all[sq].value_counts()
@@ -113,14 +114,14 @@ vis.bar_plot(bin_counts.keys(), bin_counts.values,
 # In[We can drop the TOF, EP, DE and MTC columns]
 df_all = df_all.drop(['TOF', 'EP', 'DE', 'MTC'], axis=1)
 
-
 # In[Before encoding we have to split up the sequences we want to predict (test set)]
 df_test = df_all[df_all.Sequence == 'none_nid']
 df_train = df_all[df_all.Sequence != 'none_nid']
-del df_all
+#del df_all
 
 # In[]
-print(df_train.Sequence)
+print(len(df_all[df_all.Sequence==0]))
+print(df_all.Sequence)
 # In[One hot encode target]
 lb = pp.LabelBinarizer()
 lb.fit(df_train.Sequence)
