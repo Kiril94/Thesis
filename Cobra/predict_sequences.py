@@ -4,7 +4,7 @@ Created on Mon Sep 13 15:50:50 2021
 
 @author: klein
 """
-#import xgboost
+import xgboost as xgb
 import os
 from pathlib import Path
 import pandas as pd
@@ -17,7 +17,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import preprocessing as pp
-
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
@@ -113,50 +114,66 @@ vis.bar_plot(bin_counts.keys(), bin_counts.values,
              figsize=(15,6), logscale=True, 
              figname=f"{fig_dir}/sequence_pred/X_distr_bin.png")
 # In[We can drop the TOF, EP, DE and MTC columns]
-df_all = df_all.drop(['TOF', 'EP', 'DE', 'MTC'], axis=1)
-
+try:
+    df_all = df_all.drop(['TOF', 'EP', 'DE', 'MTC'], axis=1)
+except: 
+    print("those columns are not present")
 # In[Before encoding we have to split up the sequences we want to predict (test set)]
 df_test = df_all[df_all.Sequence == 'none_nid']
 df_train = df_all[df_all.Sequence != 'none_nid']
-#del df_all
+del df_all
 
-# In[]
-print(len(df_all[df_all.Sequence==0]))
-print(df_all.Sequence)
-# In[One hot encode target]
-lb = pp.LabelBinarizer()
-lb.fit(df_train.Sequence)
-y = lb.transform(df_train.Sequence)
-print(y.shape)
+# In[Integer encode labels]
+target_labels = df_train.Sequence.unique()
+target_ids = np.arange(len(target_labels))
+target_dict = dict(zip(target_labels, target_ids))
+y = df_train[sq].map(target_dict)
+print(target_labels)
+print(y)
+#lb = pp.LabelBinarizer()
+#lb.fit(df_train.Sequence)
+#y_train_val = lb.transform(df_train.Sequence)
+#print(y_train_val.shape)
 
 # In[Now we separate the patient ID and the SeriesInstance UID]
 #From now on we should not change the order or remove any values,
 # otherwise the ids wont match afterwards
-df_ids = df_all[[PID_k, SID_k]]
-df_all = df_all.drop([PID_k, SID_k, 'Sequence', SD_k], axis=1) 
-# Drop also the sequence and series description column
-
-# In[Drop series description]
-df_all = df_all.drop([SD_k], axis=1)
-#no remaining nan values
-print(df_all.isnull().sum())
+df_train_ids = df_train[[PID_k, SID_k]]
+df_test_ids = df_test[[PID_k, SID_k]]
+try:
+    df_train = df_train.drop([PID_k, SID_k, 'Sequence', SD_k], axis=1)
+    df_test = df_test.drop([PID_k, SID_k, 'Sequence', SD_k], axis=1)
+except:
+    print("those columns are not present")
 
 # In[Min max scale non bin columns]
 
-num_cols = df_all.select_dtypes(include="float64").columns
-X = df_all.copy()
+num_cols = df_train.select_dtypes(include="float64").columns
+X = df_train.copy()
+X_test = df_test.copy()
 for col in num_cols:
-  X[col] = (df_all[col] - df_all[col].min())/(df_all[col].max()-df_all[col].min()) 
-
-# In[Train val separation]
-test_label = lb.transform(np.array(['none_nid']))
-
-
+  X[col] = (df_train[col] - df_train[col].min())/ \
+      (df_train[col].max()-df_train[col].min()) 
+  X_test[col] = (df_test[col] - df_test[col].min())/ \
+      (df_test[col].max()-df_test[col].min()) 
 
 
+# In[Split train and val]
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.1, random_state=42)
 
+# In[Now we can train]
 
-
+# Init classifier
+xgb_cl = xgb.XGBClassifier()
+# Fit
+xgb_cl.fit(X_train, y_train)
+# Predict
+preds = xgb_cl.predict(X_test)
+# Score
+#accuracy_score(y_test, preds)
+# In[]
+print(preds)
 
 # In[Turn sparse columns into sparse arrays]
 columns_list = list(df_all.columns)
@@ -168,8 +185,6 @@ for item in sparse_columns:
 df_all = utils.convert_to_sparse_pandas(
     df_all, columns_list)
 print(df_all.dtypes)
-
-
 
 
 # In[Count number of relevant patients in 2019]
@@ -197,7 +212,5 @@ fig.suptitle('All Sequences', fontsize=20)
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/scatter_for_all.png")
 
-# In[tets]
-print(df_all.keys())
 
 # In[https://towardsdatascience.com/beginners-guide-to-xgboost-for-classification-problems-50f75aac5390]
