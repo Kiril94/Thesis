@@ -240,8 +240,11 @@ nid_seq_sort = nid_seq[seq_vars].dropna(thresh=5).sort_values(by=SD_k,
                                                                ascending=True)
 nid_seq_sort = nid_seq_sort.loc[nid_seq_sort.astype(str).drop_duplicates().index]
 nid_seq_sort = nid_seq_sort.drop_duplicates(subset = [SD_k])
-nid_seq_sort.to_csv(f"{base_dir}/tables/non_identified_seq_ids_all.csv", 
+nid_seq_sort.to_csv(f"{base_dir}/tables/non_identified_seq_all.csv", 
                         index=False)
+# In[]
+unique_sequence_names = df_all['SequenceName'].unique()
+np.savetxt( f"{base_dir}/tables/unique_seq_names.txt", unique_sequence_names, fmt="%s")
 
 # In[Show some scans]
 vis.show_series('a0be3bf699294420053eb3c6ca7d7f6c',

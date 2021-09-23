@@ -82,13 +82,13 @@ for month, subdir in enumerate(healthy_dirs[starting_month-1:starting_month]):
     
 # In[Create one csv for all 2019]
 neg_tab_dirs = sorted([f"{csv_folder}/{x}" for x \
-                       in os.listdir(csv_folder) if x.startswith('healthy') and 
-                       not('_10_nn' in x)])  
+                       in os.listdir(csv_folder) if x.startswith('healthy')])  
 df_neg_list = [utils.load_scan_csv(csv_path) for csv_path in \
                neg_tab_dirs]
 df_all_neg_2019 = pd.concat(df_neg_list, axis=0, join="outer") 
 # In[Write it to a csv]
 df_all_neg_2019.to_csv(f"{csv_folder}/neg_all.csv", index = False, header = True)
+
 # In[Combine pos and negative into one csv]
 df_all_neg = utils.load_scan_csv(f"{csv_folder}/neg_all.csv")
 df_p = utils.load_scan_csv(f"{csv_folder}/pos_nn.csv")
