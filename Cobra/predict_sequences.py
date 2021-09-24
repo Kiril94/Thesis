@@ -183,9 +183,12 @@ pred_val[pred_val<=.9] = 0
 pred_val = np.argmax(pred_val, axis=1)
 
 # In[]
-ax = skplot.metrics.plot_confusion_matrix(y_val, pred_val, normalize=True,
-                                     figsize=(8,8))
-
+#ax = skplot.metrics.plot_confusion_matrix(y_val, pred_val, normalize=True,
+#                                     figsize=(8,8))
+args = [y_val, pred_val]
+kwargs = {'normalize':True}
+vis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs, 
+                   )
 # In[]
 
 print(y_val)

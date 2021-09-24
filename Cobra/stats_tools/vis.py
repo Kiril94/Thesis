@@ -18,10 +18,11 @@ from matplotlib import ticker
 
 # In[General plots]
 def nice_plot(
-    X,Y, SY = 0, errorbar = False,scatter=False, absolute_sigma = True, 
+    X, Y, SY = 0, errorbar = False,scatter=False, absolute_sigma = True, 
     show_plot = True, save_plot=False, figname=None, xlabel = 'x',ylabel='', 
     data_label=' ', figsize = (10,5), y_range= None, legend_loc = 0, 
-    legend_fs =20, legend_ncol = 1, legend_color = 'white', label_fs = 25, ticksize = 20, axis= None, 
+    legend_fs =20, legend_ncol = 1, legend_color = 'white', label_fs = 25, 
+    ticksize = 20, axis= None, 
     figure = None, plot_legend = False, x_show_range = None, text_fs = 14, 
     dpi = 80, xlogscale = False, ylogscale = False, color = 'skyblue', 
     plot_style = 'ggplot', linestyle = 'solid', ecolor = 'deepskyblue', 
@@ -88,7 +89,7 @@ def nice_plot(
                            fontsize = legend_fs, shadow = True)
         legend.get_frame().set_facecolor(legend_color)
     
-    ax.set_xlabel(xlabel, fontsize =label_fs)
+    ax.set_xlabel(xlabel, fontsize=label_fs)
     if xlogscale:
         ax.set_xscale('log')
 

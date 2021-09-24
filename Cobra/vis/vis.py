@@ -73,10 +73,65 @@ def bar_plot(labels, counts, figsize=(10,6), width=.8,
     ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls,
                    rotation=xtickparams_rot)
     ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls)
-    ax.tick_params(axis='x', )
     if logscale:
         ax.set_yscale('log')
     fig.tight_layout()
     if save_plot:
         fig.savefig(figname, dpi=dpi)
 
+##############################################################
+def plot_decorator(plot_func, args, kwargs, 
+                   figsize=(9,9), save=False, dpi=80, figname='',
+                   lgd=False, lgd_loc=0, lgd_fs=25, lgd_color='white', 
+                   lgd_ncol=1, lgd_shadow=True,
+                   set_xlabel=False, xlabel='count', xlabel_fs=25,
+                   set_ylabel=False, ylabel='count', ylabel_fs=25,
+                   set_xticks=False, xticks=[], xtick_labels=[],
+                   set_yticks=False, yticks=[], ytick_labels=[],
+                   set_xtickparams=False, xtickparams_ls=25, xtickparams_rot=0, 
+                   set_ytickparams=False, ytickparams_ls=25, ytickparams_rot=0,
+                   xlogscale=False, ylogscale=False,):
+    
+    """Takes a function plot_func which takes args, 
+    kwargs and ax to produce a plot"""
+    fig, ax = plt.subplots(figsize=figsize)
+    ax = plot_func(*args, **kwargs, ax=ax)
+    
+    if lgd:
+        ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor=lgd_color,
+                  ncol=lgd_ncol, shadow=lgd_shadow)
+    if set_ylabel:
+        ax.set_ylabel(ylabel, fontsize=ylabel_fs)
+    if set_xlabel:
+        ax.set_xlabel(xlabel, fontsize=ylabel_fs)
+    if set_xticks:
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xtick_labels)
+    if set_yticks:
+        ax.set_yticks(yticks)
+        ax.set_yticklabels(ytick_labels)
+    if set_xtickparams:
+        ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls,
+                       rotation=xtickparams_rot)
+    if set_ytickparams:
+        ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls,
+                       rotation=ytickparams_rot)
+    if xlogscale:
+        ax.set_xscale('log')
+    if ylogscale:
+        ax.set_yscale('log')
+        
+    fig.tight_layout()
+    if save:
+        fig.savefig(figname, dpi=dpi)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
