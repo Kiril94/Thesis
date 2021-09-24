@@ -10,6 +10,7 @@ from pathlib import Path
 import pandas as pd
 #from utilss import stats
 from utilss import utils
+from utilss import classification as clss
 from vis import vis
 from stats_tools import vis as svis
 from utilss import mri_stats
@@ -167,59 +168,59 @@ X_train, X_val, y_train, y_val = train_test_split(
 # In[Initialize and train]
 xgb_cl = xgb.XGBClassifier() 
 xgb_cl.fit(X_train, y_train)
-
 # In[Predict]
 pred_prob_val = xgb_cl.predict_proba(X_val)
-# Score
-#accuracy_score(y_test, preds)
 # In[Plot roc curve]
 vis.plot_decorator(skplot.metrics.plot_roc_curve, args=[y_val, pred_prob_val,], 
                    kwargs={'figsize':(9,8),'text_fontsize':14.5,
-                           'title':"Sequence Prediction - ROC Curves"},)
+                           'title':"Sequence Prediction - ROC Curves"},
+                   figname=f"{fig_dir}/sequence_pred/ROC_curves.png")
 # In[Test FPR for different thresholds]
-
-thresholds = np.linspace(.8,.999,300)
+thresholds = np.linspace(.8,.999,200)
 fprs = []
 for i, th in enumerate(thresholds):
-    pred_val = np.copy(pred_prob_val)
-    pred_val[pred_val>th] = 1
-    pred_val[pred_val<=th] = 0
-    pred_val = np.argmax(pred_val, axis=1)
+    #pred_val = np.copy(pred_prob_val)
+    #pred_val[pred_val>th] = 1
+    #pred_val[pred_val<=th] = 0
+    #pred_val = np.argmax(pred_val, axis=1)
+    pred_val = clss.prob_to_class(pred_prob_val, th, 0)
     cm = confusion_matrix(y_val, pred_val)
-    fprs.append(ast.fpr_multi(cm))
+    fprs.append(clss.fpr_multi(cm))
 fprs = np.array(fprs)
 print(fprs.shape)
+
 # In[Plot fprs for different thresholds]
-fig, ax = plt.subplots()
+print(len(np.split(fprs[:,1:], axis=0,indices_or_sections=6)))
+print(np.split(fprs[:,1:], axis=1,indices_or_sections=6)[0][:,0].shape)
+# In[Look at FPR]
+final_th = 0.92
+fig, ax = plt.subplots(figsize=(9,5))
 for i in range(6):
-    ax.plot(thresholds, fprs[:,i+1])
-
+    ax.plot(thresholds, fprs[:,1+i], label=list(target_dict.keys())[i+1])
+ax.axvline(final_th, color='red', linestyle='--',label=f'final cutoff={final_th}')
+ax.legend(fontsize=16.5, facecolor='white')
+ax.set_xlabel('Cutoff', fontsize=20)
+ax.set_ylabel('FPR', fontsize=20)
+fig.tight_layout()
+fig.savefig(f"{fig_dir}/sequence_pred/fpr_cutoff.png", dpi=80)
 # In[Plot confusion matrix]
+
+#pred_val = np.copy(pred_prob_val)
+#pred_val[pred_val>final_th] = 1
+#pred_val[pred_val<=final_th] = 0
+pred_val = clss.prob_to_class(pred_prob_val, final_th, 0)#np.argmax(pred_val, axis=1)
+cm = confusion_matrix(y_val, pred_val)
+
 args = [y_val, pred_val]
-kwargs = {'normalize':True,'text_fontsize':16,'title_fontsize':18 }
+kwargs = {'normalize':True, 'text_fontsize':16,'title_fontsize':18, }
 vis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs, 
-                   set_xticks=True, xticks=np.arange(7),xtick_labels=target_dict.keys(),
-                   set_yticks=True, yticks=np.arange(7),ytick_labels=target_dict.keys(),
-                   save=True, figname=f"{fig_dir}/sequence_pred/confusion_matrix.png")
-# In[]
-
-print(y_val)
-print(len(target_dict))
+                   set_xticks=True, xticks=np.arange(7), xtick_labels=target_dict.keys(),
+                   set_yticks=True, yticks=np.arange(7), ytick_labels=target_dict.keys(),
+                   save=True, figname=f"{fig_dir}/sequence_pred/confusion_matrix_norm.png")
+# In[make prediction for the test set]
 
 
 
-
-
-# In[Turn sparse columns into sparse arrays]
-columns_list = list(df_all.columns)
-sparse_columns = ['EP', 'GR', 'IR', 'RM', 'SE', 'DE', 'MP', 'MTC', 
-                  'OSP', 'SK', 'SP', 'SS', 'TOF']
-for item in sparse_columns:
-    columns_list.remove(item)
-
-df_all = utils.convert_to_sparse_pandas(
-    df_all, columns_list)
-print(df_all.dtypes)
 
 
 # In[Count number of relevant patients in 2019]
@@ -227,7 +228,6 @@ print(len(df_2019[mask_dict.t1 | mask_dict.t2 | mask_dict.t2s | mask_dict.t1gd \
         | mask_dict.t2gd | mask_dict.gd | mask_dict.swi | mask_dict.flair \
         | mask_dict.dwi][PID_k].unique()))
 print(len(df_2019[PID_k].unique()))
-
 
 
 # In[visualize sequences scatter]

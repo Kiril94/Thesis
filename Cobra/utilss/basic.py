@@ -26,7 +26,7 @@ def get_index(list_of_strings, substring):
     except StopIteration:
         return len(list_of_strings) - 1
     
-def my_argmax(a, default=-1):
+def my_argmax(a, axis=1, default=-1):
     rows = np.where(a == a.max(axis=1)[:, None])[0]
     rows_multiple_max = rows[:-1][rows[:-1] == rows[1:]]
     my_argmax = a.argmax(axis=1)

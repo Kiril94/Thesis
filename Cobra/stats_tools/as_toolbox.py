@@ -427,7 +427,7 @@ class NLLH_scan:
         llh[~pos_mask] = -np.inf
         return Par_grid, llh
     
-#############################################
+##############Binary confusion matrix stats###############################
 def False_Negative_Rate(y_pred, y_true):
     """Compute the number of false positives. 
     Where positive is 1."""
@@ -465,66 +465,6 @@ def Precision(y_pred, y_true):
 
 def False_Discovery_Rate(y_pred,y_true):
     return 1-Precision(y_pred, y_true)
-
-
-#######################Mutliclass classification####################################
-def fp_multi(cm):
-    return cm.sum(axis=0) - np.diag(cm)  
-
-def fn_multi(cm):
-    """Takes confusion matrix"""
-    return cm.sum(axis=1) - np.diag(cm)
-
-def tp_multi(cm):
-    """Takes confusion matrix"""
-    return np.diag(cm)
-def tn_multi(cm):
-    """Takes confusion matrix"""
-    fp = fp_multi(cm)
-    fn = fn_multi(cm)
-    tp = tp_multi(cm)
-    tn = cm.sum() - (fp + fn + tp)
-    return tn
-
-def tpr_multi(cm):
-    """Takes confusion matrix
-    returns: Sensitivity, hit rate, recall, or true positive rate"""
-    return tp_multi(cm)/(tp_multi(cm)+fn_multi(cm))
-def tnr_multi(cm):
-    """Takes confusion matrix
-    returns: Specificity or true negative rate"""  
-    return tn_multi(cm)/(tn_multi(cm)+fp_multi(cm))
-
-def ppv_multi(cm):
-    """Takes confusion matrix
-    returns: Precision or positive predictive value"""  
-    return tp_multi(cm)/(tp_multi(cm)+fp_multi(cm))
-
-def npv_multi(cm):
-    """Takes confusion matrix
-    returns: Negative predictive value"""  
-    return tn_multi(cm)/(tn_multi(cm)+fn_multi(cm))
-
-def fpr_multi(cm):
-    """Takes confusion matrix
-    returns: Fall out or false positive rate"""  
-    return fp_multi(cm)/(fp_multi(cm)+tn_multi(cm))
-
-def fnr_multi(cm):
-    """Takes confusion matrix
-    returns: False negative rate"""  
-    return fn_multi(cm)/(tp_multi(cm)+fn_multi(cm))
-
-def fdr_multi(cm):
-    """Takes confusion matrix
-    returns: False discovery rate"""  
-    return fp_multi(cm)/(tp_multi(cm)+fp_multi(cm))
-
-def acc_multi(cm):
-    """Takes confusion matrix
-    returns: Overall accuracy"""  
-    return (tp_multi(cm)+tn_multi(cm))/(tp_multi(cm)+fp_multi(cm)+fn_multi(cm)+tn_multi(cm))
-
 
 def MCMH(post, prop, Theta0, num_iter = 1000, nwalkers = 10, burn_in = 500):
     """Performs the Monte_Carlo Metropolis Hasting algorithm for a 1d function.

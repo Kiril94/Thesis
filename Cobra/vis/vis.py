@@ -84,6 +84,7 @@ def plot_decorator(plot_func, args, kwargs,
                    figsize=(9,9), save=False, dpi=80, figname='',
                    lgd=False, lgd_loc=0, lgd_fs=25, lgd_color='white', 
                    lgd_ncol=1, lgd_shadow=True,
+                   set_ttl=False, ttl='Title', ttl_fs=20, ttl_clr='k', 
                    set_xlabel=False, xlabel='count', xlabel_fs=25,
                    set_ylabel=False, ylabel='count', ylabel_fs=25,
                    set_xticks=False, xticks=[], xtick_labels=[],
@@ -100,6 +101,8 @@ def plot_decorator(plot_func, args, kwargs,
     if lgd:
         ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor=lgd_color,
                   ncol=lgd_ncol, shadow=lgd_shadow)
+    if set_ttl:
+        ax.set_title(ttl, fontsize=ttl_fs, color=ttl_clr)
     if set_ylabel:
         ax.set_ylabel(ylabel, fontsize=ylabel_fs)
     if set_xlabel:
