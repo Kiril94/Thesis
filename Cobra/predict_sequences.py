@@ -11,6 +11,7 @@ import pandas as pd
 #from utilss import stats
 from utilss import utils
 from vis import vis
+from stats_tools import vis as svis
 from utilss import mri_stats
 from utilss.basic import DotDict
 import seaborn as sns
@@ -19,7 +20,7 @@ import numpy as np
 from sklearn import preprocessing as pp
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix as conf_mat
+from sklearn.metrics import confusion_matrix 
 import scikitplot as skplot
 from stats_tools import as_toolbox as ast
 
@@ -175,23 +176,25 @@ pred_prob_val = xgb_cl.predict_proba(X_val)
 vis.plot_decorator(skplot.metrics.plot_roc_curve, args=[y_val, pred_prob_val,], 
                    kwargs={'figsize':(9,8),'text_fontsize':14.5,
                            'title':"Sequence Prediction - ROC Curves"},)
-# In[]
-pred_val = np.copy(pred_prob_val)
-threshold = .9
-pred_val[pred_val>threshold] = 1
-pred_val[pred_val<=threshold] = 0
-pred_val = np.argmax(pred_val, axis=1)
-confusion_matrix = conf_mat(y_val, pred_val)
-FP = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)  
-FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
-TP = np.diag(confusion_matrix)
-TN = confusion_matrix.sum() - (FP + FN + TP)
-FPR = FP/(FP+TN)
-print(FPR)
+# In[Test FPR for different thresholds]
 
-# In[]
-#ax = skplot.metrics.plot_confusion_matrix(y_val, pred_val, normalize=True,
-#                                     figsize=(8,8))
+thresholds = np.linspace(.8,.999,300)
+fprs = []
+for i, th in enumerate(thresholds):
+    pred_val = np.copy(pred_prob_val)
+    pred_val[pred_val>th] = 1
+    pred_val[pred_val<=th] = 0
+    pred_val = np.argmax(pred_val, axis=1)
+    cm = confusion_matrix(y_val, pred_val)
+    fprs.append(ast.fpr_multi(cm))
+fprs = np.array(fprs)
+print(fprs.shape)
+# In[Plot fprs for different thresholds]
+fig, ax = plt.subplots()
+for i in range(6):
+    ax.plot(thresholds, fprs[:,i+1])
+
+# In[Plot confusion matrix]
 args = [y_val, pred_val]
 kwargs = {'normalize':True,'text_fontsize':16,'title_fontsize':18 }
 vis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs, 
@@ -201,11 +204,7 @@ vis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs,
 # In[]
 
 print(y_val)
-print(target_dict)
-
-
-
-
+print(len(target_dict))
 
 
 
