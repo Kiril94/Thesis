@@ -8,22 +8,17 @@ import xgboost as xgb
 import os
 from pathlib import Path
 import pandas as pd
-#from utilss import stats
 from utilss import utils
 from utilss import classification as clss
 from vis import vis
 from stats_tools import vis as svis
 from utilss import mri_stats
-from utilss.basic import DotDict
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn import preprocessing as pp
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix 
 import scikitplot as skplot
-from stats_tools import as_toolbox as ast
 
 
 # In[tables directories]
@@ -141,7 +136,7 @@ print(target_dict)
 # In[Now we separate the patient ID and the SeriesInstance UID]
 #From now on we should not change the order or remove any values,
 # otherwise the ids wont match afterwards
-df_train_ids = df_train[[PID_k, SID_k]]
+df_train_ids = df_train[[PID_k, SID_k,sq]]  #also contains sequences
 df_test_ids = df_test[[PID_k, SID_k]]
 try:
     df_train = df_train.drop([PID_k, SID_k, 'Sequence', SD_k], axis=1)
@@ -176,23 +171,15 @@ vis.plot_decorator(skplot.metrics.plot_roc_curve, args=[y_val, pred_prob_val,],
                            'title':"Sequence Prediction - ROC Curves"},
                    figname=f"{fig_dir}/sequence_pred/ROC_curves.png")
 # In[Test FPR for different thresholds]
-thresholds = np.linspace(.8,.999,200)
+thresholds = np.linspace(.8,.999, 200)
 fprs = []
 for i, th in enumerate(thresholds):
-    #pred_val = np.copy(pred_prob_val)
-    #pred_val[pred_val>th] = 1
-    #pred_val[pred_val<=th] = 0
-    #pred_val = np.argmax(pred_val, axis=1)
     pred_val = clss.prob_to_class(pred_prob_val, th, 0)
     cm = confusion_matrix(y_val, pred_val)
     fprs.append(clss.fpr_multi(cm))
 fprs = np.array(fprs)
-print(fprs.shape)
 
-# In[Plot fprs for different thresholds]
-print(len(np.split(fprs[:,1:], axis=0,indices_or_sections=6)))
-print(np.split(fprs[:,1:], axis=1,indices_or_sections=6)[0][:,0].shape)
-# In[Look at FPR]
+# In[Plot FPR for different thresholds]
 final_th = 0.92
 fig, ax = plt.subplots(figsize=(9,5))
 for i in range(6):
@@ -204,11 +191,7 @@ ax.set_ylabel('FPR', fontsize=20)
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/fpr_cutoff.png", dpi=80)
 # In[Plot confusion matrix]
-
-#pred_val = np.copy(pred_prob_val)
-#pred_val[pred_val>final_th] = 1
-#pred_val[pred_val<=final_th] = 0
-pred_val = clss.prob_to_class(pred_prob_val, final_th, 0)#np.argmax(pred_val, axis=1)
+pred_val = clss.prob_to_class(pred_prob_val, final_th, 0) # np.argmax(pred_val, axis=1)
 cm = confusion_matrix(y_val, pred_val)
 
 args = [y_val, pred_val]
@@ -218,6 +201,20 @@ vis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs,
                    set_yticks=True, yticks=np.arange(7), ytick_labels=target_dict.keys(),
                    save=True, figname=f"{fig_dir}/sequence_pred/confusion_matrix_norm.png")
 # In[make prediction for the test set]
+pred_prob_test = xgb_cl.predict_proba(X_test)
+pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
+vis.bar_plot(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
+             xlabel='Sequence', title='Predicted sequences')
+
+# In[Create and save dataframe with predictions]
+df_test[sq] = pred_test
+df_test = pd.concat([df_test, df_test_ids], axis=1)
+df_train = pd.concat([df_train, df_train_ids], axis=1)
+df_final = pd.concat([df_train, df_test])
+del df_test, df_train
+# In[Examine final df]
+print(df_final.Sequence)
+
 
 
 
