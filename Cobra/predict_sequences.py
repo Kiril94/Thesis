@@ -206,7 +206,8 @@ vis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs,
 pred_prob_test = xgb_cl.predict_proba(X_test)
 pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
 vis.bar_plot(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
-             xlabel='Sequence', title='Predicted sequences')
+             xlabel='Sequence', title='Predicted sequences', save_plot=True,
+             figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
 
 # In[Get labels from prediction]
 dict_mapping = lambda t: basic.inv_dict(target_dict)[t]
@@ -223,6 +224,12 @@ df_final[[PID_k, SID_k, sq, ICD_k]].to_csv(f"{base_dir}/share/pred_seq.csv")
 print(len(df_final[[PID_k, SID_k, sq, ICD_k]]))
 print(df_final.Sequence)
 print(df_final.isna().sum())
+
+# In[Final sequence distribution]
+vis.bar_plot(target_dict.keys(), df_final[sq].value_counts(),
+             xlabel='Sequence', title='All sequences after prediction',
+             save_plot=(True), figname=f"{fig_dir}/sequence_pred/seq_dist_all_pred.png")
+
 
 
 # In[visualize sequences scatter]
