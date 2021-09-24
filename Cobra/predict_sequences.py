@@ -19,8 +19,10 @@ import numpy as np
 from sklearn import preprocessing as pp
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix as conf_mat
 import scikitplot as skplot
+from stats_tools import as_toolbox as ast
+
 
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
@@ -167,28 +169,35 @@ xgb_cl.fit(X_train, y_train)
 
 # In[Predict]
 pred_prob_val = xgb_cl.predict_proba(X_val)
-
 # Score
 #accuracy_score(y_test, preds)
-
 # In[Plot roc curve]
-skplt.metrics.plot_roc_curve(y_val, pred_prob_val, figsize=(9,8),
-                             text_fontsize=12,
-                             title="Sequence Prediction - ROC Curves")
-
+vis.plot_decorator(skplot.metrics.plot_roc_curve, args=[y_val, pred_prob_val,], 
+                   kwargs={'figsize':(9,8),'text_fontsize':14.5,
+                           'title':"Sequence Prediction - ROC Curves"},)
 # In[]
 pred_val = np.copy(pred_prob_val)
-pred_val[pred_val>.9] = 1
-pred_val[pred_val<=.9] = 0
+threshold = .9
+pred_val[pred_val>threshold] = 1
+pred_val[pred_val<=threshold] = 0
 pred_val = np.argmax(pred_val, axis=1)
+confusion_matrix = conf_mat(y_val, pred_val)
+FP = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)  
+FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
+TP = np.diag(confusion_matrix)
+TN = confusion_matrix.sum() - (FP + FN + TP)
+FPR = FP/(FP+TN)
+print(FPR)
 
 # In[]
 #ax = skplot.metrics.plot_confusion_matrix(y_val, pred_val, normalize=True,
 #                                     figsize=(8,8))
 args = [y_val, pred_val]
-kwargs = {'normalize':True}
+kwargs = {'normalize':True,'text_fontsize':16,'title_fontsize':18 }
 vis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs, 
-                   )
+                   set_xticks=True, xticks=np.arange(7),xtick_labels=target_dict.keys(),
+                   set_yticks=True, yticks=np.arange(7),ytick_labels=target_dict.keys(),
+                   save=True, figname=f"{fig_dir}/sequence_pred/confusion_matrix.png")
 # In[]
 
 print(y_val)
