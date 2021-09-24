@@ -189,3 +189,4 @@ def convert_to_sparse_pandas(df, exclude_columns=[]):
         df[columnName] = pd.SparseArray(columnData.values, dtype='uint8')
 
     return df
+

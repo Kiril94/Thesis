@@ -19,6 +19,8 @@ import numpy as np
 from sklearn import preprocessing as pp
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+import scikitplot as skplot
 
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
@@ -128,12 +130,9 @@ target_labels = df_train.Sequence.unique()
 target_ids = np.arange(len(target_labels))
 target_dict = dict(zip(target_labels, target_ids))
 y = df_train[sq].map(target_dict)
-print(target_labels)
 print(y)
-#lb = pp.LabelBinarizer()
-#lb.fit(df_train.Sequence)
-#y_train_val = lb.transform(df_train.Sequence)
-#print(y_train_val.shape)
+print(target_dict)
+
 
 # In[Now we separate the patient ID and the SeriesInstance UID]
 #From now on we should not change the order or remove any values,
@@ -159,21 +158,46 @@ for col in num_cols:
 
 
 # In[Split train and val]
-X_train, X_test, y_train, y_test = train_test_split(
+X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.1, random_state=42)
 
-# In[Now we can train]
-
-# Init classifier
-xgb_cl = xgb.XGBClassifier()
-# Fit
+# In[Initialize and train]
+xgb_cl = xgb.XGBClassifier() 
 xgb_cl.fit(X_train, y_train)
-# Predict
-preds = xgb_cl.predict(X_test)
+
+# In[Predict]
+pred_prob_val = xgb_cl.predict_proba(X_val)
+
 # Score
 #accuracy_score(y_test, preds)
+
+# In[Plot roc curve]
+skplt.metrics.plot_roc_curve(y_val, pred_prob_val, figsize=(9,8),
+                             text_fontsize=12,
+                             title="Sequence Prediction - ROC Curves")
+
 # In[]
-print(preds)
+pred_val = np.copy(pred_prob_val)
+pred_val[pred_val>.9] = 1
+pred_val[pred_val<=.9] = 0
+pred_val = np.argmax(pred_val, axis=1)
+
+# In[]
+ax = skplot.metrics.plot_confusion_matrix(y_val, pred_val, normalize=True,
+                                     figsize=(8,8))
+
+# In[]
+
+print(y_val)
+print(target_dict)
+
+
+
+
+
+
+
+
 
 # In[Turn sparse columns into sparse arrays]
 columns_list = list(df_all.columns)
