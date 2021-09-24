@@ -46,6 +46,7 @@ SV_k = 'SequenceVariant'
 SN_k = 'SequenceName'
 SO_k = 'ScanOptions'
 ETL_k = 'EchoTrainLength'
+
 # In[Test functions]
 masks = [np.array([1, 0, 0]), np.array([0, 0, 0]), np.array([1, 1, 0])]
 mask = masks[0]
@@ -369,3 +370,8 @@ vis.bar_plot(year_month_unique[:-2], year_month_counts[:-2], figsize=(13,7),
              ylabel='Frequency', title='Studies for positive patients',
              figname=f"{fig_dir}/pos/studies_months_years.png" )
 
+# In[Count number of relevant patients in 2019]
+print(len(df_2019[mask_dict.t1 | mask_dict.t2 | mask_dict.t2s | mask_dict.t1gd \
+        | mask_dict.t2gd | mask_dict.gd | mask_dict.swi | mask_dict.flair \
+        | mask_dict.dwi][PID_k].unique()))
+print(len(df_2019[PID_k].unique()))

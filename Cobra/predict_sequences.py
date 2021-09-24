@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import pandas as pd
 from utilss import utils
+from utilss import basic
 from utilss import classification as clss
 from vis import vis
 from stats_tools import vis as svis
@@ -40,17 +41,19 @@ SS_k = 'ScanningSequence'
 SV_k = 'SequenceVariant'
 SO_k = 'ScanOptions'
 ETL_k = 'EchoTrainLength'
-
+DT_k = 'DateTime'
+ICD_k = 'InstanceCreationDate'
 # In[load all csv]
-rel_cols = [SID_k, SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, PID_k]
+rel_cols = [SID_k, SD_k, TE_k, TR_k, FA_k, TI_k, 
+            ETL_k, SS_k, SV_k, PID_k, DT_k, ICD_k,]
 table_all_dir = f"{table_dir}/neg_pos.csv"  
 df_all = utils.load_scan_csv(table_all_dir)[rel_cols]
 
 # In[Select only relevant columns]
 print(f"all elements {len(df_all)}")
 df_all = df_all[rel_cols].dropna(subset=[SID_k, PID_k, SS_k, SV_k, TR_k])
-print(f"after dropping nans {len(df_all)}")
 
+print(f"after dropping nans {len(df_all)}")
 
 # In[Get masks for the different series descriptions]
 mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
@@ -136,16 +139,15 @@ print(target_dict)
 # In[Now we separate the patient ID and the SeriesInstance UID]
 #From now on we should not change the order or remove any values,
 # otherwise the ids wont match afterwards
-df_train_ids = df_train[[PID_k, SID_k,sq]]  #also contains sequences
-df_test_ids = df_test[[PID_k, SID_k]]
+df_train_ids = df_train[[PID_k, SID_k, sq, DT_k, ICD_k]]  #also contains sequences
+df_test_ids = df_test[[PID_k, SID_k, DT_k, ICD_k]]
 try:
-    df_train = df_train.drop([PID_k, SID_k, 'Sequence', SD_k], axis=1)
-    df_test = df_test.drop([PID_k, SID_k, 'Sequence', SD_k], axis=1)
+    df_train = df_train.drop([PID_k, SID_k, 'Sequence', SD_k, DT_k, ICD_k], axis=1)
+    df_test = df_test.drop([PID_k, SID_k, 'Sequence', SD_k, DT_k, ICD_k], axis=1)
 except:
     print("those columns are not present")
 
 # In[Min max scale non bin columns]
-
 num_cols = df_train.select_dtypes(include="float64").columns
 X = df_train.copy()
 X_test = df_test.copy()
@@ -155,10 +157,10 @@ for col in num_cols:
   X_test[col] = (df_test[col] - df_test[col].min())/ \
       (df_test[col].max()-df_test[col].min()) 
 
-
 # In[Split train and val]
 X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.1, random_state=42)
+
 
 # In[Initialize and train]
 xgb_cl = xgb.XGBClassifier() 
@@ -206,26 +208,21 @@ pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
 vis.bar_plot(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
              xlabel='Sequence', title='Predicted sequences')
 
-# In[Create and save dataframe with predictions]
-dict_mapping = lambda t: target_dict[t]
+# In[Get labels from prediction]
+dict_mapping = lambda t: basic.inv_dict(target_dict)[t]
 pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
-
+# In[Create and save dataframe with predictions]
 df_test[sq] = pred_test_labels
 df_test = pd.concat([df_test, df_test_ids], axis=1)
 df_train = pd.concat([df_train, df_train_ids], axis=1)
 df_final = pd.concat([df_train, df_test])
-del df_test, df_train
+#del df_test, df_train
 # In[Examine final df]
+df_final = df_final.dropna(subset=[ICD_k])
+df_final[[PID_k, SID_k, sq, ICD_k]].to_csv(f"{base_dir}/share/pred_seq.csv")
+print(len(df_final[[PID_k, SID_k, sq, ICD_k]]))
 print(df_final.Sequence)
-
-
-
-
-# In[Count number of relevant patients in 2019]
-print(len(df_2019[mask_dict.t1 | mask_dict.t2 | mask_dict.t2s | mask_dict.t1gd \
-        | mask_dict.t2gd | mask_dict.gd | mask_dict.swi | mask_dict.flair \
-        | mask_dict.dwi][PID_k].unique()))
-print(len(df_2019[PID_k].unique()))
+print(df_final.isna().sum())
 
 
 # In[visualize sequences scatter]
