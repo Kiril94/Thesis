@@ -207,15 +207,16 @@ vis.bar_plot(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
              xlabel='Sequence', title='Predicted sequences')
 
 # In[Create and save dataframe with predictions]
-df_test[sq] = pred_test
+dict_mapping = lambda t: target_dict[t]
+pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
+
+df_test[sq] = pred_test_labels
 df_test = pd.concat([df_test, df_test_ids], axis=1)
 df_train = pd.concat([df_train, df_train_ids], axis=1)
 df_final = pd.concat([df_train, df_test])
 del df_test, df_train
 # In[Examine final df]
 print(df_final.Sequence)
-
-
 
 
 
