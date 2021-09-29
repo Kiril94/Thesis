@@ -78,7 +78,7 @@ print(seq_count)
 # In[visualize number of volumes sequences]
 vis.bar_plot(seq_count.keys(), seq_count.values, figsize=(13,6), xlabel='Sequence',
              xtickparams_ls=16, save_plot=True, title='All Patients',
-             figname=f"{fig_dir}/sequence_pred/sequences_count.png")
+             figname=f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
 
 
 # In[Turn ScanningSequence into multi-hot encoded]
@@ -201,7 +201,7 @@ kwargs = {'normalize':True, 'text_fontsize':16,'title_fontsize':18, }
 vis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs, 
                    set_xticks=True, xticks=np.arange(7), xtick_labels=target_dict.keys(),
                    set_yticks=True, yticks=np.arange(7), ytick_labels=target_dict.keys(),
-                   save=True, figname=f"{fig_dir}/sequence_pred/confusion_matrix_norm.png")
+                   save=True, figname=f"{fig_dir}/sequence_pred/confusion_matrix_val_norm.png")
 # In[make prediction for the test set]
 pred_prob_test = xgb_cl.predict_proba(X_test)
 pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
@@ -209,6 +209,26 @@ vis.bar_plot(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
              xlabel='Sequence', title='Predicted sequences', save_plot=True,
              figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
 
+# In[show predicted and true]
+fig, ax = plt.subplots()
+pred_counts = np.unique(pred_test, return_counts=True)[1]
+ax.bar(target_dict.keys(), seq_count.values[1:], 
+       width=.5, label='true',
+       color='blue')
+ax.bar(target_dict.keys(), pred_counts,  bottom=seq_count.values[1:],
+       width=.5, label='predicted', color='red')
+ax.legend(fontsize=16)
+fig.tight_layout()
+
+# In[]
+
+fig, ax = vis.bar_plot(target_dict.keys(), seq_count.values[1:],
+             xlabel='Sequence', title='Predicted sequences')
+vis.bar_plot(target_dict.keys(), pred_counts, fig=fig, ax=ax, 
+             bottom=seq_count.values[1:], save_plot=True,
+             figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
+# In[]
+print(np.unique(pred_test, return_counts=True)[1])
 # In[Get labels from prediction]
 dict_mapping = lambda t: basic.inv_dict(target_dict)[t]
 pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])

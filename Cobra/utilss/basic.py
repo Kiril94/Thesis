@@ -5,6 +5,7 @@ Created on Wed Sep 15 10:41:26 2021
 @author: klein
 """
 import numpy as np
+import pandas as pd
 
 
 def create_dict(keys, values):
@@ -35,3 +36,7 @@ def my_argmax(a, axis=1, default=-1):
     my_argmax = a.argmax(axis=axis)
     my_argmax[rows_multiple_max] = default
     return my_argmax
+
+def df_to_dict(df, col_key, col_val):
+    """Create a dict from a df using two columns"""
+    return pd.Series(df[col_val].values,index=df[col_key]).to_dict()

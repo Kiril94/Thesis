@@ -57,10 +57,16 @@ def bar_plot(labels, counts, figsize=(10,6), width=.8,
              ylabel='count', ylabel_fs=25,
              xlabel='x', xlabel_fs=25,
              xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25, logscale=False,
-             save_plot=False, figname=None, dpi=80, plot_style='ggplot'):
-    fig, ax = plt.subplots(1,figsize = figsize)
+             save_plot=False, figname=None, dpi=80, plot_style='ggplot',
+             fig=None, ax=None, bottom=[]):
+    
     plt.style.use(plot_style)
-    ax.bar(np.arange(len(counts)), counts, width, label = lgd_label)
+    if ax==None or fig==None:
+        fig, ax = plt.subplots(1, figsize = figsize)
+    if len(bottom)==0:
+        bottom = np.zeros(len(counts))
+    ax.bar(np.arange(len(counts)), counts, width, label = lgd_label,
+           bottom=bottom)
     x = np.arange(len(counts))  # the label locations
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
@@ -78,7 +84,8 @@ def bar_plot(labels, counts, figsize=(10,6), width=.8,
     fig.tight_layout()
     if save_plot:
         fig.savefig(figname, dpi=dpi)
-
+    
+    return fig, ax
 ##############################################################
 def plot_decorator(plot_func, args, kwargs, 
                    figsize=(9,9), save=False, dpi=80, figname='',

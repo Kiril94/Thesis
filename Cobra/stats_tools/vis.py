@@ -22,7 +22,7 @@ def nice_plot(
     show_plot = True, save_plot=False, figname=None, xlabel = 'x',ylabel='', 
     data_label=' ', figsize = (10,5), y_range= None, legend_loc = 0, 
     legend_fs =20, legend_ncol = 1, legend_color = 'white', label_fs = 25, 
-    ticksize = 20, axis= None, 
+    ticksize = 20, axis=None, 
     figure = None, plot_legend = False, x_show_range = None, text_fs = 14, 
     dpi = 80, xlogscale = False, ylogscale = False, color = 'skyblue', 
     plot_style = 'ggplot', linestyle = 'solid', ecolor = 'deepskyblue', 
