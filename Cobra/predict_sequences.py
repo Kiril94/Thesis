@@ -210,25 +210,15 @@ vis.bar_plot(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
              figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
 
 # In[show predicted and true]
-fig, ax = plt.subplots()
 pred_counts = np.unique(pred_test, return_counts=True)[1]
-ax.bar(target_dict.keys(), seq_count.values[1:], 
-       width=.5, label='true',
-       color='blue')
-ax.bar(target_dict.keys(), pred_counts,  bottom=seq_count.values[1:],
-       width=.5, label='predicted', color='red')
-ax.legend(fontsize=16)
-fig.tight_layout()
-
-# In[]
-
 fig, ax = vis.bar_plot(target_dict.keys(), seq_count.values[1:],
-             xlabel='Sequence', title='Predicted sequences')
+                       lgd_label='true',
+              title='Volumes Count - All Patients')
 vis.bar_plot(target_dict.keys(), pred_counts, fig=fig, ax=ax, 
-             bottom=seq_count.values[1:], save_plot=True,
+             bottom=seq_count.values[1:],  lgd_label='pred',
+             save_plot=True, lgd=True, xlabel='Sequence Type',
              figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
-# In[]
-print(np.unique(pred_test, return_counts=True)[1])
+
 # In[Get labels from prediction]
 dict_mapping = lambda t: basic.inv_dict(target_dict)[t]
 pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
