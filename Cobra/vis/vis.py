@@ -49,14 +49,34 @@ def show_series(patient_id, series_id, base_data_dir='Y:'):
         display3d(arr3d)
         counter += 1
         
-        
+#########################################################
+def ax_decorator(ax, lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,
+                 title='', title_fs=25,
+                 ylabel='count', ylabel_fs=25,
+                 xlabel='x', xlabel_fs=25,
+                 xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25, 
+                 logscale=False):
+    if lgd:
+        ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor = 'white')
+    if title!='':
+        ax.set_title(title, fontsize=title_fs)
+    ax.set_ylabel(ylabel, fontsize=ylabel_fs)
+    ax.set_xlabel(xlabel, fontsize=xlabel_fs)
+    ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls,
+                   rotation=xtickparams_rot)
+    ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls)
+    if logscale:
+        ax.set_yscale('log')
+    return ax
+    
 ##########################################
 def bar_plot(labels, counts, figsize=(10,6), width=.8,
              lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,
              title='', title_fs=25,
              ylabel='count', ylabel_fs=25,
              xlabel='x', xlabel_fs=25,
-             xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25, logscale=False,
+             xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25, 
+             logscale=False,
              save_plot=False, figname=None, dpi=80, plot_style='ggplot',
              fig=None, ax=None, bottom=[]):
     
@@ -70,6 +90,8 @@ def bar_plot(labels, counts, figsize=(10,6), width=.8,
     x = np.arange(len(counts))  # the label locations
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
+    
+    ax = ax_decorator(ax, )
     if lgd:
         ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor = 'white')
     if title!='':
