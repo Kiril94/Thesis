@@ -22,7 +22,7 @@ def ax_decorator(ax, lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,
                  ylabel='count', ylabel_fs=25,
                  xlabel='x', xlabel_fs=25,
                  xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25, 
-                 logscale=False):
+                 logscale=False, **kwargs):
     if lgd:
         ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor = 'white')
     if title!='':
@@ -90,8 +90,8 @@ def plot_decorator(plot_func, args, kwargs,
 
 
 def nice_plot(
-    X, Y, SY = 0, errorbar = False,scatter=False, absolute_sigma = True, 
-    show_plot = True, save_plot=False, figname=None, xlabel = 'x',ylabel='', 
+    X, Y, SY = 0, errorbar=False, scatter=False, absolute_sigma=True, 
+    show_plot=True, save_plot=False, figname=None, xlabel = 'x',ylabel='', 
     data_label=' ', figsize = (10,5), y_range= None, legend_loc = 0, 
     legend_fs =20, legend_ncol = 1, legend_color = 'white', label_fs = 25, 
     ticksize = 20, axis=None, 
@@ -180,46 +180,28 @@ def nice_plot(
         fig.savefig(figname, dpi = dpi)
         
     if show_plot:
-        plt.show(fig)
-    else:
-        plt.close(fig)
+        plt.show()
         
     return fig, ax
     
 ##########################################
-def bar_plot(labels, counts, figsize=(10,6), width=.8,
-             lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,
-             title='', title_fs=25,
-             ylabel='count', ylabel_fs=25,
-             xlabel='x', xlabel_fs=25,
-             xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25, 
-             logscale=False,
-             save_plot=False, figname=None, dpi=80, plot_style='ggplot',
-             fig=None, ax=None, bottom=[]):
+def bar_plot(labels, counts, width=.8,
+             lgd_label='', figsize=(10,6), save_plot=False, 
+             figname=None, dpi=80, plot_style='ggplot',
+             fig=None, ax=None, bottom=[], kwargs={}):
     
     plt.style.use(plot_style)
     if ax==None or fig==None:
-        fig, ax = plt.subplots(1, figsize = figsize)
+        fig, ax = plt.subplots(1, figsize=figsize)
     if len(bottom)==0:
         bottom = np.zeros(len(counts))
-    ax.bar(np.arange(len(counts)), counts, width, label = lgd_label,
+    ax.bar(np.arange(len(counts)), counts, width, label=lgd_label,
            bottom=bottom)
     x = np.arange(len(counts))  # the label locations
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     
-    ax = ax_decorator(ax, )
-    if lgd:
-        ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor = 'white')
-    if title!='':
-        ax.set_title(title, fontsize=title_fs)
-    ax.set_ylabel(ylabel, fontsize=ylabel_fs)
-    ax.set_xlabel(xlabel, fontsize=xlabel_fs)
-    ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls,
-                   rotation=xtickparams_rot)
-    ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls)
-    if logscale:
-        ax.set_yscale('log')
+    ax = ax_decorator(ax, **kwargs)
     fig.tight_layout()
     if save_plot:
         fig.savefig(figname, dpi=dpi)
@@ -302,10 +284,10 @@ def nice_histogram(
         fig.savefig(figname, dpi = dpi)
     
     if show_plot:
-        plt.show(fig)
-    else:
-        plt.close(fig)
+        plt.show()
+        
     Figure = {"x":x, "y":y, "binwidth":binwidth, "fig":fig, "ax":ax}
+    
     if poisson_error:
         Figure["sy"] =sy
     
@@ -380,9 +362,8 @@ def nice_contour(
         fig.savefig(figname, dpi = dpi)
     
     if show_plot:
-        plt.show(fig)
-    else:
-        plt.close(fig)
+        plt.show()
+   
     return fig, ax
 #######################################
 def scatter_hist(X0,X1,Y0,Y1, ax, ax_histx, ax_histy, N_bins_x, N_bins_y,
@@ -499,9 +480,7 @@ def plot_classification(X, y, classifier, N_bins_x = 40, N_bins_y = 40,
         fig.savefig(figname, bbox_inches = 'tight')
     
     if show_plot:
-        plt.show(fig)
-    else:
-        plt.close(fig)
+        plt.show()
     
     return classifier, ax_scatter, ax_histx, ax_histy, fig
 
@@ -600,9 +579,7 @@ def show_int_distribution(integers, save_plot = True,
     if save_plot:
         fig.savefig(figname)
     if show_plot:
-        plt.show(fig)
-    else:
-        plt.close(fig)
+        plt.show()
     
     return dict_raw, dict_odd_even, dict_high_low, fig, AX
 
