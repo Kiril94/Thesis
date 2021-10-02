@@ -76,7 +76,7 @@ seq_count = df_all[sq].value_counts()
 print(seq_count)
 
 # In[visualize number of volumes sequences]
-vis.bar_plot(seq_count.keys(), seq_count.values, figsize=(13,6), xlabel='Sequence',
+svis.bar_plot(seq_count.keys(), seq_count.values, figsize=(13,6), xlabel='Sequence',
              xtickparams_ls=16, save_plot=True, title='All Patients',
              figname=f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
 
@@ -114,7 +114,7 @@ fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/X_distr.png")
 # In[Show the binary columns]
 bin_counts = df_all[sparse_columns].sum(axis=0)
-vis.bar_plot(bin_counts.keys(), bin_counts.values, 
+svis.bar_plot(bin_counts.keys(), bin_counts.values, 
              figsize=(15,6), logscale=True, 
              figname=f"{fig_dir}/sequence_pred/X_distr_bin.png")
 # In[We can drop the TOF, EP, DE and MTC columns]
@@ -168,7 +168,7 @@ xgb_cl.fit(X_train, y_train)
 # In[Predict]
 pred_prob_val = xgb_cl.predict_proba(X_val)
 # In[Plot roc curve]
-vis.plot_decorator(skplot.metrics.plot_roc_curve, args=[y_val, pred_prob_val,], 
+svis.plot_decorator(skplot.metrics.plot_roc_curve, args=[y_val, pred_prob_val,], 
                    kwargs={'figsize':(9,8),'text_fontsize':14.5,
                            'title':"Sequence Prediction - ROC Curves"},
                    figname=f"{fig_dir}/sequence_pred/ROC_curves.png")
@@ -198,23 +198,23 @@ cm = confusion_matrix(y_val, pred_val)
 
 args = [y_val, pred_val]
 kwargs = {'normalize':True, 'text_fontsize':16,'title_fontsize':18, }
-vis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs, 
+svis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs, 
                    set_xticks=True, xticks=np.arange(7), xtick_labels=target_dict.keys(),
                    set_yticks=True, yticks=np.arange(7), ytick_labels=target_dict.keys(),
                    save=True, figname=f"{fig_dir}/sequence_pred/confusion_matrix_val_norm.png")
 # In[make prediction for the test set]
 pred_prob_test = xgb_cl.predict_proba(X_test)
 pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
-vis.bar_plot(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
+svis.bar_plot(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
              xlabel='Sequence', title='Predicted sequences', save_plot=True,
              figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
 
 # In[show predicted and true]
 pred_counts = np.unique(pred_test, return_counts=True)[1]
-fig, ax = vis.bar_plot(target_dict.keys(), seq_count.values[1:],
+fig, ax = svis.bar_plot(target_dict.keys(), seq_count.values[1:],
                        lgd_label='true',
               title='Volumes Count - All Patients')
-vis.bar_plot(target_dict.keys(), pred_counts, fig=fig, ax=ax, 
+svis.bar_plot(target_dict.keys(), pred_counts, fig=fig, ax=ax, 
              bottom=seq_count.values[1:],  lgd_label='pred',
              save_plot=True, lgd=True, xlabel='Sequence Type',
              figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
@@ -236,7 +236,7 @@ print(df_final.Sequence)
 print(df_final.isna().sum())
 
 # In[Final sequence distribution]
-vis.bar_plot(target_dict.keys(), df_final[sq].value_counts(),
+svis.bar_plot(target_dict.keys(), df_final[sq].value_counts(),
              xlabel='Sequence', title='All sequences after prediction',
              save_plot=(True), figname=f"{fig_dir}/sequence_pred/seq_dist_all_pred.png")
 

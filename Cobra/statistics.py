@@ -138,7 +138,7 @@ none_c = df_p['Manufacturer'].isnull().sum()
 fig, ax = plt.subplots(1, figsize = (10,6))
 manufacturers_unq = ['Philips', 'SIEMENS', 'GEMS', 'Agfa', 'none']
 counts = np.array([philips_c, siemens_c, gms_c, agfa_c, none_c])
-vis.bar_plot(manufacturers_unq, counts, xlabel='Manufacturer', 
+svis.bar_plot(manufacturers_unq, counts, xlabel='Manufacturer', 
              save_plot=True, figname=f"{fig_dir}/pos/manufacturers_count.png",
              title='Positive Patients')
 
@@ -275,7 +275,7 @@ seq_counts = np.array([counts_dict.t1, counts_dict.flair, counts_dict.t2,
                        counts_dict.t2s, counts_dict.dwi, 
                        counts_dict.swi, counts_dict.angio, counts_dict.adc,
                        counts_dict.other, counts_dict.none_nid])
-vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
+svis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
              xtickparams_ls=16, save_plot=True, title='Positive Patients',
              figname=f"{fig_dir}/pos/basic_sequences_count.png")
 
@@ -287,7 +287,7 @@ seq_counts = np.array([counts_dict.dti, counts_dict.tracew, counts_dict.asl,
                        counts_dict.stir, 
                        counts_dict.screensave, counts_dict.autosave,
                        ])
-vis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
+svis.bar_plot(sequences_names, seq_counts, figsize=(13,6), xlabel='Sequence',
              xtickparams_ls=16, save_plot=True, title='Positive Patients',
              figname=f"{fig_dir}/pos/other_sequences_count.png")
 
@@ -348,7 +348,7 @@ year_month_keys = [str(int(key[1]))+'/'+str(key[0])[:4] for key in ps_datetime_c
 year_month_keys.insert(-1,'5/2021') # this month is missing
 year_month_counts = ps_datetime_count.values
 year_month_counts = np.insert(year_month_counts, -1, 0)
-vis.bar_plot(year_month_keys[:-3], year_month_counts[:-3], figsize=(13,7),
+svis.bar_plot(year_month_keys[:-3], year_month_counts[:-3], figsize=(13,7),
              xtickparams_rot=70, 
                     xlabel='month/year', save_plot=(True), ylabel='Frequency',
                     title='Number of acquired volumes for positive patients',
@@ -365,7 +365,7 @@ _, study_dates = stats.time_between_studies(df_p)
 year_month_study_dates = [str(date.year)+'/'+str(date.month)for date in study_dates]
 year_month_unique, year_month_counts = np.unique(
     np.array(year_month_study_dates), return_counts=True)
-vis.bar_plot(year_month_unique[:-2], year_month_counts[:-2], figsize=(13,7),
+svis.bar_plot(year_month_unique[:-2], year_month_counts[:-2], figsize=(13,7),
              xtickparams_rot=70, xlabel='study month/year', save_plot=(True), 
              ylabel='Frequency', title='Studies for positive patients',
              figname=f"{fig_dir}/pos/studies_months_years.png" )

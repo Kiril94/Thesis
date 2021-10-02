@@ -10,7 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from cryptography.fernet import Fernet
 from utilss import basic
-from vis import vis
+from stats_tools import vis as svis
+
 
 
 # In[Load and decrypt dataframe]
@@ -50,7 +51,7 @@ seqs = df_pp.Sequence.unique()
 series_pp_dict = {seq:df_pp[df_pp.Sequence==seq] for seq in seqs}
 pat_pp_dict = {seq:series_pp_dict[seq].PID.unique() for seq in seqs}
 pat_pp_counts = [len(df.PID.unique()) for df in list(series_pp_dict.values())]
-vis.bar_plot(seqs, pat_pp_counts, dpi=100, save_plot=True, 
+svis.bar_plot(seqs, pat_pp_counts, dpi=100, save_plot=True, 
              figname=f"{fig_dir}/patients_pre_post.png", 
              title="# Patients with pre and post disease scan",
              xlabel='Sequence')
