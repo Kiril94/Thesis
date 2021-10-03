@@ -24,6 +24,7 @@ def ax_decorator(ax,
                  xlabel='x', xlabel_fs=25,
                  xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25,
                  xlogscale=False, ylogscale=False,
+                 xrange=(None,None), yrange=(None,None),
                  **kwargs):
     if lgd:
         legend = ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor='white')
@@ -35,6 +36,8 @@ def ax_decorator(ax,
     ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls,
                    rotation=xtickparams_rot)
     ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls)
+    ax.set_xlim(xrange)
+    ax.set_ylim(yrange)
     if xlogscale:
         ax.set_yscale('log')
     if ylogscale:
@@ -92,19 +95,16 @@ def plot_decorator(plot_func, args, kwargs,
         fig.savefig(figname, dpi=dpi)
 
 
-def nice_plot(
-        X, Y, SY=0, errorbar=False, scatter=False, absolute_sigma=True,
-        show_plot=True, save_plot=False, figname=None, xlabel='x', ylabel='',
-        data_label=' ', figsize=(10, 5), y_range=None, legend_loc=0,
-        legend_fs=20, legend_ncol=1, legend_color='white', label_fs=25,
-        ticksize=20, axis=None,
-        figure=None, plot_legend=False, x_show_range=None, text_fs=14,
-        dpi=80, xlogscale=False, ylogscale=False, color='skyblue',
+def line(
+        x, y, sy=0, errorbar=False, scatter=False, absolute_sigma=True,
+        show=True, save=False, figname=None, 
+        label='', figsize=(10, 5), 
+        ax=None, fig=None, text_fs=14,
+        dpi=80, color='skyblue',
         plot_style='ggplot', linestyle='solid', ecolor='deepskyblue',
         capsize=3, capthick=0.3, err_markersize=6,  elinewidth=.9,
         alpha=1, scr_markersize=30, scr_markerstyle='o', linewidth=3,
-        fill_under_curve=False,
-        fill_color='skyblue', drawstyle='default',
+        fill_color=None, drawstyle='default',
         kwargs={}):
     r"""
     Simple x-y plot. 
@@ -112,85 +112,73 @@ def nice_plot(
     Parameters:
     ----------
 
-    X, Y, SY: lists of array_like,
+    x, y, sy: of array_like,
         input data, if produced from histogram, pass ONLY values where Y>0
     errorbar: bool, False by default, if True errorbars are plotted 
-    color_scheme: tuple of integers, first specifies color scheme, second the color
+    
     Returns:
     -------
-    ax: axis object
     fig: figure object
+    ax: axis object
+
     """
 
-    if not(axis == None):
-        ax = axis
-        fig = figure
-    else:
+    if ax == None or fig == None:
         fig, ax = plt.subplots(figsize=figsize)
-
-    if type(color) == tuple:
+    try:
         line_color = Color_palette(color[0])[color[1]]
-    else:
+    except:
         line_color = color
-    if type(ecolor) == tuple:
+    try:
         ecolor = Color_palette(ecolor[0])[ecolor[1]]
-    if type(fill_color) == tuple:
+    except:
+        pass
+    try:
         fill_color = Color_palette(fill_color[0])[fill_color[1]]
+    except:
+        pass
 
     plt.style.use(plot_style)
-    const_err = (type(SY) == float)
+    const_err = (type(sy) == float)
     if const_err:
-        SY = np.ones(len(X))*SY
+        sy = np.ones(len(x))*sy
     if errorbar:
-        ax.errorbar(X, Y, yerr=SY, marker='.', mec=ecolor, color=ecolor,
+        ax.errorbar(x, y, yerr=sy, marker='.', mec=ecolor, color=ecolor,
                     elinewidth=elinewidth, capsize=capsize, capthick=capthick,
                     linestyle='none', markersize=err_markersize,
-                    label=data_label, alpha=alpha)  # plot data
+                    label=label, alpha=alpha)  # plot data
     elif scatter:
         ax.scatter(
-            X, Y, color=line_color,  label=data_label,
+            x, y, color=line_color,  label=label,
             linestyle=linestyle, s=scr_markersize,
             alpha=alpha, marker=scr_markerstyle)
     else:
-        ax.plot(X, Y, color=line_color,  label=data_label, drawstyle=drawstyle,
+        ax.plot(x, y, color=line_color,  label=label, drawstyle=drawstyle,
                 linestyle=linestyle, alpha=alpha, linewidth=linewidth)
-
-    if fill_under_curve:
-        plt.fill_between(X, Y, color=fill_color)
+        
+    if fill_color != None:
+        plt.fill_between(x, y, color=fill_color)
     ax = ax_decorator(ax, **kwargs)
-    ax.set_ylabel(ylabel, fontsize=label_fs)
-    ax.tick_params(axis='both', labelsize=ticksize)
-
-    if y_range != None:
-        ax.set_ylim((y_range[0], y_range[1]))
-
-    if not(x_show_range == None):
-        ax.set_xlim(x_show_range)
-
     fig.tight_layout()
-
-    if save_plot:
+    if save:
         fig.savefig(figname, dpi=dpi)
-
-    if show_plot:
-        plt.show()
 
     return fig, ax
 
 ##########################################
 
 
-def bar_plot(labels, counts, width=.8,
-             lgd_label='', figsize=(10, 6), save_plot=False,
+def bar(labels, counts, width=.8,
+             label='', figsize=(10, 6), save=False,
              figname=None, dpi=80, plot_style='ggplot',
              fig=None, ax=None, bottom=[], kwargs={}):
 
     plt.style.use(plot_style)
     if ax == None or fig == None:
-        fig, ax = plt.subplots(1, figsize=figsize)
+        fig, ax = plt.subplots(figsize=figsize)
     if len(bottom) == 0:
         bottom = np.zeros(len(counts))
-    ax.bar(np.arange(len(counts)), counts, width, label=lgd_label,
+    ax.bar(np.arange(len(counts)), counts, width, label=label,
            bottom=bottom)
     x = np.arange(len(counts))  # the label locations
     ax.set_xticks(x)
@@ -198,7 +186,7 @@ def bar_plot(labels, counts, width=.8,
 
     ax = ax_decorator(ax, **kwargs)
     fig.tight_layout()
-    if save_plot:
+    if save:
         fig.savefig(figname, dpi=dpi)
 
     return fig, ax
