@@ -1,4 +1,4 @@
-    # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Created on Sat Jan 16 15:18:15 2021
 
@@ -21,11 +21,11 @@ def ax_decorator(ax, lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,
                  title='', title_fs=25,
                  ylabel='count', ylabel_fs=25,
                  xlabel='x', xlabel_fs=25,
-                 xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25, 
+                 xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25,
                  logscale=False, **kwargs):
     if lgd:
-        ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor = 'white')
-    if title!='':
+        ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor='white')
+    if title != '':
         ax.set_title(title, fontsize=title_fs)
     ax.set_ylabel(ylabel, fontsize=ylabel_fs)
     ax.set_xlabel(xlabel, fontsize=xlabel_fs)
@@ -39,24 +39,23 @@ def ax_decorator(ax, lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,
 
 # In[General plots]
 
-def plot_decorator(plot_func, args, kwargs, 
-                   figsize=(9,9), save=False, dpi=80, figname='',
-                   lgd=False, lgd_loc=0, lgd_fs=25, lgd_color='white', 
+def plot_decorator(plot_func, args, kwargs,
+                   figsize=(9, 9), save=False, dpi=80, figname='',
+                   lgd=False, lgd_loc=0, lgd_fs=25, lgd_color='white',
                    lgd_ncol=1, lgd_shadow=True,
-                   set_ttl=False, ttl='Title', ttl_fs=20, ttl_clr='k', 
+                   set_ttl=False, ttl='Title', ttl_fs=20, ttl_clr='k',
                    set_xlabel=False, xlabel='count', xlabel_fs=25,
                    set_ylabel=False, ylabel='count', ylabel_fs=25,
                    set_xticks=False, xticks=[], xtick_labels=[],
                    set_yticks=False, yticks=[], ytick_labels=[],
-                   set_xtickparams=False, xtickparams_ls=25, xtickparams_rot=0, 
+                   set_xtickparams=False, xtickparams_ls=25, xtickparams_rot=0,
                    set_ytickparams=False, ytickparams_ls=25, ytickparams_rot=0,
                    xlogscale=False, ylogscale=False,):
-    
     """Takes a function plot_func which takes args, 
     kwargs and ax to produce a plot"""
     fig, ax = plt.subplots(figsize=figsize)
     ax = plot_func(*args, **kwargs, ax=ax)
-    
+
     if lgd:
         ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor=lgd_color,
                   ncol=lgd_ncol, shadow=lgd_shadow)
@@ -82,32 +81,31 @@ def plot_decorator(plot_func, args, kwargs,
         ax.set_xscale('log')
     if ylogscale:
         ax.set_yscale('log')
-        
+
     fig.tight_layout()
     if save:
         fig.savefig(figname, dpi=dpi)
 
 
-
 def nice_plot(
-    X, Y, SY = 0, errorbar=False, scatter=False, absolute_sigma=True, 
-    show_plot=True, save_plot=False, figname=None, xlabel = 'x',ylabel='', 
-    data_label=' ', figsize = (10,5), y_range= None, legend_loc = 0, 
-    legend_fs =20, legend_ncol = 1, legend_color = 'white', label_fs = 25, 
-    ticksize = 20, axis=None, 
-    figure = None, plot_legend = False, x_show_range = None, text_fs = 14, 
-    dpi = 80, xlogscale = False, ylogscale = False, color = 'skyblue', 
-    plot_style = 'ggplot', linestyle = 'solid', ecolor = 'deepskyblue', 
-    capsize = 3, capthick = 0.3, err_markersize = 6,  elinewidth = .9, 
-    alpha = 1, scr_markersize = 30, scr_markerstyle = 'o', linewidth = 3, 
-    fill_under_curve = False, 
-    fill_color = 'skyblue', drawstyle = 'default'):
+        X, Y, SY=0, errorbar=False, scatter=False, absolute_sigma=True,
+        show_plot=True, save_plot=False, figname=None, xlabel='x', ylabel='',
+        data_label=' ', figsize=(10, 5), y_range=None, legend_loc=0,
+        legend_fs=20, legend_ncol=1, legend_color='white', label_fs=25,
+        ticksize=20, axis=None,
+        figure=None, plot_legend=False, x_show_range=None, text_fs=14,
+        dpi=80, xlogscale=False, ylogscale=False, color='skyblue',
+        plot_style='ggplot', linestyle='solid', ecolor='deepskyblue',
+        capsize=3, capthick=0.3, err_markersize=6,  elinewidth=.9,
+        alpha=1, scr_markersize=30, scr_markerstyle='o', linewidth=3,
+        fill_under_curve=False,
+        fill_color='skyblue', drawstyle='default'):
     r"""
     Simple x-y plot. 
-    
+
     Parameters:
     ----------
-    
+
     X, Y, SY: lists of array_like,
         input data, if produced from histogram, pass ONLY values where Y>0
     errorbar: bool, False by default, if True errorbars are plotted 
@@ -117,193 +115,201 @@ def nice_plot(
     ax: axis object
     fig: figure object
     """
-    
-    if not(axis==None):
+
+    if not(axis == None):
         ax = axis
         fig = figure
     else:
         fig, ax = plt.subplots(figsize=figsize)
-        
-    if type(color)==tuple:
+
+    if type(color) == tuple:
         line_color = Color_palette(color[0])[color[1]]
     else:
         line_color = color
-    if type(ecolor)==tuple:
+    if type(ecolor) == tuple:
         ecolor = Color_palette(ecolor[0])[ecolor[1]]
-    if type(fill_color)==tuple:
+    if type(fill_color) == tuple:
         fill_color = Color_palette(fill_color[0])[fill_color[1]]
-        
+
     plt.style.use(plot_style)
-    const_err = (type(SY)==float)
+    const_err = (type(SY) == float)
     if const_err:
         SY = np.ones(len(X))*SY
     if errorbar:
-        ax.errorbar(X, Y, yerr=SY, marker = '.', mec=ecolor, color = ecolor, 
-                    elinewidth=elinewidth, capsize = capsize, capthick=capthick, 
-                    linestyle = 'none',markersize = err_markersize,
-                    label =data_label, alpha = alpha)#plot data
+        ax.errorbar(X, Y, yerr=SY, marker='.', mec=ecolor, color=ecolor,
+                    elinewidth=elinewidth, capsize=capsize, capthick=capthick,
+                    linestyle='none', markersize=err_markersize,
+                    label=data_label, alpha=alpha)  # plot data
     elif scatter:
         ax.scatter(
-            X,Y, color = line_color,  label =data_label, 
-            linestyle = linestyle, s = scr_markersize,
-            alpha = alpha, marker = scr_markerstyle)
+            X, Y, color=line_color,  label=data_label,
+            linestyle=linestyle, s=scr_markersize,
+            alpha=alpha, marker=scr_markerstyle)
     else:
-        ax.plot(X,Y, color = line_color,  label =data_label, drawstyle = drawstyle, 
-                linestyle = linestyle, alpha = alpha, linewidth = linewidth)
-    
+        ax.plot(X, Y, color=line_color,  label=data_label, drawstyle=drawstyle,
+                linestyle=linestyle, alpha=alpha, linewidth=linewidth)
+
     if fill_under_curve:
-        plt.fill_between(X,Y, color = fill_color)
-    
-    ax.set_ylabel(ylabel, fontsize = label_fs)
-    ax.tick_params(axis = 'both',labelsize  = ticksize)
+        plt.fill_between(X, Y, color=fill_color)
+
+    ax.set_ylabel(ylabel, fontsize=label_fs)
+    ax.tick_params(axis='both', labelsize=ticksize)
     if plot_legend:
-        legend = ax.legend(loc = legend_loc, ncol = legend_ncol,
-                           fontsize = legend_fs, shadow = True)
+        legend = ax.legend(loc=legend_loc, ncol=legend_ncol,
+                           fontsize=legend_fs, shadow=True)
         legend.get_frame().set_facecolor(legend_color)
-    
+
     ax.set_xlabel(xlabel, fontsize=label_fs)
     if xlogscale:
         ax.set_xscale('log')
 
     if ylogscale:
         ax.set_yscale('log')
-    
-    if y_range!=None:
-        ax.set_ylim((y_range[0],y_range[1]))
-    
-    if not(x_show_range==None):
+
+    if y_range != None:
+        ax.set_ylim((y_range[0], y_range[1]))
+
+    if not(x_show_range == None):
         ax.set_xlim(x_show_range)
-    
+
     fig.tight_layout()
 
     if save_plot:
-        fig.savefig(figname, dpi = dpi)
-        
+        fig.savefig(figname, dpi=dpi)
+
     if show_plot:
         plt.show()
-        
+
     return fig, ax
-    
+
 ##########################################
+
+
 def bar_plot(labels, counts, width=.8,
-             lgd_label='', figsize=(10,6), save_plot=False, 
+             lgd_label='', figsize=(10, 6), save_plot=False,
              figname=None, dpi=80, plot_style='ggplot',
              fig=None, ax=None, bottom=[], kwargs={}):
-    
+
     plt.style.use(plot_style)
-    if ax==None or fig==None:
+    if ax == None or fig == None:
         fig, ax = plt.subplots(1, figsize=figsize)
-    if len(bottom)==0:
+    if len(bottom) == 0:
         bottom = np.zeros(len(counts))
     ax.bar(np.arange(len(counts)), counts, width, label=lgd_label,
            bottom=bottom)
     x = np.arange(len(counts))  # the label locations
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
-    
+
     ax = ax_decorator(ax, **kwargs)
     fig.tight_layout()
     if save_plot:
         fig.savefig(figname, dpi=dpi)
-    
+
     return fig, ax
 
 #########################
-def nice_histogram(
-    x_all, N_bins, poisson_error=False, show_plot=False, plot_hist=True, 
-    plot_errors=True, plot_legend = False, save = False, figname = '', 
-    x_range = None, data_label = 'Data, histogram', data_label_hist = '',
-    figsize = (12,6), histtype = 'step', color_hist = 'red', xlabel = 'x', 
-    ylabel = 'Frequency', label_fs = 20, legend_fs = 18, legend_loc = 0, 
-    legend_ncol = 1, legend_color = 'white', ticks_size = 20, 
-    xlog_scale = False, ylog_scale = False, axis = None, figure = None, 
-    dpi = 80, ecolor = 'deepskyblue', capsize = 3, capthick = 0.3, 
-    markersize = 6, elinewidth = .9, hist_alpha = .9, hist_linestyle = 'solid', 
-    hist_linewidth = 2, plot_style = 'ggplot', caption='', caption_fs=18,
-    title='', title_fs=18):
 
+
+def nice_histogram(
+        x_all, N_bins, poisson_error=False, show_plot=False, plot_hist=True,
+        plot_errors=True, plot_legend=False, save=False, figname='',
+        x_range=None, data_label='Data, histogram', data_label_hist='',
+        figsize=(12, 6), histtype='step', color_hist='red', xlabel='x',
+        ylabel='Frequency', label_fs=20, legend_fs=18, legend_loc=0,
+        legend_ncol=1, legend_color='white', ticks_size=20,
+        xlog_scale=False, ylog_scale=False, axis=None, figure=None,
+        dpi=80, ecolor='deepskyblue', capsize=3, capthick=0.3,
+        markersize=6, elinewidth=.9, hist_alpha=.9, hist_linestyle='solid',
+        hist_linewidth=2, plot_style='ggplot', caption='', caption_fs=18,
+        title='', title_fs=18):
     """Produce a nice histogram.
     Returns: dictionary with x, y, sy, binwidth, fig, ax."""
-    if not(x_range==None):
-        mask_x = (x_all>x_range[0]) & (x_all<x_range[1])
+    if not(x_range == None):
+        mask_x = (x_all > x_range[0]) & (x_all < x_range[1])
         x_all = x_all[mask_x]
 
     if poisson_error:
-        x,y,sy, binwidth = fits.produce_hist_values(
-            x_all,N_bins, x_range = x_range,
-            log = xlog_scale, poisson_error = poisson_error)
+        x, y, sy, binwidth = fits.produce_hist_values(
+            x_all, N_bins, x_range=x_range,
+            log=xlog_scale, poisson_error=poisson_error)
     else:
-        x,y, binwidth = fits.produce_hist_values(
-            x_all,N_bins, x_range = x_range,
-            log = xlog_scale, poisson_error = poisson_error)
+        x, y, binwidth = fits.produce_hist_values(
+            x_all, N_bins, x_range=x_range,
+            log=xlog_scale, poisson_error=poisson_error)
 
-    if type(color_hist)==tuple:
-        color_hist = Color_palette(color_hist[0])[color_hist[1]] 
-    if type(ecolor)==tuple:
-        ecolor = Color_palette(ecolor[0])[ecolor[1]]    
+    if type(color_hist) == tuple:
+        color_hist = Color_palette(color_hist[0])[color_hist[1]]
+    if type(ecolor) == tuple:
+        ecolor = Color_palette(ecolor[0])[ecolor[1]]
 
-    if not(axis==None):
+    if not(axis == None):
         ax = axis
         fig = figure
     else:
-        fig, ax = plt.subplots(figsize=figsize)  
+        fig, ax = plt.subplots(figsize=figsize)
     plt.style.use(plot_style)
 
     if plot_hist:
-        ax.hist(x_all, bins=N_bins, range=(x_all.min(), x_all.max()), 
-                histtype=histtype, linewidth=hist_linewidth, color=color_hist, 
-                label=data_label_hist, alpha = hist_alpha, 
-                linestyle = hist_linestyle)
+        ax.hist(x_all, bins=N_bins, range=(x_all.min(), x_all.max()),
+                histtype=histtype, linewidth=hist_linewidth, color=color_hist,
+                label=data_label_hist, alpha=hist_alpha,
+                linestyle=hist_linestyle)
     if poisson_error:
         if plot_errors:
             ax.errorbar(
-                x, y, yerr=sy, xerr=0.0, label=data_label, marker = '.', 
-                mec=ecolor, color = ecolor, elinewidth=elinewidth, 
-                capsize = capsize, capthick=capthick, linestyle = 'none',
-                markersize = markersize)
+                x, y, yerr=sy, xerr=0.0, label=data_label, marker='.',
+                mec=ecolor, color=ecolor, elinewidth=elinewidth,
+                capsize=capsize, capthick=capthick, linestyle='none',
+                markersize=markersize)
         else:
-            print('no uncertainties were given, if you want to assume poisson errors set poisson_errors to True')
-            
-    ax.set_xlabel(xlabel, fontsize = label_fs)
-    ax.set_ylabel(ylabel, fontsize = label_fs)
-    ax.tick_params(axis ='both', labelsize = ticks_size)
+            print(
+                'no uncertainties were given, if you want to assume poisson errors set poisson_errors to True')
+
+    ax.set_xlabel(xlabel, fontsize=label_fs)
+    ax.set_ylabel(ylabel, fontsize=label_fs)
+    ax.tick_params(axis='both', labelsize=ticks_size)
     if xlog_scale:
         ax.set_xscale('log')
     if ylog_scale:
         ax.set_yscale('log')
     if plot_legend:
-        legend = ax.legend(loc=legend_loc, fontsize = legend_fs, 
-                           shadow = True, ncol = legend_ncol)
+        legend = ax.legend(loc=legend_loc, fontsize=legend_fs,
+                           shadow=True, ncol=legend_ncol)
         legend.get_frame().set_facecolor(legend_color)
-    if caption!='':
-        fig.text(.5, -.05, caption, ha='center', wrap=True, fontsize=caption_fs)
-    if title!='':
+    if caption != '':
+        fig.text(.5, -.05, caption, ha='center',
+                 wrap=True, fontsize=caption_fs)
+    if title != '':
         ax.set_title(title, fontsize=title_fs)
     if save:
         fig.tight_layout()
-        fig.savefig(figname, dpi = dpi)
-    
+        fig.savefig(figname, dpi=dpi)
+
     if show_plot:
         plt.show()
-        
-    Figure = {"x":x, "y":y, "binwidth":binwidth, "fig":fig, "ax":ax}
-    
+
+    Figure = {"x": x, "y": y, "binwidth": binwidth, "fig": fig, "ax": ax}
+
     if poisson_error:
-        Figure["sy"] =sy
-    
+        Figure["sy"] = sy
+
     return Figure
 
 #############################
+
+
 def nice_contour(
-    xx, yy, z, levels = 40, cmap = 'inferno', colors = None, figsize = (12,6),
-    filled = True, figure = None, axis = None, plot_style = 'ggplot', 
-    show_cbar = True, cbar_size = '5%', cbar_pad = 0.1, label_fs = 20, 
-    tick_size = 20, cbar_tick_labelsize = 20,  cbar_orientation = 'vertical', cbar_label = '', 
-    cbar_label_fs = 20, cbar_num_ticks = 5, clabels = None, labels_inline = True,
-    clabel_fs = 18, plot_clabels = False, linewidths = 1.5, linestyles = 'solid', 
-    plot_legend = False, legend_loc = 0, legend_fs = 20,
-    xlabel = '', ylabel = '', show_plot = True, save = False, figname = '', 
-    dpi = 80):
+        xx, yy, z, levels=40, cmap='inferno', colors=None, figsize=(12, 6),
+        filled=True, fig=None, ax=None, plot_style='ggplot',
+        show_cbar=True, cbar_size='5%', cbar_pad=0.1, label_fs=20,
+        tick_size=20, cbar_tick_labelsize=20,  cbar_orientation='vertical',
+        cbar_label='', cbar_label_fs=20, cbar_num_ticks=5, clabels=None,
+        labels_inline=True, clabel_fs=18, plot_clabels=False,
+        linewidths=1.5, linestyles='solid',
+        plot_legend=False, legend_loc=0, legend_fs=20,
+        xlabel='', ylabel='', show_plot=True, save=False, figname='',
+        dpi=80):
     """Producing nice contour plot. 
     Parameters:
         xx, yy, zz: xx and yy are meshgrids, z is a 2d matrix
@@ -311,47 +317,45 @@ def nice_contour(
         fig, ax
     """
 
-    if not(axis==None):
-        ax = axis
-        fig = figure
-    else:
-        fig, ax = plt.subplots(figsize=figsize)  
+    if ax == None or fig == None:
+        fig, ax = plt.subplots(figsize=figsize)
+
     plt.style.use(plot_style)
-    if colors!=None:
+    if colors != None:
         cmap = None
 
     if filled:
-        im = ax.contourf(xx, yy, z, levels = levels, cmap= cmap)
+        im = ax.contourf(xx, yy, z, levels=levels, cmap=cmap)
     else:
         im = ax.contour(
-            xx, yy, z, levels = levels, cmap= cmap, colors = colors,
-            linestyles = linestyles, linewidths = linewidths)
+            xx, yy, z, levels=levels, cmap=cmap, colors=colors,
+            linestyles=linestyles, linewidths=linewidths)
         if plot_clabels:
             ax.clabel(im, inline=labels_inline, fontsize=clabel_fs)
         for i in range(len(clabels)):
             im.collections[i].set_label(clabels[i])
         if plot_legend:
-            ax.legend(loc=legend_loc, fontsize = legend_fs)
-    #set axes params
-    ax.set_xlabel(xlabel, fontsize = label_fs)
-    ax.set_ylabel(ylabel, fontsize = label_fs)
-    ax.tick_params(axis = 'both', labelsize  = tick_size)
+            ax.legend(loc=legend_loc, fontsize=legend_fs)
+    # set axes params
+    ax.set_xlabel(xlabel, fontsize=label_fs)
+    ax.set_ylabel(ylabel, fontsize=label_fs)
+    ax.tick_params(axis='both', labelsize=tick_size)
 
-    #colorbar
+    # colorbar
     if show_cbar:
         divider = make_axes_locatable(ax)
-        if cbar_orientation=='vertical':
+        if cbar_orientation == 'vertical':
             cbar_loc = 'right'
         else:
             cbar_loc = 'top'
 
-        cax = divider.append_axes(cbar_loc, size=cbar_size, pad= cbar_pad)
+        cax = divider.append_axes(cbar_loc, size=cbar_size, pad=cbar_pad)
         cbar = fig.colorbar(im, cax=cax, orientation=cbar_orientation)
-        cbar.ax.tick_params(labelsize=cbar_tick_labelsize) 
-        if cbar_orientation=='vertical':
-            cbar.ax.set_ylabel(cbar_label, fontsize = cbar_label_fs)
+        cbar.ax.tick_params(labelsize=cbar_tick_labelsize)
+        if cbar_orientation == 'vertical':
+            cbar.ax.set_ylabel(cbar_label, fontsize=cbar_label_fs)
         else:
-            cbar.ax.set_title(cbar_label, fontsize = cbar_label_fs, color = ax)
+            cbar.ax.set_title(cbar_label, fontsize=cbar_label_fs, color=ax)
             cax.xaxis.set_ticks_position('top')
         tick_locator = ticker.MaxNLocator(nbins=cbar_num_ticks)
         cbar.locator = tick_locator
@@ -359,52 +363,55 @@ def nice_contour(
 
     if save:
         fig.tight_layout()
-        fig.savefig(figname, dpi = dpi)
-    
+        fig.savefig(figname, dpi=dpi)
+
     if show_plot:
         plt.show()
-   
+
     return fig, ax
 #######################################
-def scatter_hist(X0,X1,Y0,Y1, ax, ax_histx, ax_histy, N_bins_x, N_bins_y,
+
+
+def scatter_hist(X0, X1, Y0, Y1, ax, ax_histx, ax_histy, N_bins_x, N_bins_y,
                  histlabel0, histlabel1):
     """Helper function to create additional axes with histograms."""
-    
-    #set tick parameters
+
+    # set tick parameters
     ax_histx.tick_params(axis="x", labelbottom=False,)
     ax_histy.tick_params(axis="y", labelleft=False)
-    ax_histx.tick_params(axis="y", labelsize = 18 )
-    ax_histy.tick_params(axis ="x", labelsize = 18)
-    
+    ax_histx.tick_params(axis="y", labelsize=18)
+    ax_histy.tick_params(axis="x", labelsize=18)
+
     # x ranges for histograms
-    x_min = np.amin([X0,X1])
-    x_max = np.amax([X0,X1])
-    y_min = np.amin([Y0,Y1])
-    y_max = np.amax([Y0,Y1])    
-    
+    x_min = np.amin([X0, X1])
+    x_max = np.amax([X0, X1])
+    y_min = np.amin([Y0, Y1])
+    y_max = np.amax([Y0, Y1])
+
     # create actual histograms
-    ax_histx.hist(X0, bins=N_bins_x,range=(x_min,x_max), 
-                  alpha = .8, label = histlabel0)
-    ax_histx.hist(X1, bins=N_bins_x,range=(x_min,x_max), 
-                  alpha = .8, label = histlabel1)
-    ax_histy.hist(Y0, bins=N_bins_y,range=(y_min,y_max),
-                  orientation='horizontal', alpha = .8)
-    ax_histy.hist(Y1, bins=N_bins_y, range=(y_min,y_max),
-                  orientation='horizontal',alpha = .8)
-    ax_histx.legend(fontsize = 12)
+    ax_histx.hist(X0, bins=N_bins_x, range=(x_min, x_max),
+                  alpha=.8, label=histlabel0)
+    ax_histx.hist(X1, bins=N_bins_x, range=(x_min, x_max),
+                  alpha=.8, label=histlabel1)
+    ax_histy.hist(Y0, bins=N_bins_y, range=(y_min, y_max),
+                  orientation='horizontal', alpha=.8)
+    ax_histy.hist(Y1, bins=N_bins_y, range=(y_min, y_max),
+                  orientation='horizontal', alpha=.8)
+    ax_histx.legend(fontsize=12)
 
 ###########################################
-def plot_classification(X, y, classifier, N_bins_x = 40, N_bins_y = 40, 
-                        label0='type I', label1 = 'type II', 
-                        histlabel0 = 'type I', histlabel1 = 'type II',
-                        xlabel='x', ylabel = 'y', 
-                        figsize = (10,10), save = False, figname = '',
-                        show_plot = False):
 
+
+def plot_classification(X, y, classifier, N_bins_x=40, N_bins_y=40,
+                        label0='type I', label1='type II',
+                        histlabel0='type I', histlabel1='type II',
+                        xlabel='x', ylabel='y',
+                        figsize=(10, 10), save=False, figname='',
+                        show_plot=False):
     r"""
     Create a scatter plot including separation according to classifier #
     with histograms of projections on x and y axis.
-    
+
     Parameters:
     -----------
     X: array_like
@@ -425,7 +432,7 @@ def plot_classification(X, y, classifier, N_bins_x = 40, N_bins_y = 40,
     xlabel, ylabel: str, optional
     figsize: (float,float), optional, default (10,10)
     show: bool, show plot if True
-    
+
     Returns:
     -------
     classifier: object, fitted classifier that contains 
@@ -434,62 +441,62 @@ def plot_classification(X, y, classifier, N_bins_x = 40, N_bins_y = 40,
         or change parameters
     fig: fig object, can be used for saving when sth changed
     """
-    
-    
+
     classifier.fit(X, y)
-    
-    fig, ax = plt.subplots()#create figure
+
+    fig, ax = plt.subplots()  # create figure
     scatter_kwargs = {'s': 100, 'edgecolor': 'k', 'alpha': 1,
-                      'marker':'s'}
+                      'marker': 's'}
     contourf_kwargs = {'alpha': .3}
-    #plot decision boundaries
-    ax_scatter = plot_decision_regions(X=X, y=y, 
-                                clf=classifier, legend=2,
-                                scatter_kwargs=scatter_kwargs,
-                                contourf_kwargs=contourf_kwargs,#
-                                ax = ax)
-    ax_scatter.set_xlim(X[:,0].min()*1.1, X[:,0].max()*1.1)
-    ax_scatter.set_ylim(X[:,1].min()*1.1, X[:,1].max()*1.1)
-    ax_scatter.tick_params(labelsize = 20)
-    ax_scatter.set_xlabel(xlabel, fontsize = 20)
-    ax_scatter.set_ylabel(ylabel, fontsize = 20)
-    handles, labels = ax_scatter.get_legend_handles_labels()#get pos of axis  
+    # plot decision boundaries
+    ax_scatter = plot_decision_regions(X=X, y=y,
+                                       clf=classifier, legend=2,
+                                       scatter_kwargs=scatter_kwargs,
+                                       contourf_kwargs=contourf_kwargs,
+                                       ax=ax)
+    ax_scatter.set_xlim(X[:, 0].min()*1.1, X[:, 0].max()*1.1)
+    ax_scatter.set_ylim(X[:, 1].min()*1.1, X[:, 1].max()*1.1)
+    ax_scatter.tick_params(labelsize=20)
+    ax_scatter.set_xlabel(xlabel, fontsize=20)
+    ax_scatter.set_ylabel(ylabel, fontsize=20)
+    handles, labels = ax_scatter.get_legend_handles_labels()  # get pos of axis
     bbox = ax_scatter.get_position()
     left, bottom, width, height = bbox.bounds
     spacing = 0.04
-    ax_scatter.legend(handles, [label0, label1], 
-           framealpha=0.3, scatterpoints=1, fontsize = 20,
-            bbox_to_anchor=(left+width, bottom+height, 0.5, 0.5))
-    #set position for additional axes
+    ax_scatter.legend(handles, [label0, label1],
+                      framealpha=0.3, scatterpoints=1, fontsize=20,
+                      bbox_to_anchor=(left+width, bottom+height, 0.5, 0.5))
+    # set position for additional axes
     rect_histx = [left, bottom + height + spacing, width, 0.25]
     rect_histy = [left + width + spacing, bottom, 0.25, height]
 
-
     ax_histx = fig.add_axes(rect_histx, sharex=ax)
     ax_histy = fig.add_axes(rect_histy, sharey=ax)
-    mask0 = y==0
-    X0 = X[mask0,0]
-    X1 = X[~mask0,0]
-    Y0 = X[mask0,1]
-    Y1 = X[~mask0,1]
-    scatter_hist(X0,X1,Y0, Y1, ax_scatter, ax_histx, ax_histy,
-                 N_bins_x=N_bins_x, N_bins_y=N_bins_y, 
-                 histlabel0 = histlabel0 , histlabel1 = histlabel1)
-    
+    mask0 = y == 0
+    X0 = X[mask0, 0]
+    X1 = X[~mask0, 0]
+    Y0 = X[mask0, 1]
+    Y1 = X[~mask0, 1]
+    scatter_hist(X0, X1, Y0, Y1, ax_scatter, ax_histx, ax_histy,
+                 N_bins_x=N_bins_x, N_bins_y=N_bins_y,
+                 histlabel0=histlabel0, histlabel1=histlabel1)
+
     if save:
-        fig.savefig(figname, bbox_inches = 'tight')
-    
+        fig.savefig(figname, bbox_inches='tight')
+
     if show_plot:
         plt.show()
-    
+
     return classifier, ax_scatter, ax_histx, ax_histy, fig
 
 ###########################
-def add_zoom_inset(ax, zoom,loc, x,y, xlim, ylim , sy = None, 
-                   xlabel = '', ylabel = '', label_fs = 18,
-                   mark_inset_loc = (3,1), borderpad = 4):
+
+
+def add_zoom_inset(ax, zoom, loc, x, y, xlim, ylim, sy=None,
+                   xlabel='', ylabel='', label_fs=18,
+                   mark_inset_loc=(3, 1), borderpad=4):
     """Add inset axis that shows a region of the data.
-    
+
     Parameters:
     -----------
     ax: axis object
@@ -502,47 +509,51 @@ def add_zoom_inset(ax, zoom,loc, x,y, xlim, ylim , sy = None,
     mark_inset_loc: (int, int), corners for connection to the new axis
     borderpad: float, distance from border
     """
-    
-    axins = zoomed_inset_axes(ax,zoom,loc = loc,
-                              borderpad=borderpad) 
-    if sy==None:
-        axins.plot(x, y)
-    else: 
-        axins.errorbar(x, y, yerr=sy, fmt='.b',  ecolor='b', elinewidth=.5, 
-             capsize=0, capthick=0.1)
-        
-    if not(ylim==None):
-        axins.set_ylim(ylim)
-    
-    axins.set_xlabel(xlabel, fontsize = label_fs)
-    axins.set_ylabel(ylabel, fontsize = label_fs)
-    axins.set_xlim(xlim) # Limit the region for zoom
-    mark_inset(ax, axins, loc1=mark_inset_loc[0], 
-               loc2=mark_inset_loc[1], fc="none", ec="0.5")
-   
 
-# In[Random Numbers] 
+    axins = zoomed_inset_axes(ax, zoom, loc=loc,
+                              borderpad=borderpad)
+    if sy == None:
+        axins.plot(x, y)
+    else:
+        axins.errorbar(x, y, yerr=sy, fmt='.b',  ecolor='b', elinewidth=.5,
+                       capsize=0, capthick=0.1)
+
+    if not(ylim == None):
+        axins.set_ylim(ylim)
+
+    axins.set_xlabel(xlabel, fontsize=label_fs)
+    axins.set_ylabel(ylabel, fontsize=label_fs)
+    axins.set_xlim(xlim)  # Limit the region for zoom
+    mark_inset(ax, axins, loc1=mark_inset_loc[0],
+               loc2=mark_inset_loc[1], fc="none", ec="0.5")
+
+
+# In[Random Numbers]
 
 ############################
 def create_1d_hist(ax, values, bins, x_range, title):
     """Helper function for show_int_distribution. (Author: Troels Petersen)"""
-    ax.hist(values, bins, x_range, histtype='step', density=False, lw=2)         
+    ax.hist(values, bins, x_range, histtype='step', density=False, lw=2)
     ax.set(xlim=x_range, title=title)
     hist_data = np.histogram(values, bins, x_range)
     return hist_data
 
 ################################
-def get_chi2_ndf( hist, const):
+
+
+def get_chi2_ndf(hist, const):
     """Helper function for show_int_distribution. (Author: Troels Petersen)"""
     data = hist[0]
     const_unnormed = const * data.sum()
-    chi2 = np.sum( (data - const_unnormed)**2 / data )
+    chi2 = np.sum((data - const_unnormed)**2 / data)
     ndof = data.size
     return chi2, ndof
 
 #################################
-def show_int_distribution(integers, save_plot = True, 
-                          figname = '', show_plot= False):
+
+
+def show_int_distribution(integers, save_plot=True,
+                          figname='', show_plot=False):
     """Show histogram of integers, to see if random.(Author: Troels Petersen)
     modified by: Kiril Klein
     Parameters: 
@@ -557,61 +568,65 @@ def show_int_distribution(integers, save_plot = True,
     ax_number, ax_odd_even, ax_high_low = ax.flatten()
 
     # Fill 1d histograms and plot them:
-    hist_numbers  = create_1d_hist(ax_number, integers, 10, 
-                                  (-0.5, 9.5), 'Numbers posted') #Plot all digits
-    hist_odd_even = create_1d_hist(ax_odd_even, integers % 2,  2, 
-                                   (-0.5, 1.5), 'Even and odd numbers')#Is number even or odd
-    hist_high_low = create_1d_hist(ax_high_low, integers // 5, 2, 
-                                  (-0.5, 1.5), 'Above and equal to or below 5')#Is number >= or < 5
+    hist_numbers = create_1d_hist(ax_number, integers, 10,
+                                  (-0.5, 9.5), 'Numbers posted')  # Plot all digits
+    hist_odd_even = create_1d_hist(ax_odd_even, integers % 2,  2,
+                                   (-0.5, 1.5), 'Even and odd numbers')  # Is number even or odd
+    hist_high_low = create_1d_hist(ax_high_low, integers // 5, 2,
+                                   (-0.5, 1.5), 'Above and equal to or below 5')  # Is number >= or < 5
     fig.tight_layout()
-    
-    chi2_raw, ndf_raw  = get_chi2_ndf( hist_numbers,  1.0 / 10)
-    chi2_odd_even, ndf_odd_even = get_chi2_ndf( hist_odd_even, 1.0 / 2 )
-    chi2_high_low, ndf_high_low = get_chi2_ndf( hist_high_low, 1.0 / 2 )
+
+    chi2_raw, ndf_raw = get_chi2_ndf(hist_numbers,  1.0 / 10)
+    chi2_odd_even, ndf_odd_even = get_chi2_ndf(hist_odd_even, 1.0 / 2)
+    chi2_high_low, ndf_high_low = get_chi2_ndf(hist_high_low, 1.0 / 2)
     p_raw = stats.chi2.sf(chi2_raw, ndf_raw)
     p_odd_even = stats.chi2.sf(chi2_odd_even, ndf_odd_even)
     p_high_low = stats.chi2.sf(chi2_high_low, ndf_high_low)
-    
-    dict_raw = {'chi2':chi2_raw, 'ndf':ndf_raw ,'p': p_raw }
-    dict_odd_even = {'chi2':chi2_odd_even, 'ndf':ndf_odd_even ,'p': p_odd_even }
-    dict_high_low = {'chi2':chi2_high_low, 'ndf':ndf_high_low ,'p': p_high_low }
+
+    dict_raw = {'chi2': chi2_raw, 'ndf': ndf_raw, 'p': p_raw}
+    dict_odd_even = {'chi2': chi2_odd_even,
+                     'ndf': ndf_odd_even, 'p': p_odd_even}
+    dict_high_low = {'chi2': chi2_high_low,
+                     'ndf': ndf_high_low, 'p': p_high_low}
     AX = [ax_number, ax_odd_even, ax_high_low]
     if save_plot:
         fig.savefig(figname)
     if show_plot:
         plt.show()
-    
+
     return dict_raw, dict_odd_even, dict_high_low, fig, AX
 
 # In[Helper functions]
 
 ##################################
+
+
 def Color_palette(k):
     """Takes integer, Returns color scheme."""
     Color_schemes1 = [
-        [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', 
-        u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf'],
-        ["#70d6ff","#ff70a6","#ff9770","#ffd670","#e9ff70"],
-        ['#F61613', '#EECC86', '#34AE8E', '#636253', '#A26251'], 
-        ["#8acdea","#746d75","#8c4843","#9e643c","#ede6f2"],
+        [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd',
+         u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf'],
+        ["#70d6ff", "#ff70a6", "#ff9770", "#ffd670", "#e9ff70"],
+        ['#F61613', '#EECC86', '#34AE8E', '#636253', '#A26251'],
+        ["#8acdea", "#746d75", "#8c4843", "#9e643c", "#ede6f2"],
         ['#2CBDFE', '#47DBCD', '#9D2EC5',  '#F3A0F2', '#661D98', '#F5B14C'],
-        ['#845EC2','#ffc75f','#f9f871','#ff5e78'],
-        ['#fff3e6','#1a508b','#0d335d','#c1a1d3'],
-        ["#f72585","#b5179e","#7209b7","#560bad","#480ca8",
-        "#3a0ca3","#3f37c9","#4361ee","#4895ef","#4cc9f0"],
-        ["#22223b","#4a4e69","#9a8c98","#c9ada7","#f2e9e4"],
-        ["#d8f3dc","#b7e4c7","#95d5b2","#74c69d",
-        "#52b788","#40916c","#2d6a4f","#1b4332","#081c15"],
-        ["#ffbe0b","#fb5607","#ff006e","#8338ec","#3a86ff"],
-        ["#7400b8","#6930c3","#5e60ce","#5390d9","#4ea8de",
-        "#48bfe3","#56cfe1","#64dfdf","#72efdd","#80ffdb"],
-        ["#cc8b86","#f9eae1","#7d4f50","#d1be9c","#aa998f"],
-        ["#ff595e","#ffca3a","#8ac926","#1982c4","#6a4c93"],
-        ["#8c1c13","#bf4342","#e7d7c1","#a78a7f","#735751"],
-        ["#f72585","#b5179e","#7209b7","#560bad","#480ca8",
-        "#3a0ca3","#3f37c9","#4361ee","#4895ef","#4cc9f0"],
-        ["#006466","#065a60","#0b525b","#144552","#1b3a4b",
-        "#212f45","#272640","#312244","#3e1f47","#4d194d"]]
+        ['#845EC2', '#ffc75f', '#f9f871', '#ff5e78'],
+        ['#fff3e6', '#1a508b', '#0d335d', '#c1a1d3'],
+        ["#f72585", "#b5179e", "#7209b7", "#560bad", "#480ca8",
+         "#3a0ca3", "#3f37c9", "#4361ee", "#4895ef", "#4cc9f0"],
+        ["#22223b", "#4a4e69", "#9a8c98", "#c9ada7", "#f2e9e4"],
+        ["#d8f3dc", "#b7e4c7", "#95d5b2", "#74c69d",
+         "#52b788", "#40916c", "#2d6a4f", "#1b4332", "#081c15"],
+        ["#ffbe0b", "#fb5607", "#ff006e", "#8338ec", "#3a86ff"],
+        ["#7400b8", "#6930c3", "#5e60ce", "#5390d9", "#4ea8de",
+         "#48bfe3", "#56cfe1", "#64dfdf", "#72efdd", "#80ffdb"],
+        ["#cc8b86", "#f9eae1", "#7d4f50", "#d1be9c", "#aa998f"],
+        ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93"],
+        ["#8c1c13", "#bf4342", "#e7d7c1", "#a78a7f", "#735751"],
+        ["#f72585", "#b5179e", "#7209b7", "#560bad", "#480ca8",
+         "#3a0ca3", "#3f37c9", "#4361ee", "#4895ef", "#4cc9f0"],
+        ["#006466", "#065a60", "#0b525b", "#144552", "#1b3a4b",
+         "#212f45", "#272640", "#312244", "#3e1f47", "#4d194d"]]
     Color_schemes = Color_schemes1
     for i in range(len(Color_schemes1)):
         Color_schemes.append(reversed(Color_schemes1[i]))
