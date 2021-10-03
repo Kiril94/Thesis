@@ -17,80 +17,68 @@ from matplotlib import ticker
 
 
 # In[Helper]
-def ax_decorator(ax,
-                 lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25, lgd_color='white',
-                 title='', title_fs=25,
+def ax_decorator(fig, ax,
+                 lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25, 
+                 lgd_color='white', lgd_ncol=1,
+                 title='', title_fs=25, 
                  ylabel='count', ylabel_fs=25,
                  xlabel='x', xlabel_fs=25,
-                 xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25,
+                 xticks=[], xtick_labels=[],
+                 yticks=[], ytick_labels=[],
+                 xtickparams_ls=25, xtickparams_rot=0,
+                 ytickparams_ls=25, ytickparams_rot=0,
                  xlogscale=False, ylogscale=False,
                  xrange=(None,None), yrange=(None,None),
+                 tight_layout=True,
                  **kwargs):
     if lgd:
-        legend = ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor='white')
+        legend = ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor='white',
+                           ncol=lgd_ncol)
         legend.get_frame().set_facecolor(lgd_color)
-    if title != '':
-        ax.set_title(title, fontsize=title_fs)
+    ax.set_title(title, fontsize=title_fs)
     ax.set_ylabel(ylabel, fontsize=ylabel_fs)
     ax.set_xlabel(xlabel, fontsize=xlabel_fs)
     ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls,
                    rotation=xtickparams_rot)
-    ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls)
+    ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls,
+                   rotation=ytickparams_rot)
+    if len(xticks)!=0:
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xtick_labels)
+    if len(xticks)!=0:
+        ax.set_yticks(yticks)
+        ax.set_yticklabels(ytick_labels)
     ax.set_xlim(xrange)
     ax.set_ylim(yrange)
     if xlogscale:
         ax.set_yscale('log')
     if ylogscale:
-        ax.set_yscale('log')
-    return ax
+        ax.set_yscale('log') 
+    if tight_layout:
+        fig.tight_layout()
+    return fig, ax
 
 
 # In[General plots]
 
-def plot_decorator(plot_func, args, kwargs,
+def plot_decorator(plot_func, plot_func_args, plot_func_kwargs,
                    figsize=(9, 9), save=False, dpi=80, figname='',
                    lgd=False, lgd_loc=0, lgd_fs=25, lgd_color='white',
                    lgd_ncol=1, lgd_shadow=True,
                    set_ttl=False, ttl='Title', ttl_fs=20, ttl_clr='k',
                    set_xlabel=False, xlabel='count', xlabel_fs=25,
                    set_ylabel=False, ylabel='count', ylabel_fs=25,
-                   set_xticks=False, xticks=[], xtick_labels=[],
-                   set_yticks=False, yticks=[], ytick_labels=[],
-                   set_xtickparams=False, xtickparams_ls=25, xtickparams_rot=0,
-                   set_ytickparams=False, ytickparams_ls=25, ytickparams_rot=0,
-                   xlogscale=False, ylogscale=False,):
+                   xlogscale=False, ylogscale=False, 
+                   caption='', caption_fs=20, caption_pos=(.5, -.05),
+                   kwargs={}):
     """Takes a function plot_func which takes args, 
     kwargs and ax to produce a plot"""
     fig, ax = plt.subplots(figsize=figsize)
-    ax = plot_func(*args, **kwargs, ax=ax)
-
-    if lgd:
-        ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor=lgd_color,
-                  ncol=lgd_ncol, shadow=lgd_shadow)
-    if set_ttl:
-        ax.set_title(ttl, fontsize=ttl_fs, color=ttl_clr)
-    if set_ylabel:
-        ax.set_ylabel(ylabel, fontsize=ylabel_fs)
-    if set_xlabel:
-        ax.set_xlabel(xlabel, fontsize=ylabel_fs)
-    if set_xticks:
-        ax.set_xticks(xticks)
-        ax.set_xticklabels(xtick_labels)
-    if set_yticks:
-        ax.set_yticks(yticks)
-        ax.set_yticklabels(ytick_labels)
-    if set_xtickparams:
-        ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls,
-                       rotation=xtickparams_rot)
-    if set_ytickparams:
-        ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls,
-                       rotation=ytickparams_rot)
-    if xlogscale:
-        ax.set_xscale('log')
-    if ylogscale:
-        ax.set_yscale('log')
-
-    fig.tight_layout()
+    ax = plot_func(*plot_func_args, **plot_func_kwargs, ax=ax)
+    fig, ax = ax_decorator(fig, ax, kwargs)
+    if caption != '':
+        fig.text(caption_pos[0], caption_pos[1], caption, ha='center',
+                 wrap=True, fontsize=caption_fs)  
     if save:
         fig.savefig(figname, dpi=dpi)
 
@@ -129,15 +117,10 @@ def line(
         line_color = Color_palette(color[0])[color[1]]
     except:
         line_color = color
-    try:
+    if type(ecolor) == tuple:
         ecolor = Color_palette(ecolor[0])[ecolor[1]]
-    except:
-        pass
-    try:
+    if type(fill_color) == tuple:
         fill_color = Color_palette(fill_color[0])[fill_color[1]]
-    except:
-        pass
-
     plt.style.use(plot_style)
     const_err = (type(sy) == float)
     if const_err:
@@ -158,8 +141,7 @@ def line(
         
     if fill_color != None:
         plt.fill_between(x, y, color=fill_color)
-    ax = ax_decorator(ax, **kwargs)
-    fig.tight_layout()
+    fig, ax = ax_decorator(fig, ax, **kwargs)
     if save:
         fig.savefig(figname, dpi=dpi)
 
@@ -167,11 +149,12 @@ def line(
 
 ##########################################
 
-
 def bar(labels, counts, width=.8,
-             label='', figsize=(10, 6), save=False,
-             figname=None, dpi=80, plot_style='ggplot',
-             fig=None, ax=None, bottom=[], kwargs={}):
+        label='', figsize=(10, 6), save=False,
+        figname=None, dpi=80, plot_style='ggplot',
+        fig=None, ax=None, bottom=[], 
+        caption='', caption_fs=20, caption_pos=(.5, -.05),
+        kwargs={}):
 
     plt.style.use(plot_style)
     if ax == None or fig == None:
@@ -184,52 +167,48 @@ def bar(labels, counts, width=.8,
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
 
-    ax = ax_decorator(ax, **kwargs)
-    fig.tight_layout()
+    fig, ax = ax_decorator(fig, ax, **kwargs)
     if save:
         fig.savefig(figname, dpi=dpi)
-
     return fig, ax
 
 #########################
 
 
-def nice_histogram(
-        x_all, N_bins, poisson_error=False, show_plot=False, plot_hist=True,
-        plot_errors=True, plot_legend=False, save=False, figname='',
-        x_range=None, data_label='Data, histogram', data_label_hist='',
+def hist(
+        x_all, N_bins, poisson_error=False, xlogscale=False,
+        show=False, plot_hist=True, xrange=None,
+        plot_legend=False, save=False, figname='',
+        data_label='Data, histogram', data_label_hist='',
         figsize=(12, 6), histtype='step', color_hist='red', xlabel='x',
         ylabel='Frequency', label_fs=20, legend_fs=18, legend_loc=0,
-        legend_ncol=1, legend_color='white', ticks_size=20,
-        xlog_scale=False, ylog_scale=False, axis=None, figure=None,
+        legend_color='white', ticks_size=20,
+        ax=None, fig=None,
         dpi=80, ecolor='deepskyblue', capsize=3, capthick=0.3,
         markersize=6, elinewidth=.9, hist_alpha=.9, hist_linestyle='solid',
-        hist_linewidth=2, plot_style='ggplot', caption='', caption_fs=18,
-        title='', title_fs=18):
+        hist_linewidth=2, plot_style='ggplot', 
+        kwargs={}):
     """Produce a nice histogram.
     Returns: dictionary with x, y, sy, binwidth, fig, ax."""
-    if not(x_range == None):
-        mask_x = (x_all > x_range[0]) & (x_all < x_range[1])
+    if not(xrange == None):
+        mask_x = (x_all > xrange[0]) & (x_all < xrange[1])
         x_all = x_all[mask_x]
 
     if poisson_error:
         x, y, sy, binwidth = fits.produce_hist_values(
-            x_all, N_bins, x_range=x_range,
-            log=xlog_scale, poisson_error=poisson_error)
+            x_all, N_bins, x_range=xrange,
+            log=xlogscale, poisson_error=poisson_error)
     else:
         x, y, binwidth = fits.produce_hist_values(
-            x_all, N_bins, x_range=x_range,
-            log=xlog_scale, poisson_error=poisson_error)
+            x_all, N_bins, x_range=xrange,
+            log=xlogscale, poisson_error=poisson_error)
 
     if type(color_hist) == tuple:
         color_hist = Color_palette(color_hist[0])[color_hist[1]]
     if type(ecolor) == tuple:
         ecolor = Color_palette(ecolor[0])[ecolor[1]]
 
-    if not(axis == None):
-        ax = axis
-        fig = figure
-    else:
+    if ax == None or fig == None:
         fig, ax = plt.subplots(figsize=figsize)
     plt.style.use(plot_style)
 
@@ -239,41 +218,18 @@ def nice_histogram(
                 label=data_label_hist, alpha=hist_alpha,
                 linestyle=hist_linestyle)
     if poisson_error:
-        if plot_errors:
-            ax.errorbar(
-                x, y, yerr=sy, xerr=0.0, label=data_label, marker='.',
-                mec=ecolor, color=ecolor, elinewidth=elinewidth,
-                capsize=capsize, capthick=capthick, linestyle='none',
-                markersize=markersize)
-        else:
-            print(
-                'no uncertainties were given, if you want to assume poisson errors set poisson_errors to True')
+        ax.errorbar(
+            x, y, yerr=sy, xerr=0.0, label=data_label, marker='.',
+            mec=ecolor, color=ecolor, elinewidth=elinewidth,
+            capsize=capsize, capthick=capthick, linestyle='none',
+            markersize=markersize)
 
-    ax.set_xlabel(xlabel, fontsize=label_fs)
-    ax.set_ylabel(ylabel, fontsize=label_fs)
-    ax.tick_params(axis='both', labelsize=ticks_size)
-    if xlog_scale:
-        ax.set_xscale('log')
-    if ylog_scale:
-        ax.set_yscale('log')
-    if plot_legend:
-        legend = ax.legend(loc=legend_loc, fontsize=legend_fs,
-                           shadow=True, ncol=legend_ncol)
-        legend.get_frame().set_facecolor(legend_color)
-    if caption != '':
-        fig.text(.5, -.05, caption, ha='center',
-                 wrap=True, fontsize=caption_fs)
-    if title != '':
-        ax.set_title(title, fontsize=title_fs)
+    fig, ax = ax_decorator(fig, ax, **kwargs)     
     if save:
-        fig.tight_layout()
         fig.savefig(figname, dpi=dpi)
-
-    if show_plot:
+    if show:
         plt.show()
-
     Figure = {"x": x, "y": y, "binwidth": binwidth, "fig": fig, "ax": ax}
-
     if poisson_error:
         Figure["sy"] = sy
 
@@ -282,7 +238,7 @@ def nice_histogram(
 #############################
 
 
-def nice_contour(
+def contour(
         xx, yy, z, levels=40, cmap='inferno', colors=None, figsize=(12, 6),
         filled=True, fig=None, ax=None, plot_style='ggplot',
         show_cbar=True, cbar_size='5%', cbar_pad=0.1, label_fs=20,
@@ -290,9 +246,8 @@ def nice_contour(
         cbar_label='', cbar_label_fs=20, cbar_num_ticks=5, clabels=None,
         labels_inline=True, clabel_fs=18, plot_clabels=False,
         linewidths=1.5, linestyles='solid',
-        plot_legend=False, legend_loc=0, legend_fs=20,
-        xlabel='', ylabel='', show_plot=True, save=False, figname='',
-        dpi=80):
+        show=True, save=False, figname='',
+        dpi=80, kwargs={}):
     """Producing nice contour plot. 
     Parameters:
         xx, yy, zz: xx and yy are meshgrids, z is a 2d matrix
@@ -317,13 +272,9 @@ def nice_contour(
             ax.clabel(im, inline=labels_inline, fontsize=clabel_fs)
         for i in range(len(clabels)):
             im.collections[i].set_label(clabels[i])
-        if plot_legend:
-            ax.legend(loc=legend_loc, fontsize=legend_fs)
+    
     # set axes params
-    ax = ax_decorator()
-    ax.set_xlabel(xlabel, fontsize=label_fs)
-    ax.set_ylabel(ylabel, fontsize=label_fs)
-    ax.tick_params(axis='both', labelsize=tick_size)
+    fig, ax = ax_decorator(fig, ax, **kwargs)
 
     # colorbar
     if show_cbar:
@@ -346,10 +297,9 @@ def nice_contour(
         cbar.update_ticks()
 
     if save:
-        fig.tight_layout()
         fig.savefig(figname, dpi=dpi)
 
-    if show_plot:
+    if show:
         plt.show()
 
     return fig, ax
