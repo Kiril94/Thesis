@@ -24,14 +24,15 @@ importlib.reload(dicom2nifti)
 importlib.reload(utils)
 def p(string): print(string)
 
+
 # In[main directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 base_data_dir = "Y:/"
 out_pos_path = "Y:\\nii\\positive"
 data_dirs = os.listdir(base_data_dir)
-positive_dir = f"{base_data_dir}/positive" 
-healthy_dirs = sorted([f"{base_data_dir}/{x}" for x \
+positive_dir = f"{base_data_dir}/positive"
+healthy_dirs = sorted([f"{base_data_dir}/{x}" for x
                        in data_dirs if x.startswith('2019')])
 print(base_dir)
 print(f"main directories: {data_dirs}")
@@ -58,17 +59,18 @@ print(study_counters)
 # In[Count scans number]
 scan_counters = {}
 for healthy_dir in healthy_dirs[8:9]:
-    print(f"counting studies in {healthy_dir}")    
+    print(f"counting studies in {healthy_dir}")
     patient_list = utils.list_subdir(healthy_dir)
     scan_counter = 0
     for pat_dir in patient_list:
-        print('|',end=(''))
+        print('|', end=(''))
         scan_counter += len(ld.Patient(pat_dir).get_scan_directories())
     scan_counters[healthy_dir] = scan_counter
     print(f'number of scans in {healthy_dir} =  {scan_counter}')
 # In[test]
 print(base_dir)
-level3 = utils.count_subdirectories(f"{base_dir}/data", 2, True)#sum(1 for _ in iglob(f"{base_dir}/data/*/*"))
+# sum(1 for _ in iglob(f"{base_dir}/data/*/*"))
+level3 = utils.count_subdirectories(f"{base_dir}/data", 2, True)
 p(level3)
 # In[Read some dcm files]
 
@@ -84,9 +86,10 @@ with open("D:/Thesis/Cobra/dicom.txt", "w") as f:
     f.write(str(dicom))
 
 # In[]
-out_patient_dir = os.path.join(f"D:\Thesis\Cobra\data\0b630d10621e9c5d831a8053f95125b6_converted")
+out_patient_dir = os.path.join(
+    f"D:\Thesis\Cobra\data\0b630d10621e9c5d831a8053f95125b6_converted")
 # In[look at converted patients]
-con_pat_paths = [os.path.join(out_pos_path, conv_pat)\
+con_pat_paths = [os.path.join(out_pos_path, conv_pat)
                  for conv_pat in conv_patients_list]
 converted_patient = con_pat_paths[400]
 files = utils.list_subdir(converted_patient)
@@ -94,7 +97,7 @@ print(files[:2])
 # read json header
 json_file = files[1]
 with open(json_file) as f:
-  header = json.load(f)
+    header = json.load(f)
 print(header)
 #img_mat = nib.load(files[1])
 #data = img_mat.get_fdata()
@@ -106,7 +109,7 @@ patient_list = utils.list_subdir(positive_dir)
 # In[count studies]
 study_counter = 0
 for pat_dir in patient_list[:3]:
-    print('|',end=(''))
+    print('|', end=(''))
     print(pat_dir)
     print([f for f in os.listdir(pat_dir)])
     study_counter += sum(1 for _ in iglob(pat_dir))
@@ -118,13 +121,13 @@ for dir_ in healthy_dirs[4:5]:
     patient_list = utils.list_subdir(dir_)
     report_counter = 0
     report_counter += sum(1 for _ in iglob(f"{dir_}/*/*/DOC/*/*.pdf"))
-    print('|',end=(''))
-    report_counters[dir_] = report_counter 
+    print('|', end=(''))
+    report_counters[dir_] = report_counter
     print(f'number of study reports in {dir_} = {report_counter}')
 
 # In[]
 print(healthy_dirs[11:12])
-#print(sum([1,1,1]))
+# print(sum([1,1,1]))
 # In[]
 
 # number of pos patients = 831
@@ -169,6 +172,33 @@ print(healthy_dirs[11:12])
 # number of studies in Z://2019_11 =  2472
 # number of studies in Z://2019_12 =  2065
 # studies_list = [2567, 2252, 2186, 2297, 2397, 2250, 1746, 2205,\
+# 2392, 2424, 2472, 2065]
+# number of healthy studies = 27253
+
+# |pos ^ healthy| = 143
+
+# approx 250MB/patient
+# whole dataset: 6TB
+397, 2250, 1746, 2205,\
+    # 2392, 2424, 2472, 2065]
+# number of healthy studies = 27253
+
+# |pos ^ healthy| = 143
+
+# approx 250MB/patient
+# whole dataset: 6TB
+aset: 6TB
+397, 2250, 1746, 2205,\
+    # 2392, 2424, 2472, 2065]
+# number of healthy studies = 27253
+
+# |pos ^ healthy| = 143
+
+# approx 250MB/patient
+# whole dataset: 6TB
+et: 6TB
+aset: 6TB
+397, 2250, 1746, 2205,\
                 #2392, 2424, 2472, 2065]
 # number of healthy studies = 27253
 

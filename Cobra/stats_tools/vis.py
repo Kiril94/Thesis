@@ -17,14 +17,17 @@ from matplotlib import ticker
 
 
 # In[Helper]
-def ax_decorator(ax, lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,
+def ax_decorator(ax,
+                 lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25, lgd_color='white',
                  title='', title_fs=25,
                  ylabel='count', ylabel_fs=25,
                  xlabel='x', xlabel_fs=25,
                  xtickparams_ls=25, xtickparams_rot=0, ytickparams_ls=25,
-                 logscale=False, **kwargs):
+                 xlogscale=False, ylogscale=False,
+                 **kwargs):
     if lgd:
-        ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor='white')
+        legend = ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor='white')
+        legend.get_frame().set_facecolor(lgd_color)
     if title != '':
         ax.set_title(title, fontsize=title_fs)
     ax.set_ylabel(ylabel, fontsize=ylabel_fs)
@@ -32,7 +35,9 @@ def ax_decorator(ax, lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25,
     ax.tick_params(axis='x', which='major', labelsize=xtickparams_ls,
                    rotation=xtickparams_rot)
     ax.tick_params(axis='y', which='major', labelsize=ytickparams_ls)
-    if logscale:
+    if xlogscale:
+        ax.set_yscale('log')
+    if ylogscale:
         ax.set_yscale('log')
     return ax
 
@@ -99,7 +104,8 @@ def nice_plot(
         capsize=3, capthick=0.3, err_markersize=6,  elinewidth=.9,
         alpha=1, scr_markersize=30, scr_markerstyle='o', linewidth=3,
         fill_under_curve=False,
-        fill_color='skyblue', drawstyle='default'):
+        fill_color='skyblue', drawstyle='default',
+        kwargs={}):
     r"""
     Simple x-y plot. 
 
@@ -151,20 +157,9 @@ def nice_plot(
 
     if fill_under_curve:
         plt.fill_between(X, Y, color=fill_color)
-
+    ax = ax_decorator(ax, **kwargs)
     ax.set_ylabel(ylabel, fontsize=label_fs)
     ax.tick_params(axis='both', labelsize=ticksize)
-    if plot_legend:
-        legend = ax.legend(loc=legend_loc, ncol=legend_ncol,
-                           fontsize=legend_fs, shadow=True)
-        legend.get_frame().set_facecolor(legend_color)
-
-    ax.set_xlabel(xlabel, fontsize=label_fs)
-    if xlogscale:
-        ax.set_xscale('log')
-
-    if ylogscale:
-        ax.set_yscale('log')
 
     if y_range != None:
         ax.set_ylim((y_range[0], y_range[1]))
@@ -337,6 +332,7 @@ def nice_contour(
         if plot_legend:
             ax.legend(loc=legend_loc, fontsize=legend_fs)
     # set axes params
+    ax = ax_decorator()
     ax.set_xlabel(xlabel, fontsize=label_fs)
     ax.set_ylabel(ylabel, fontsize=label_fs)
     ax.tick_params(axis='both', labelsize=tick_size)
