@@ -240,6 +240,7 @@ nid_seq_sort[seq_vars].to_csv(f"{base_dir}/tables/non_identified_seq.csv",
                               index=False)
 p(nid_seq_sort)
 
+
 # In[Look at 'other' group for all mris]
 mask_dict_all = mri_stats.get_masks_dict(df_all, False)
 seq_vars = [SD_k, TE_k, TR_k, FA_k, TI_k,
