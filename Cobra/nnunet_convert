@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Oct  6 16:54:47 2021
+
+@author: kiril
+"""
+from nnUNet.nnunet.dataset_conversion import utils
+
+# In[]
+
+utils.generate_dataset_json(join(target_base, 'dataset.json'), target_imagesTr, 
+                            target_imagesTs, ('Red', 'Green', 'Blue'),
+                          labels={0: 'background', 1: 'street'}, dataset_name=task_name, license='hands off!')
