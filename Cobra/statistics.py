@@ -97,7 +97,7 @@ print(f"Number of scans in 2021 {studies_2021}")
 time_diff_studies_pos, _ = stats.time_between_studies(df_p)
 
 # In[]
-svis.nice_histogram(np.array(time_diff_studies_pos)/24, 100, ylog_scale=(True),
+svis.hist(np.array(time_diff_studies_pos)/24, 100, ylog_scale=(True),
                     show_plot=True, xlabel='Days between studies',
                     save=True, title='Positive Patients',
                     figname=f"{fig_dir}/pos/time_between_studies.png")
@@ -112,7 +112,7 @@ ppatient_df['NumStudies'] = num_studies_l
 # In[Show distribution of the studies]
 num_studies_a = np.array(num_studies_l)
 max_studies = max(num_studies_a)
-svis.nice_histogram(num_studies_a, np.arange(.5, max_studies+.5),
+svis.hist(num_studies_a, np.arange(.5, max_studies+.5),
                     show_plot=True, xlabel='Number of studies',
                     save=True, title='Positive Patients',
                     figname=f"{fig_dir}/pos/num_studies.png")
@@ -120,7 +120,7 @@ svis.nice_histogram(num_studies_a, np.arange(.5, max_studies+.5),
 
 # In[Get number of acquired volumes per patient]
 scans_per_patient = df_p.groupby('PatientID').size()
-figure = svis.nice_histogram(
+figure = svis.hist(
     scans_per_patient, np.arange(1, 110, 2),
     show_plot=True, xlabel='# volumes per patient',
     save=True, figname=f"{fig_dir}/pos/volumes_per_patient.png",
