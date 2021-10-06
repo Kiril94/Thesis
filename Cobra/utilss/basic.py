@@ -6,7 +6,11 @@ Created on Wed Sep 15 10:41:26 2021
 """
 import numpy as np
 import pandas as pd
+import os
 
+
+def list_subdir(dir_):
+    return [os.path.join(dir_, x) for x in os.listdir(dir_)]
 
 def create_dict(keys, values):
     return dict(zip(keys, values))

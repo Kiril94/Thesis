@@ -136,9 +136,6 @@ def count_subdirectories(dir_, level=1, count_all=True):
         result = sum(1 for x in iglob(dir_str))
     return result
 
-    
-def list_subdir(dir_):
-    return [os.path.join(dir_, x) for x in os.listdir(dir_)]
 
 def get_json(path):
     """Returns data, contained in a json file under path."""

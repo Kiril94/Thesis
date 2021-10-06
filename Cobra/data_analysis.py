@@ -9,6 +9,7 @@ import os
 from glob import iglob
 import importlib
 from utilss import utils
+from utilss import basic
 import time
 from utilss import dicom2nifti
 import json
@@ -40,7 +41,7 @@ print(base_dir)
 print(f"main directories: {data_dirs}")
 
 # In[Get all positive patients]
-pos_patients_list = utils.list_subdir(positive_dir)
+pos_patients_list = basic.list_subdir(positive_dir)
 
 # In[Count patient numbers]
 patient_numbers = []
