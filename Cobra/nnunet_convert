@@ -10,24 +10,41 @@ from pathlib import Path
 from os.path import join
 import os
 from utilss import basic
+from xml.dom import minidom
 
+
+# In[Define directories]
+script_dir = os.path.realpath(__file__)
+base_dir = Path(script_dir).parent
+data_folder = join(base_dir, "data/data_folder")
+task_folder = join(
+    base_dir, data_folder,
+    "nnUNet_raw_data_base/nnUNet_raw_data/Task500_Test")
+
+train_folder = join(task_folder, "imagesTr")
+test_folder = join(task_folder, "imagesTs")
+train_labels_folder = join(task_folder, "labelsTr")
+train_files = basic.list_subdir(train_folder)
 
 # In[Rename files]
 # The last index should correspond to the modality
 # we rename all files to _0000.nii
+test_files = basic.list_subdir(test_folder)
+train_labels_files = basic.list_subdir(train_labels_folder)
+#for file in train_labels_files:
+#    os.rename(file, file[:-8]+".nii")
 
-# In[]
-script_dir = os.path.realpath(__file__)
-base_dir = Path(script_dir).parent
-task_folder = join(
-    base_dir, 
-    "data/data_folder/nnUNet_raw_data_base/nnUNet_raw_data/Task500_Test")
-train_folder = join(task_folder, "imagesTr")
+# In[Get labels]
+mydoc = minidom.parse(join(data_folder, "labels_dict.xml"))
+#items = mydoc.getElementsByTagName('item')
+print(dir(mydoc))
 
-
+print(dir(mydoc.firstChild.tagName))
 # In[]
 utils.generate_dataset_json(join(task_folder, 'dataset.json'), 
-                            join(task_folder, "imagesTr"), 
-                            join(task_folder, "imagesTs"), 
-                            ('Red', 'Green', 'Blue'),
-                          labels={0: 'background', 1: 'street'}, dataset_name=task_name, license='hands off!')
+                            train_folder, 
+                            test_folder, 
+                            ('T1'),
+                          labels={0: 'background', 1: 'street'}, 
+                          dataset_name="Task500_Test", 
+                          license='hands off!')

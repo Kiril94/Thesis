@@ -63,7 +63,7 @@ print(study_counters)
 scan_counters = {}
 for healthy_dir in healthy_dirs[8:9]:
     print(f"counting studies in {healthy_dir}")
-    patient_list = utils.list_subdir(healthy_dir)
+    patient_list = basic.list_subdir(healthy_dir)
     scan_counter = 0
     for pat_dir in patient_list:
         print('|', end=(''))
@@ -79,11 +79,11 @@ p(level3)
 
 #patient = ld.Patient(pos_patients_list[100])
 #scan_dirs = patient.get_scan_directories()
-#scan_path = utils.list_subdir("D:\\Thesis\\Cobra\\data\\test_compression\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\26b082d69057e5884eb3ac0634966629")
+#scan_path = basic.list_subdir("D:\\Thesis\\Cobra\\data\\test_compression\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\26b082d69057e5884eb3ac0634966629")
 
 
 dir_ = "D:\\Thesis\\Cobra\\data\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\5a4e9aa404ceb1f3995850b6e3ea246c"
-subdir = utils.list_subdir(dir_)
+subdir = basic.list_subdir(dir_)
 dicom = pydicom.dcmread(subdir[0])
 with open("D:/Thesis/Cobra/dicom.txt", "w") as f:
     f.write(str(dicom))
@@ -95,7 +95,7 @@ out_patient_dir = os.path.join(
 con_pat_paths = [os.path.join(out_pos_path, conv_pat)
                  for conv_pat in conv_patients_list]
 converted_patient = con_pat_paths[400]
-files = utils.list_subdir(converted_patient)
+files = basic.list_subdir(converted_patient)
 print(files[:2])
 # read json header
 json_file = files[1]
@@ -108,7 +108,7 @@ print(header)
 #vis.display3d(data, axis=2, start_slice=10, num_slices=20)
 
 # In[]
-patient_list = utils.list_subdir(positive_dir)
+patient_list = basic.list_subdir(positive_dir)
 # In[count studies]
 study_counter = 0
 for pat_dir in patient_list[:3]:
@@ -121,7 +121,7 @@ print(f'number of studies in {pos_dir} =  {study_counter}')
 # In[Count number of documented studies]
 report_counters = {}
 for dir_ in healthy_dirs[4:5]:
-    patient_list = utils.list_subdir(dir_)
+    patient_list = basic.list_subdir(dir_)
     report_counter = 0
     report_counter += sum(1 for _ in iglob(f"{dir_}/*/*/DOC/*/*.pdf"))
     print('|', end=(''))
