@@ -6,9 +6,28 @@ Created on Wed Oct  6 16:54:47 2021
 @author: kiril
 """
 from nnUNet.nnunet.dataset_conversion import utils
+from pathlib import Path
+from os.path import join
+import os
+from utilss import basic
+
+
+# In[Rename files]
+# The last index should correspond to the modality
+# we rename all files to _0000.nii
 
 # In[]
+script_dir = os.path.realpath(__file__)
+base_dir = Path(script_dir).parent
+task_folder = join(
+    base_dir, 
+    "data/data_folder/nnUNet_raw_data_base/nnUNet_raw_data/Task500_Test")
+train_folder = join(task_folder, "imagesTr")
 
-utils.generate_dataset_json(join(target_base, 'dataset.json'), target_imagesTr, 
-                            target_imagesTs, ('Red', 'Green', 'Blue'),
+
+# In[]
+utils.generate_dataset_json(join(task_folder, 'dataset.json'), 
+                            join(task_folder, "imagesTr"), 
+                            join(task_folder, "imagesTs"), 
+                            ('Red', 'Green', 'Blue'),
                           labels={0: 'background', 1: 'street'}, dataset_name=task_name, license='hands off!')
