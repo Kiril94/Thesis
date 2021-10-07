@@ -217,23 +217,21 @@ svis.plot_decorator(skplot.metrics.plot_confusion_matrix,
 # In[make prediction for the test set]
 pred_prob_test = xgb_cl.predict_proba(X_test)
 pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
-svis.bar_plot(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
-              xlabel='Sequence', title='Predicted sequences', save_plot=True,
+svis.bar(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
+         kwargs={'xlabel':'Sequence', 'title':'Predicted sequences',},
+              save=True,
               figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
 
 # In[show predicted and true]
 pred_counts = np.unique(pred_test, return_counts=True)[1]
-fig, ax = svis.bar_plot(target_dict.keys(), seq_count.values[1:],
-                        lgd_label='true',
-                        title='Volumes Count - All Patients')
-svis.bar_plot(target_dict.keys(), pred_counts, fig=fig, ax=ax,
-              bottom=seq_count.values[1:],  lgd_label='pred',
-              save_plot=True, lgd=True, xlabel='Sequence Type',
+fig, ax = svis.bar(target_dict.keys(), seq_count.values[1:], label='true',
+                   kwargs = {'title':'Volumes Count - All Patients'},)
+svis.bar(target_dict.keys(), pred_counts, fig=fig, ax=ax,
+              bottom=seq_count.values[1:], label='pred', color=(0,1), 
+              kwargs={'save_plot':True, 'lgd':True, 'xlabel':'Sequence Type',
+                      'color':(1,3), 'yrange':(0,130000)},
               figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
-
 # In[Get labels from prediction]
-
-
 def dict_mapping(t): return basic.inv_dict(target_dict)[t]
 
 pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
@@ -241,7 +239,10 @@ pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
 df_test[sq] = pred_test_labels
 df_test = pd.concat([df_test, df_test_ids], axis=1)
 df_train = pd.concat([df_train, df_train_ids], axis=1)
+df_test['true_label'] = 0
+df_train['true_label'] = 1
 df_final = pd.concat([df_train, df_test])
+
 #del df_test, df_train
 # In[Examine final df]
 df_final = df_final.dropna(subset=[ICD_k])
@@ -250,12 +251,41 @@ print(len(df_final[[PID_k, SID_k, sq, ICD_k]]))
 print(df_final.Sequence)
 print(df_final.isna().sum())
 
+
+
 # In[Final sequence distribution]
-svis.bar_plot(target_dict.keys(), df_final[sq].value_counts(),
-              xlabel='Sequence', title='All sequences after prediction',
-              save_plot=(True), figname=f"{fig_dir}/sequence_pred/seq_dist_all_pred.png")
+svis.bar(target_dict.keys(), df_final[sq].value_counts(),
+         kwargs={'xlabel':'Sequence', 'title':'All sequences after prediction',},
+         save=(True), figname=f"{fig_dir}/sequence_pred/seq_dist_all_pred.png")
 
+# In[Find intersection of FLAIR, DWI, SWI or T2*]
+#swi
+rel_seq = ['dwi', 'flair', 'swi', 't2s', 't1']
+mask_dict = {}
+for seq in rel_seq:
+    mask_dict[seq] = df_final[sq]==seq
+patd ={}
+for seq, mask in mask_dict.items():
+    patd[seq] = set(df_final[mask][PID_k].unique())
 
+dwi_flair_swi = set.intersection(patd['dwi'], patd['flair'], patd['swi'])
+dwi_flair_t2s = set.intersection(patd['dwi'], patd['flair'], patd['t2s'])
+dwi_flair_t2s_t1 = set.intersection(patd['dwi'], patd['flair'], patd['t2s'],
+                                    patd['t1'])
+dwi_flair_swi_t1 = set.intersection(patd['dwi'], patd['flair'], patd['swi'],
+                                    patd['t1'])
+all_four = set.intersection(set(dwi_flair_t2s), set(dwi_flair_swi))
+print(f"#Patients with dwi, flair, swi: {len(dwi_flair_swi)}")
+print(f"Including t1 {len(dwi_flair_swi_t1)}")
+print(f"#Patients with dwi, flair, t2s: {len(dwi_flair_t2s)}")
+print(f"Including t1 {len(dwi_flair_t2s_t1)}")
+print(f"#Patients with all 4: {len(all_four)}")
+
+# In[Write to files]
+write_dir = f"{base_dir}/share/Cerebriu/download_patients"
+with open(f"{write_dir}/dwi_flair_t2s.txt", 'w') as f:
+    for item in dwi_flair_t2s:
+        f.write("%s\n" % item)
 # In[visualize sequences scatter]
 fig, ax = plt.subplots(2, 2, figsize=(10, 10))
 ax = ax.flatten()
@@ -272,6 +302,7 @@ sns.scatterplot(x=IR_k, y=FA_k, legend=None, hue='Sequence',
 fig.suptitle('All Sequences', fontsize=20)
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/scatter_for_all.png")
+
 
 
 

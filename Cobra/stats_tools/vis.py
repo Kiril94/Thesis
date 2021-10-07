@@ -162,6 +162,10 @@ def bar(labels, counts, width=.8,
         fig, ax = plt.subplots(figsize=figsize)
     if len(bottom) == 0:
         bottom = np.zeros(len(counts))
+    try:
+        color = Color_palette(color[0])[color[1]]
+    except:
+        pass
     ax.bar(np.arange(len(counts)), counts, width, label=label,
            bottom=bottom, color=color)
     x = np.arange(len(counts))  # the label locations
@@ -539,6 +543,7 @@ def show_int_distribution(integers, save_plot=True,
 def Color_palette(k):
     """Takes integer, Returns color scheme."""
     Color_schemes1 = [
+        [i['color'] for i in plt.rcParams['axes.prop_cycle']],
         [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd',
          u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf'],
         ["#70d6ff", "#ff70a6", "#ff9770", "#ffd670", "#e9ff70"],

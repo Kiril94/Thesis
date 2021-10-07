@@ -34,15 +34,10 @@ src_dirs = os.listdir("Y:")
 src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
                        in src_dirs if x.startswith('2019')])
 dst_data_dir = "G:/CoBra/Data"
-print(Path('Y:/2019_01/000d30ebf6b150c5b4bee2f199fbd210/8255fc9525809f4030ab3d022530a576/MR/6cb3194cd9239cb24cc1a2a12506aa94').parts)
+
 # In[move]
 
 
-#for dir_ in healthy_dirs[:1]:
-    #if not(os.path.exists(target_path(dir_))):
-    #    os.mkdir(target_path(dir_))
-    
-    #patient_list = utils.list_subdir(dir_)
 num_patients = 5
 start = time.time()
 for pat in patient_list[:num_patients]:
