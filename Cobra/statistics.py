@@ -24,6 +24,7 @@ import pydicom
 from utilss.basic import DotDict
 import importlib
 import math
+
 # importlib.reload(mri_stats)
 
 # In[Define some helper functions]
@@ -388,6 +389,13 @@ svis.bar_plot(year_month_unique[:-2], year_month_counts[:-2], figsize=(13, 7),
               ylabel='Frequency', title='Studies for positive patients',
               figname=f"{fig_dir}/pos/studies_months_years.png")
 
+# In[Plot patient count]
+labels = ['2019', 'pos']
+counts = np.array([812, 28071])
+kwargs={'xlabel':''}
+fig,ax = svis.bar(labels, counts, kwargs=kwargs, save=True, 
+                  fig=f"{fig_dir}/basic_stats/pat_count.png")
+ax.text(-.05,1200,'812', fontsize=20)
 # In[Count number of relevant patients in 2019]
 print(len(df_2019[mask_dict.t1 | mask_dict.t2 | mask_dict.t2s | mask_dict.t1gd
                   | mask_dict.t2gd | mask_dict.gd | mask_dict.swi | mask_dict.flair

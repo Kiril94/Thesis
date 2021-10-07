@@ -269,12 +269,5 @@ fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/scatter_for_all.png")
 
 
-# In[https://towardsdatascience.com/beginners-guide-to-xgboost-for-classification-problems-50f75aac5390]
-,
-                ax=ax[3])
-fig.suptitle('All Sequences', fontsize=20)
-fig.tight_layout()
-fig.savefig(f"{fig_dir}/sequence_pred/scatter_for_all.png")
-
 
 # In[https://towardsdatascience.com/beginners-guide-to-xgboost-for-classification-problems-50f75aac5390]
