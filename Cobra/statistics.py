@@ -64,14 +64,24 @@ table_dir = f"{base_dir}/tables"
 
 # In[load positive csv]
 #pos_tab_dir = f"{table_dir}/pos_nn.csv"
-#neg_tab_dir = f"{table_dir}/all2019.csv"
+#neg_tab_dir = f"{table_dir}/neg_all.csv"
 #df_p = utils.load_scan_csv(pos_tab_dir)
 #df_n = utils.load_scan_csv(neg_tab_dir)
 all_tab_dir = f"{table_dir}/neg_pos.csv"
 df_all = utils.load_scan_csv(all_tab_dir)
+
 #keys = df_p.keys()
 #p(f"Number of patients = {len(df_p.PatientID.unique())}")
 
+
+# In[]
+#df_all = df_all.dropna(subset=[PID_k, SD_k])
+pos_unique = df_p[PID_k].unique()
+pos_mask = df_all[PID_k].isin(pos_unique)
+
+df_all['pos'] = 0
+df_all.loc[pos_mask,'pos'] = 1
+print(df_n[PID_k].nunique()+df_p[PID_k].nunique()-df_all[PID_k].nunique())
 # In[Remove those where patient id and series description is none]
 df_n = df_n[df_n[PID_k].notna()]
 df_n = df_n[df_n[SD_k].notna()]
@@ -82,24 +92,26 @@ with open(f'{base_dir}/results/neg_ids.txt', 'w') as filehandle:
         filehandle.write('%s\n' % listitem)
 
 # In[Count the number of studies]
-num_studies_l = stats.count_number_of_studies(df_p)
-
+num_studies_all = stats.count_number_of_studies(df_all)
+print(f"The number of studies is {num_studies_all}")
 # In[Convert time and date to datetime for efficient access]
-df_p = stats.add_datetime(df_p)
+df_all = stats.add_datetime(df_all)
 #df_p.to_csv(pos_tab_dir, index = False, header = True)
+
 # In[]
 p(f"first study {df_p.DateTime.min()}")
 p(f"last study {df_p.DateTime.max()}")
-studies_2021 = stats.check_tags(df_p, '2021', date_k).sum()
+studies_all = stats.check_tags(df_all, 'all', date_k).sum()
 print(f"Number of scans in 2021 {studies_2021}")
 # In[Sort the the scans by time and count those that are less than 2 hours apart]
-time_diff_studies_pos, _ = stats.time_between_studies(df_p)
-
+time_diff_studies_all, _ = stats.time_between_studies(df_all)
 # In[]
-svis.hist(np.array(time_diff_studies_pos)/24, 100, ylog_scale=(True),
+print(len(time_diff_studies_all))
+# In[]
+svis.hist(np.array(time_diff_studies_all)/24, 100, ylog_scale=(True),
                     show_plot=True, xlabel='Days between studies',
-                    save=True, title='Positive Patients',
-                    figname=f"{fig_dir}/pos/time_between_studies.png")
+                    save=True, title='All Patients',
+                    figname=f"{fig_dir}/time_between_studies.png")
 
 # In[Store the results]
 patient_ids = df_p['PatientID'].unique()
@@ -389,21 +401,18 @@ svis.bar_plot(year_month_unique[:-2], year_month_counts[:-2], figsize=(13, 7),
 
 # In[Plot patient count]
 labels = ['2019', 'pos']
-counts = np.array([812, 28071])
-kwargs={'xlabel':''}
-fig,ax = svis.bar(labels, counts, kwargs=kwargs, save=True, 
-                  fig=f"{fig_dir}/basic_stats/pat_count.png")
-ax.text(-.05,1200,'812', fontsize=20)
+counts = np.array([28071-23545, 0])
+counts_low = np.array([23545, 812])
+kwargs={'xlabel':'', 'show':False, 'yrange':(0,30000)}
+fig, ax = svis.bar(labels, counts_low, kwargs=kwargs, save=True, 
+                  figname=f"{fig_dir}/pat_count.png")
+ax.text(1-.05,1200,'812', fontsize=22)
+fig, ax = svis.bar(labels, counts, bottom=counts_low, kwargs=kwargs, save=True, 
+                  figname=f"{fig_dir}/pat_count.png", fig=fig, ax=ax,
+                  color='black')
+
 # In[Count number of relevant patients in 2019]
 print(len(df_2019[mask_dict.t1 | mask_dict.t2 | mask_dict.t2s | mask_dict.t1gd
                   | mask_dict.t2gd | mask_dict.gd | mask_dict.swi | mask_dict.flair
                   | mask_dict.dwi][PID_k].unique()))
-print(len(df_2019[PID_k].unique()))
-positive patients',
-             figname=f"{fig_dir}/pos/studies_months_years.png" )
-
-# In[Count number of relevant patients in 2019]
-print(len(df_2019[mask_dict.t1 | mask_dict.t2 | mask_dict.t2s | mask_dict.t1gd \
-        | mask_dict.t2gd | mask_dict.gd | mask_dict.swi | mask_dict.flair \
-        | mask_dict.dwi][PID_k].unique()))
 print(len(df_2019[PID_k].unique()))

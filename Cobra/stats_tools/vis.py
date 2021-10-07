@@ -75,7 +75,7 @@ def plot_decorator(plot_func, plot_func_args, plot_func_kwargs,
     kwargs and ax to produce a plot"""
     fig, ax = plt.subplots(figsize=figsize)
     ax = plot_func(*plot_func_args, **plot_func_kwargs, ax=ax)
-    fig, ax = ax_decorator(fig, ax, kwargs)
+    fig, ax = ax_decorator(fig, ax, **kwargs)
     if caption != '':
         fig.text(caption_pos[0], caption_pos[1], caption, ha='center',
                  wrap=True, fontsize=caption_fs)  
@@ -154,6 +154,7 @@ def bar(labels, counts, width=.8,
         figname=None, dpi=80, plot_style='ggplot',
         fig=None, ax=None, bottom=[], 
         caption='', caption_fs=20, caption_pos=(.5, -.05),
+        color='red',
         kwargs={}):
 
     plt.style.use(plot_style)
@@ -162,7 +163,7 @@ def bar(labels, counts, width=.8,
     if len(bottom) == 0:
         bottom = np.zeros(len(counts))
     ax.bar(np.arange(len(counts)), counts, width, label=label,
-           bottom=bottom)
+           bottom=bottom, color=color)
     x = np.arange(len(counts))  # the label locations
     ax.set_xticks(x)
     ax.set_xticklabels(labels)

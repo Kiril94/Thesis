@@ -53,7 +53,6 @@ df_all = utils.load_scan_csv(table_all_dir)[rel_cols]
 # In[Select only relevant columns]
 print(f"all elements {len(df_all)}")
 df_all = df_all[rel_cols].dropna(subset=[SID_k, PID_k, SS_k, SV_k, TR_k])
-
 print(f"after dropping nans {len(df_all)}")
 
 # In[Get masks for the different series descriptions]
@@ -77,9 +76,10 @@ seq_count = df_all[sq].value_counts()
 print(seq_count)
 
 # In[visualize number of volumes sequences]
-svis.bar_plot(seq_count.keys(), seq_count.values, figsize=(13, 6), xlabel='Sequence',
-              xtickparams_ls=16, save_plot=True, title='All Patients',
-              figname=f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
+svis.bar(seq_count.keys(), seq_count.values, figsize=(13, 6),
+         kwargs={'xlabel':'Sequence', 'xtickparams_ls':16,
+              'title':'All Patients'}, 
+         save=True, figname=f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
 
 
 # In[Turn ScanningSequence into multi-hot encoded]
@@ -115,8 +115,8 @@ fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/X_distr.png")
 # In[Show the binary columns]
 bin_counts = df_all[sparse_columns].sum(axis=0)
-svis.bar_plot(bin_counts.keys(), bin_counts.values,
-              figsize=(15, 6), logscale=True,
+svis.bar(bin_counts.keys(), bin_counts.values,
+              figsize=(15, 6), kwargs={'logscale':True},
               figname=f"{fig_dir}/sequence_pred/X_distr_bin.png")
 # In[We can drop the TOF, EP, DE and MTC columns]
 try:
@@ -172,8 +172,9 @@ xgb_cl.fit(X_train, y_train)
 # In[Predict]
 pred_prob_val = xgb_cl.predict_proba(X_val)
 # In[Plot roc curve]
-svis.plot_decorator(skplot.metrics.plot_roc_curve, args=[y_val, pred_prob_val, ],
-                    kwargs={'figsize': (9, 8), 'text_fontsize': 14.5,
+svis.plot_decorator(skplot.metrics.plot_roc_curve, 
+                    plot_func_args=[y_val, pred_prob_val, ],
+                    plot_func_kwargs={'figsize': (9, 8), 'text_fontsize': 14.5,
                             'title': "Sequence Prediction - ROC Curves"},
                     figname=f"{fig_dir}/sequence_pred/ROC_curves.png")
 # In[Test FPR for different thresholds]
@@ -202,12 +203,17 @@ fig.savefig(f"{fig_dir}/sequence_pred/fpr_cutoff.png", dpi=80)
 pred_val = clss.prob_to_class(pred_prob_val, final_th, 0)
 cm = confusion_matrix(y_val, pred_val)
 
-args = [y_val, pred_val]
-kwargs = {'normalize': True, 'text_fontsize': 16, 'title_fontsize': 18, }
-svis.plot_decorator(skplot.metrics.plot_confusion_matrix, args, kwargs,
-                    set_xticks=True, xticks=np.arange(7), xtick_labels=target_dict.keys(),
-                    set_yticks=True, yticks=np.arange(7), ytick_labels=target_dict.keys(),
-                    save=True, figname=f"{fig_dir}/sequence_pred/confusion_matrix_val_norm.png")
+plot_func_args = [y_val, pred_val]
+plot_func_kwargs = {'normalize': True, 'text_fontsize': 16, 
+                    'title_fontsize': 18, }
+svis.plot_decorator(skplot.metrics.plot_confusion_matrix, 
+                    plot_func_args, plot_func_kwargs,
+                    kwargs={'xticks':np.arange(7), 
+                            'xtick_labels':target_dict.keys(), 
+                            'yticks':np.arange(7), 
+                            'ytick_labels':target_dict.keys()},
+                    save=True, 
+                    figname=f"{fig_dir}/sequence_pred/confusion_matrix_val_norm.png")
 # In[make prediction for the test set]
 pred_prob_test = xgb_cl.predict_proba(X_test)
 pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
@@ -229,7 +235,6 @@ svis.bar_plot(target_dict.keys(), pred_counts, fig=fig, ax=ax,
 
 
 def dict_mapping(t): return basic.inv_dict(target_dict)[t]
-
 
 pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
 # In[Create and save dataframe with predictions]

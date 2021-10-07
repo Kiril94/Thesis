@@ -66,6 +66,7 @@ def count_number_of_studies(df, threshold=2):
 
     patient_ids = df_sorted['PatientID'].unique()
     num_studies_l = []
+    pat_counter = 0
     for patient in patient_ids:
         patient_mask = df_sorted['PatientID'] == patient
         date_times = df_sorted[patient_mask]['DateTime']
@@ -87,6 +88,9 @@ def count_number_of_studies(df, threshold=2):
             except:
                 print('An error occured')
         num_studies_l.append(study_counter)
+        pat_counter+=1
+        if pat_counter%100==0:
+            print('#', end='')
     return num_studies_l
 
 
