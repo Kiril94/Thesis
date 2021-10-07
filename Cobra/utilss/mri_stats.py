@@ -97,19 +97,4 @@ def get_masks_dict(df, return_tags=True):
         return mask_dict, tag_dict
     else:
         return mask_dict
-    if return_tags:
-        return mask_dict, tag_dict
-    else:
-        return mask_dict
 
-    if return_tags:
-        return mask_dict, tag_dict
-    else:
-        return mask_dict
-k_dict
-
-    if return_tags:
-        return mask_dict, tag_dict
-    else:
-        return mask_dict
-    

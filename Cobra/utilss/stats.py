@@ -127,6 +127,3 @@ def add_datetime(df):
     df['DateTime'] = df[date_k] + ' ' + df[time_k]
     df['DateTime'] = pd.to_datetime(df['DateTime'], format='%Y%m%d %H:%M:%S')
     return df
-date_k] + ' ' +  df[time_k]
-    df['DateTime'] = pd.to_datetime(df['DateTime'], format='%Y%m%d %H:%M:%S')
-    return df

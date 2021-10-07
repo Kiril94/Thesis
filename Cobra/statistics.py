@@ -29,10 +29,8 @@ import math
 
 # In[Define some helper functions]
 
-
 def p(x):
     print(x)
-
 
 # In[Usefule keys]
 TE_k = 'EchoTime'
