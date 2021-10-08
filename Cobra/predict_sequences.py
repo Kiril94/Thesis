@@ -259,28 +259,55 @@ svis.bar(target_dict.keys(), df_final[sq].value_counts(),
          save=(True), figname=f"{fig_dir}/sequence_pred/seq_dist_all_pred.png")
 
 # In[Find intersection of FLAIR, DWI, SWI or T2*]
-#swi
+
+pos_pat = pd.read_csv(f"{base_dir}/tables/pos_nn.csv")[PID_k].unique()
+pos_mask = df_final[PID_k].isin(pos_pat)
+
 rel_seq = ['dwi', 'flair', 'swi', 't2s', 't1']
 mask_dict = {}
 for seq in rel_seq:
     mask_dict[seq] = df_final[sq]==seq
-patd ={}
+    
+patdn ={}
+patdp = {}
 for seq, mask in mask_dict.items():
-    patd[seq] = set(df_final[mask][PID_k].unique())
+    patdn[seq] = set(df_final[mask&~pos_mask][PID_k].unique())
+    patdp[seq] = set(df_final[mask&pos_mask][PID_k].unique())
 
-dwi_flair_swi = set.intersection(patd['dwi'], patd['flair'], patd['swi'])
-dwi_flair_t2s = set.intersection(patd['dwi'], patd['flair'], patd['t2s'])
-dwi_flair_t2s_t1 = set.intersection(patd['dwi'], patd['flair'], patd['t2s'],
-                                    patd['t1'])
-dwi_flair_swi_t1 = set.intersection(patd['dwi'], patd['flair'], patd['swi'],
-                                    patd['t1'])
-all_four = set.intersection(set(dwi_flair_t2s), set(dwi_flair_swi))
+dwi_flair_swi = set.intersection(patdn['dwi'], patdn['flair'], patdn['swi'])
+dwi_flair_t2s = set.intersection(patdn['dwi'], patdn['flair'], patdn['t2s'])
+dwi_flair_t2s_t1 = set.intersection(patdn['dwi'], patdn['flair'], patdn['t2s'],
+                                    patdn['t1'])
+dwi_flair_swi_t1 = set.intersection(patdn['dwi'], patdn['flair'], patdn['swi'],
+                                    patdn['t1'])
+
+dwi_flair_swip = set.intersection(patdp['dwi'], patdp['flair'], patdp['swi'])
+dwi_flair_t2sp = set.intersection(patdp['dwi'], patdp['flair'], patdp['t2s'])
+dwi_flair_t2s_t1p = set.intersection(patdp['dwi'], patdp['flair'], patdp['t2s'],
+                                    patdp['t1'])
+dwi_flair_swi_t1p = set.intersection(patdp['dwi'], patdp['flair'], patdp['swi'],
+                                    patdp['t1'])
+#all_four = set.intersection(set(dwi_flair_t2s), set(dwi_flair_swi))
 print(f"#Patients with dwi, flair, swi: {len(dwi_flair_swi)}")
 print(f"Including t1 {len(dwi_flair_swi_t1)}")
 print(f"#Patients with dwi, flair, t2s: {len(dwi_flair_t2s)}")
 print(f"Including t1 {len(dwi_flair_t2s_t1)}")
-print(f"#Patients with all 4: {len(all_four)}")
+#print(f"#Patients with all 4: {len(all_four)}")
+labels = ['dwi, flair, swi', 'dwi, flair, swi\n +t1',
+          'dwi, flair, t2*', 'dwi, flair, t2*\n +t1',]
+counts_n = np.array([len(dwi_flair_swi), len(dwi_flair_swi_t1), 
+                     len(dwi_flair_t2s), len(dwi_flair_t2s_t1)])
+counts_p = np.array([len(dwi_flair_swip), len(dwi_flair_swi_t1p), 
+                     len(dwi_flair_t2sp), len(dwi_flair_t2s_t1p)])
+fig, ax = svis.bar(labels, counts_n, figsize=(14,6), width=.6, 
+                   label='neg')
+svis.bar(labels, counts_p, label='pos', bottom=counts_n, width=.6,  fig=fig, ax=ax,
+                   kwargs={'xlabel':'Sequence Types', }, color=(0,1))
 
+# In[]
+fig, ax = svis.bar(labels, counts_n, figsize=(14,6), width=.6, 
+                   label='test')
+print(labels)
 # In[Write to files]
 write_dir = f"{base_dir}/share/Cerebriu/download_patients"
 with open(f"{write_dir}/dwi_flair_t2s.txt", 'w') as f:

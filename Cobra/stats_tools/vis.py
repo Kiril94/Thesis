@@ -18,7 +18,7 @@ from matplotlib import ticker
 
 # In[Helper]
 def ax_decorator(fig, ax,
-                 lgd_label='', lgd=False, lgd_loc=0, lgd_fs=25, 
+                 lgd_loc=0, lgd_fs=25, 
                  lgd_color='white', lgd_ncol=1,
                  title='', title_fs=25, 
                  ylabel='count', ylabel_fs=25,
@@ -31,7 +31,8 @@ def ax_decorator(fig, ax,
                  xrange=(None,None), yrange=(None,None),
                  tight_layout=True,
                  **kwargs):
-    if lgd:
+    _, labels = ax.get_legend_handles_labels()
+    if len(labels)>0:
         legend = ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor='white',
                            ncol=lgd_ncol)
         legend.get_frame().set_facecolor(lgd_color)
@@ -49,7 +50,7 @@ def ax_decorator(fig, ax,
         ax.set_yticks(yticks)
         ax.set_yticklabels(ytick_labels)
     ax.set_xlim(xrange)
-    ax.set_ylim(yrange)
+    ax.set_ylim(yrange, auto=True)
     if xlogscale:
         ax.set_yscale('log')
     if ylogscale:
