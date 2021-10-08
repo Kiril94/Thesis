@@ -246,7 +246,7 @@ df_final = pd.concat([df_train, df_test])
 #del df_test, df_train
 # In[Examine final df]
 df_final = df_final.dropna(subset=[ICD_k])
-df_final[[PID_k, SID_k, sq, ICD_k]].to_csv(f"{base_dir}/share/pred_seq.csv")
+df_final[[PID_k, SID_k, sq, ICD_k, 'true_label']].to_csv(f"{base_dir}/share/pred_seq.csv")
 print(len(df_final[[PID_k, SID_k, sq, ICD_k]]))
 print(df_final.Sequence)
 print(df_final.isna().sum())
@@ -302,12 +302,13 @@ counts_p = np.array([len(dwi_flair_swip), len(dwi_flair_swi_t1p),
 fig, ax = svis.bar(labels, counts_n, figsize=(14,6), width=.6, 
                    label='neg')
 svis.bar(labels, counts_p, label='pos', bottom=counts_n, width=.6,  fig=fig, ax=ax,
-                   kwargs={'xlabel':'Sequence Types', }, color=(0,1))
+                   kwargs={'xlabel':'Sequence Type Combinations', 
+                           'ylabel':'Patient Count',
+                           'yrange':(0,7500)}, color=(0,1), 
+                   save=True, figname=f"{fig_dir}/basic_stats/sequence_comb_pat_count.png")
+for i in range(4):
+    ax.text(i-.1, counts_n[i]+counts_p[i]+200, counts_n[i]+counts_p[i], fontsize=20)
 
-# In[]
-fig, ax = svis.bar(labels, counts_n, figsize=(14,6), width=.6, 
-                   label='test')
-print(labels)
 # In[Write to files]
 write_dir = f"{base_dir}/share/Cerebriu/download_patients"
 with open(f"{write_dir}/dwi_flair_t2s.txt", 'w') as f:
