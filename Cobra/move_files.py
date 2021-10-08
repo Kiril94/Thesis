@@ -57,14 +57,13 @@ df_patients_0 = df_patients_0.sort_values('PatientID')
 
 volume_dir_df = pd.read_csv(join(base_dir, 'tables', 'sid_directories.csv'))
 volume_dir_dic = pd.Series(
-    patient_dir_df.Directory.values, index=patient_dir_df.SeriesInstanceUID).to_dict()
+    volume_dir_df.Directory.values, index=volume_dir_df.SeriesInstanceUID).to_dict()
 
 
 # In[move]
-num_patients = 2
-i=0
-start = time.time()
-for pat in df_patients_0.PatientID.unique()[:num_patients]:
+# 1st patient was already written
+for pat in df_patients_0.PatientID.unique()[1:]:
+    start = time.time()
     print(f"patient: {pat}:", end=' ')
     volumes = df_patients_0[df_patients_0.PatientID==pat]['SeriesInstanceUID']
     print(f"{len(volumes)} volumes")
@@ -73,8 +72,10 @@ for pat in df_patients_0.PatientID.unique()[:num_patients]:
         print("|", end='')
         for dcm_file in glob.iglob(f"Y:/{volume_dir}/*"):
             dst_file_dir = target_path(
-                Path(os.path.split(dcm_file)[0]), Path("G:/CoBra/Data/test1"))
+                Path(os.path.split(dcm_file)[0]), Path("G:/CoBra/Data/dcm"))
             shutil.move(dcm_file, dst_file_dir);
-stop = time.time()
-print(f"The first method takes {(stop-start)/num_patients} per patient")
+        stop = time.time()
+        print(f" {(stop-start)/60} mins")
+
+
 
