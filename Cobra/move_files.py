@@ -62,6 +62,7 @@ volume_dir_dic = pd.Series(
 
 # In[move]
 # 1st patient was already written
+# last patient: 034eb2b7527b2db0857386daafd05d41
 for pat in df_patients_0.PatientID.unique()[1:]:
     start = time.time()
     print(f"patient: {pat}:", end=' ')
@@ -69,13 +70,16 @@ for pat in df_patients_0.PatientID.unique()[1:]:
     print(f"{len(volumes)} volumes")
     for volume in volumes:
         volume_dir = volume_dir_dic[volume]
-        print("|", end='')
         for dcm_file in glob.iglob(f"Y:/{volume_dir}/*"):
             dst_file_dir = target_path(
                 Path(os.path.split(dcm_file)[0]), Path("G:/CoBra/Data/dcm"))
-            shutil.move(dcm_file, dst_file_dir);
-        stop = time.time()
-        print(f" {(stop-start)/60} mins")
+            try:
+                shutil.move(dcm_file, dst_file_dir);
+            except:
+                print(f"Destination path {dst_file_dir} already exists")
+        print("|",  end='')
+    stop = time.time()
+    print(f" {(stop-start)/60} mins")
 
 
 
