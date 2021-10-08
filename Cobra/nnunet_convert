@@ -6,12 +6,15 @@ Created on Wed Oct  6 16:54:47 2021
 @author: kiril
 """
 from nnUNet.nnunet.dataset_conversion import utils
+from nnUNet.nnunet.preprocessing.utils import xml_parser
 from pathlib import Path
 from os.path import join
 import os
 from utilss import basic
 from xml.dom import minidom
+import xml.etree.ElementTree as ET
 
+from bs4 import BeautifulSoup
 
 # In[Define directories]
 script_dir = os.path.realpath(__file__)
@@ -35,11 +38,33 @@ train_labels_files = basic.list_subdir(train_labels_folder)
 #    os.rename(file, file[:-8]+".nii")
 
 # In[Get labels]
-mydoc = minidom.parse(join(data_folder, "labels_dict.xml"))
-#items = mydoc.getElementsByTagName('item')
-print(dir(mydoc))
+xml_dir = join(data_folder, "labels_dict.xml")
 
-print(dir(mydoc.firstChild.tagName))
+
+with open(xml_dir, 'r') as f:
+    data = f.read()
+ 
+# Passing the stored data inside
+# the beautifulsoup parser, storing
+# the returned object
+Bs_data = BeautifulSoup(data, "xml")
+ 
+# Finding all instances of tag
+# `unique`
+result_list = []
+b_label = Bs_data.find_all('Label')
+for b in b_label:
+    number = int(b.find('Number').string)
+    name = b.find('Name').string
+    color = b.find('RGBColor').string
+    result_list.append((number, name, color))
+
+print(result_list[0])
+print(dir(b_label[0].find('Name')))
+print(b_label[0].find('Name').string)
+
+#print(result)
+#print(b_label.getitem())
 # In[]
 utils.generate_dataset_json(join(task_folder, 'dataset.json'), 
                             train_folder, 
