@@ -17,6 +17,7 @@ dcm2nii_exe_path = os.path.join(base_dir, "helper\\dcm2niix_win\\dcm2niix.exe")
 def dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0):
     """Given dicom path and output path, converts dicom files in 1 folder
     to a nii file + json file containing the header. 
+    op_sys: select 0 for Windows or 1 for Linux'
     Compression level 3 gives the best time-size tradeoff
     The file name is constructed as follows:
         PatientId_ProtocolName_SequenceName(0018,1020)_SequenceName(0018,0024) 
@@ -35,4 +36,4 @@ def dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0):
     else:
         raise Exception(
             'Non valid op_sys. Available options are 0 for Windows or 1 for Linux')
-re 0 for Windows or 1 for Linux')
+
