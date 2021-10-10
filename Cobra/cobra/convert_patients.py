@@ -3,6 +3,8 @@
 Created on Thu Sep  9 10:52:01 2021
 
 @author: klein
+
+Convert dicom files to niftiis
 """
 
 import data_access.load_data_tools as ld
@@ -16,10 +18,6 @@ import nibabel as nib
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
-importlib.reload(ld)
-importlib.reload(vis)
-importlib.reload(dicom2nifti)
-importlib.reload(utils)
 def p(string): print(string)
 
 
@@ -34,6 +32,7 @@ print(f"main directories: {data_dirs}")
 
 # In[Get all positive patients]
 pos_patients_list = utils.list_subdir(positive_dir)
+
 # In[Number of converted patients]
 conv_patients_list = os.listdir(out_pos_path)
 conv_patients = len(conv_patients_list)
@@ -97,8 +96,6 @@ for i, compression in enumerate(range(1,10)):
     print(f"{i}, {compression}")
     sizes[i] = utils.get_size(os.path.join(gz_directory, str(compression)),
                               unit='')
-
-
     
 # In[plot sizes]
 conversion_times = np.array([50.8, 68.0,74.77, 80.65,73.595, 89.36,105.119,121.117, 134.9])
