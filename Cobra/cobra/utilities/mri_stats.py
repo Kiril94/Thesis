@@ -4,8 +4,8 @@ Created on Mon Sep 20 14:34:12 2021
 
 @author: klein
 """
-from utilss.basic import DotDict
-import utilss.stats as stats
+from utilities.basic import DotDict
+import utilities.stats as stats
 
 
 def get_masks_dict(df, return_tags=True):
@@ -97,4 +97,6 @@ def get_masks_dict(df, return_tags=True):
         return mask_dict, tag_dict
     else:
         return mask_dict
+    
+
 
