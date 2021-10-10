@@ -62,7 +62,7 @@ volume_dir_dic = pd.Series(
 
 # In[move]
 # 1st patient was already written
-# last patient: 034eb2b7527b2db0857386daafd05d41
+# last patient: 0385ef30676c4602159171edac0cc2d6
 for pat in df_patients_0.PatientID.unique()[1:]:
     start = time.time()
     print(f"patient: {pat}:", end=' ')

@@ -1,31 +1,19 @@
 """
 Created on Mon Aug 30 10:32:43 2021
 @author: klein
+Counting number of patients, scans, and studies directly
 """
 
 
 import data_access.load_data_tools as ld
 import os
 from glob import iglob
-import importlib
 from utilss import utils
 from utilss import basic
-import time
-from utilss import dicom2nifti
 import json
-from vis import vis
-import nibabel as nib
-import datetime
 import pydicom
-import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
-importlib.reload(ld)
-importlib.reload(vis)
-importlib.reload(dicom2nifti)
-importlib.reload(utils)
 def p(string): print(string)
-
 
 
 # In[main directories]
@@ -77,11 +65,6 @@ level3 = utils.count_subdirectories(f"{base_dir}/data", 2, True)
 p(level3)
 # In[Read some dcm files]
 
-#patient = ld.Patient(pos_patients_list[100])
-#scan_dirs = patient.get_scan_directories()
-#scan_path = basic.list_subdir("D:\\Thesis\\Cobra\\data\\test_compression\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\26b082d69057e5884eb3ac0634966629")
-
-
 dir_ = "D:\\Thesis\\Cobra\\data\\0b630d10621e9c5d831a8053f95125b6\\5274cbd4b01b48a67071a35e252a692c\\MR\\5a4e9aa404ceb1f3995850b6e3ea246c"
 subdir = basic.list_subdir(dir_)
 dicom = pydicom.dcmread(subdir[0])
@@ -92,6 +75,7 @@ with open("D:/Thesis/Cobra/dicom.txt", "w") as f:
 out_patient_dir = os.path.join(
     f"D:\Thesis\Cobra\data\0b630d10621e9c5d831a8053f95125b6_converted")
 # In[look at converted patients]
+
 con_pat_paths = [os.path.join(out_pos_path, conv_pat)
                  for conv_pat in conv_patients_list]
 converted_patient = con_pat_paths[400]
@@ -116,8 +100,8 @@ for pat_dir in patient_list[:3]:
     print(pat_dir)
     print([f for f in os.listdir(pat_dir)])
     study_counter += sum(1 for _ in iglob(pat_dir))
-study_counters[pos_dir] = study_counter
-print(f'number of studies in {pos_dir} =  {study_counter}')
+study_counters[positive_dir] = study_counter
+print(f'number of studies in {positive_dir} =  {study_counter}')
 # In[Count number of documented studies]
 report_counters = {}
 for dir_ in healthy_dirs[4:5]:
@@ -128,9 +112,7 @@ for dir_ in healthy_dirs[4:5]:
     report_counters[dir_] = report_counter
     print(f'number of study reports in {dir_} = {report_counter}')
 
-# In[]
-print(healthy_dirs[11:12])
-# print(sum([1,1,1]))
+
 # In[]
 
 # number of pos patients = 831
@@ -180,32 +162,3 @@ print(healthy_dirs[11:12])
 
 # |pos ^ healthy| = 143
 
-# approx 250MB/patient
-# whole dataset: 6TB
-397, 2250, 1746, 2205,\
-    # 2392, 2424, 2472, 2065]
-# number of healthy studies = 27253
-
-# |pos ^ healthy| = 143
-
-# approx 250MB/patient
-# whole dataset: 6TB
-aset: 6TB
-397, 2250, 1746, 2205,\
-    # 2392, 2424, 2472, 2065]
-# number of healthy studies = 27253
-
-# |pos ^ healthy| = 143
-
-# approx 250MB/patient
-# whole dataset: 6TB
-et: 6TB
-aset: 6TB
-397, 2250, 1746, 2205,\
-                #2392, 2424, 2472, 2065]
-# number of healthy studies = 27253
-
-# |pos ^ healthy| = 143
-
-# approx 250MB/patient
-# whole dataset: 6TB
