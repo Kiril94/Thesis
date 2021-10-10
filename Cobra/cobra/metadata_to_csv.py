@@ -3,16 +3,13 @@
 Created on Tue Sep  7 13:05:11 2021
 
 @author: klein
+Get data from dicom headers and write to csv
 """
 
 import os
-import numpy as np
 from access_sif_data import load_data_tools as ld
 import utilss.utils as utils
 import pandas as pd
-import importlib
-import time
-import pydicom
 from utilss import basic
 
 
