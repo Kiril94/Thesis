@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from cryptography.fernet import Fernet
-from utilss import basic
+from utilities import basic
 from stats_tools import vis as svis
 
 

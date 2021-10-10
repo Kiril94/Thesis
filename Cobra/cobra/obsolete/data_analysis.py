@@ -8,12 +8,11 @@ Counting number of patients, scans, and studies directly
 import access_sif_data.load_data_tools as ld
 import os
 from glob import iglob
-from utilss import utils
-from utilss import basic
+from utilities import utils, basic
 import json
 import pydicom
 from pathlib import Path
-from utilss.basic import p
+from utilities.basic import p
 
 
 # In[main directories]

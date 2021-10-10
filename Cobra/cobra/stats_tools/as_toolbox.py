@@ -11,9 +11,6 @@ import numpy as np
 from scipy import stats
 import urllib
 import matplotlib.pyplot as plt
-#import importlib
-#import ExternalFunctions
-# importlib.reload(ExternalFunctions)
 from .ExternalFunctions import Chi2Regression
 from .ExternalFunctions import nice_string_output
 from .ExternalFunctions import compute_f
@@ -24,6 +21,7 @@ import sympy as sp
 from scipy import special
 import itertools
 from decimal import Decimal
+
 
 # In[]
 

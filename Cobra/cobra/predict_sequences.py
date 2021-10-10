@@ -9,11 +9,9 @@ import xgboost as xgb
 import os
 from pathlib import Path
 import pandas as pd
-from utilss import utils
-from utilss import basic
-from utilss import classification as clss
+from utilities import utils, basic, mri_stats
+from utilities import classification as clss
 from stats_tools import vis as svis
-from utilss import mri_stats
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np

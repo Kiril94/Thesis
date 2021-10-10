@@ -9,9 +9,8 @@ Convert dicom files to niftiis
 
 import access_sif_data.load_data_tools as ld
 import os
-from utilss import utils
+from utilities import utils, dicom2nifti
 import time
-from utilss import dicom2nifti
 import nibabel as nib
 import datetime
 import numpy as np

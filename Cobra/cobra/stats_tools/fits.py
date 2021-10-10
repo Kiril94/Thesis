@@ -14,8 +14,7 @@ from scipy import stats
 from . import as_toolbox
 from . import vis
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-#import importlib
-#importlib.reload(vis)
+
 
 class Error(Exception):
     """Base class for other exceptions"""

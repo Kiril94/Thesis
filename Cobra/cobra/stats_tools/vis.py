@@ -6,7 +6,6 @@ Created on Sat Jan 16 15:18:15 2021
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 from mlxtend.plotting import plot_decision_regions
 from scipy import stats
 from . import fits

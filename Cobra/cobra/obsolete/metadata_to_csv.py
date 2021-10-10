@@ -8,9 +8,8 @@ Get data from dicom headers and write to csv
 
 import os
 from access_sif_data import load_data_tools as ld
-import utilss.utils as utils
 import pandas as pd
-from utilss import basic
+from utilities import basic, utils
 
 
 # In[Specify main directories]
