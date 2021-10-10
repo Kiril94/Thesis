@@ -5,7 +5,7 @@ Counting number of patients, scans, and studies directly
 """
 
 
-import data_access.load_data_tools as ld
+import access_sif_data.load_data_tools as ld
 import os
 from glob import iglob
 from utilss import utils
@@ -13,7 +13,8 @@ from utilss import basic
 import json
 import pydicom
 from pathlib import Path
-def p(string): print(string)
+from utilss.basic import p
+
 
 
 # In[main directories]

@@ -12,7 +12,6 @@ import pandas as pd
 from utilss import utils
 from utilss import basic
 from utilss import classification as clss
-from vis import vis
 from stats_tools import vis as svis
 from utilss import mri_stats
 import seaborn as sns

@@ -7,15 +7,14 @@ Created on Tue Sep  7 13:05:11 2021
 
 import os
 import numpy as np
-from data_access import load_data_tools as ld
+from access_sif_data import load_data_tools as ld
 import utilss.utils as utils
 import pandas as pd
 import importlib
 import time
 import pydicom
 from utilss import basic
-# importlib.reload(utils)
-# importlib.reload(ld)
+
 
 # In[Specify main directories]
 base_data_dir = "Y:/"
@@ -106,8 +105,5 @@ for subdir in healthy_dirs[5:]:
 # In[]
 df_uids = pd.read_csv(csv_path_ids)
 mask = df_uids['Directory'].str.contains('2019', na=False)
-df_uids = df_uids[~mask]
-df_uids.to_csv(csv_path_ids, index=False, header=True)
-.contains('2019', na=False)
 df_uids = df_uids[~mask]
 df_uids.to_csv(csv_path_ids, index=False, header=True)

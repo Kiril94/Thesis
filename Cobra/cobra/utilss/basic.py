@@ -49,3 +49,5 @@ def my_argmax(a, axis=1, default=-1):
 def df_to_dict(df, col_key, col_val):
     """Create a dict from a df using two columns"""
     return pd.Series(df[col_val].values, index=df[col_key]).to_dict()
+
+def p(x): print(x)

@@ -7,18 +7,16 @@ Created on Thu Sep  9 10:52:01 2021
 Convert dicom files to niftiis
 """
 
-import data_access.load_data_tools as ld
+import access_sif_data.load_data_tools as ld
 import os
-import importlib
 from utilss import utils
 import time
 from utilss import dicom2nifti
-from vis import vis
 import nibabel as nib
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
-def p(string): print(string)
+
 
 
 # In[main directories]

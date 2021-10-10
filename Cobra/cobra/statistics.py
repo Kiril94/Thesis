@@ -11,26 +11,15 @@ import os
 from pathlib import PurePath as Path
 import numpy as np
 from stats_tools import vis as svis
-from glob import iglob
 from vis import vis
-import datetime
-import time
 import seaborn as sns
 from utilss import stats
 from utilss import utils
 from utilss import mri_stats
-from data_access import load_data_tools as ld
-import pydicom
 from utilss.basic import DotDict
+from utilss.basic import p
 import importlib
-import math
 
-# importlib.reload(mri_stats)
-
-# In[Define some helper functions]
-
-def p(x):
-    print(x)
 
 # In[Usefule keys]
 TE_k = 'EchoTime'
