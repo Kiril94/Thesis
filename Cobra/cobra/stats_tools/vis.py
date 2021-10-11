@@ -61,7 +61,7 @@ def ax_decorator(fig, ax,
 
 # In[General plots]
 
-def plot_decorator(plot_func, plot_func_args, plot_func_kwargs,
+def plot_decorator(plot_func, plot_func_args=[], plot_func_kwargs={},
                    figsize=(9, 9), save=False, dpi=80, figname='',
                    lgd=False, lgd_loc=0, lgd_fs=25, lgd_color='white',
                    lgd_ncol=1, lgd_shadow=True,
@@ -81,6 +81,7 @@ def plot_decorator(plot_func, plot_func_args, plot_func_kwargs,
                  wrap=True, fontsize=caption_fs)  
     if save:
         fig.savefig(figname, dpi=dpi)
+    return fig, ax
 
 
 def line(

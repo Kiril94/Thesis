@@ -15,6 +15,15 @@ def list_subdir(dir_):
 def create_dict(keys, values):
     return dict(zip(keys, values))
 
+def sort_dict(dict_, by='key'):
+    if by == 'key':
+        k = dict(sorted(dict_.items(),key=lambda x:x[0]))
+    elif by == 'value':
+        k = dict(sorted(dict_.items(),key=lambda x:x[1]))
+    else:
+        raise ValueError(f"{by} is not a valid argument for by,\
+                         choose 'key' or 'value' ")
+    return k
 
 class DotDict(dict):
     """dot.notation access to dictionary attributes"""

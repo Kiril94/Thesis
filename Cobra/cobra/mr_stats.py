@@ -8,13 +8,14 @@ Created on Thu Sep  9 11:06:00 2021
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+from os.path import join
 from pathlib import PurePath as Path
 import numpy as np
 from stats_tools import vis as svis
 from vis import mri_vis as mvis
 import seaborn as sns
-from utilities import stats, utils, mri_stats
-from utilities.basic import DotDict, p
+from utilities import stats, utils, mri_stats, basic
+from utilities.basic import DotDict, p, sort_dict
 import importlib
 
 
@@ -34,6 +35,7 @@ SV_k = 'SequenceVariant'
 SN_k = 'SequenceName'
 SO_k = 'ScanOptions'
 ETL_k = 'EchoTrainLength'
+MFS_k = 'MagneticFieldStrength'
 
 # In[Test functions]
 masks = [np.array([1, 0, 0]), np.array([0, 0, 0]), np.array([1, 1, 0])]
@@ -55,19 +57,46 @@ neg_tab_dir = f"{table_dir}/neg_all.csv"
 df_p = utils.load_scan_csv(pos_tab_dir)
 #df_n = utils.load_scan_csv(neg_tab_dir)
 all_tab_dir = f"{table_dir}/neg_pos.csv"
-#df_all = utils.load_scan_csv(all_tab_dir)
+df_all = utils.load_scan_csv(all_tab_dir)
 
 #keys = df_p.keys()
 #p(f"Number of patients = {len(df_p.PatientID.unique())}")
 # In[Add column with pos tag]
 
-pos_patients = df_p.PatientID.unique()
-pos_mask = df_all.PatientID.isin(pos_patients)
-df_all["Pos"] = np.where(pos_mask, 1, 0)
-df_all.to_csv()
-# In[]
-p(df_all.keys())
-#svis.plot_decorator(plot_func, plot_func_args, plot_func_kwargs)
+#pos_patients = df_p.PatientID.unique()
+#pos_mask = df_all.PatientID.isin(pos_patients)
+#df_all["Pos"] = np.where(pos_mask, 1, 0)
+#df_all.to_csv(all_tab_dir, index=False)
+
+# In[Plot patient count]
+labels = ['2019', 'positive']
+pos_mask = df_all.Pos==1
+pos_pat_count = df_all[PID_k][pos_mask].nunique()
+neg_pat_count = df_all[PID_k][~pos_mask].nunique()
+counts = np.array([neg_pat_count, pos_pat_count])
+kwargs={'xlabel':'', 'show':False, 'yrange':(0,26000),
+        'ylabel':'Patient Count', 'title':'Number of Patients with MRI scans'}
+fig, ax = svis.bar(labels, counts, kwargs=kwargs)
+ax.text(1-.05,1200,pos_pat_count, fontsize=22)
+ax.text(0-.1,24200,neg_pat_count, fontsize=22)
+fig.savefig(f"{fig_dir}/pat_count.png", dpi=100)
+# In[Plot MR field strength]
+
+neg_value_counts = sort_dict(
+    df_all[MFS_k][~pos_mask].value_counts().sort_values().iloc[2:])
+pos_value_counts = sort_dict(
+    df_all[MFS_k][pos_mask].value_counts())
+print(neg_value_counts.values())
+fig, ax = svis.bar(neg_value_counts.keys(), neg_value_counts.values(),
+                   label='neg', )
+#ax.legend(loc='upper right')
+svis.bar(pos_value_counts.keys(), pos_value_counts.values(), 
+         bottom=[v for v in neg_value_counts.values()], 
+         color=(0,1), label='pos', 
+         fig=fig, ax=ax, kwargs={'ylabel':'Volume Count',
+                                 'xlabel':r'$B_0$',
+                                 'lgd_loc':2}, save=True,
+         figname=join(fig_dir, 'B0.png'))
 
 # In[]
 #df_all = df_all.dropna(subset=[PID_k, SD_k])
@@ -394,18 +423,64 @@ svis.bar(year_month_unique[:-2], year_month_counts[:-2], figsize=(13, 7),
               ylabel='Frequency', title='Studies for positive patients',
               figname=f"{fig_dir}/pos/studies_months_years.png")
 
-# In[Plot patient count]
-labels = ['2019', 'pos']
-counts = np.array([28071-23545, 0])
-counts_low = np.array([23545, 812])
-kwargs={'xlabel':'', 'show':False, 'yrange':(0,30000)}
-fig, ax = svis.bar(labels, counts_low, kwargs=kwargs, save=True, 
-                  figname=f"{fig_dir}/pat_count.png")
-ax.text(1-.05,1200,'812', fontsize=22)
-fig, ax = svis.bar(labels, counts, bottom=counts_low, kwargs=kwargs, save=True, 
-                  figname=f"{fig_dir}/pat_count.png", fig=fig, ax=ax,
-                  color='black')
 
+
+# In[Find intersection of FLAIR, DWI, SWI or T2*]
+
+pos_pat = pd.read_csv(f"{base_dir}/tables/pos_nn.csv")[PID_k].unique()
+pos_mask = df_final[PID_k].isin(pos_pat)
+
+rel_seq = ['dwi', 'flair', 'swi', 't2s', 't1']
+mask_dict = {}
+for seq in rel_seq:
+    mask_dict[seq] = df_final[sq]==seq
+    
+patdn ={}
+patdp = {}
+for seq, mask in mask_dict.items():
+    patdn[seq] = set(df_final[mask&~pos_mask][PID_k].unique())
+    patdp[seq] = set(df_final[mask&pos_mask][PID_k].unique())
+
+dwi_flair_swi = set.intersection(patdn['dwi'], patdn['flair'], patdn['swi'])
+dwi_flair_t2s = set.intersection(patdn['dwi'], patdn['flair'], patdn['t2s'])
+dwi_flair_t2s_t1 = set.intersection(patdn['dwi'], patdn['flair'], patdn['t2s'],
+                                    patdn['t1'])
+dwi_flair_swi_t1 = set.intersection(patdn['dwi'], patdn['flair'], patdn['swi'],
+                                    patdn['t1'])
+
+dwi_flair_swip = set.intersection(patdp['dwi'], patdp['flair'], patdp['swi'])
+dwi_flair_t2sp = set.intersection(patdp['dwi'], patdp['flair'], patdp['t2s'])
+dwi_flair_t2s_t1p = set.intersection(patdp['dwi'], patdp['flair'], patdp['t2s'],
+                                    patdp['t1'])
+dwi_flair_swi_t1p = set.intersection(patdp['dwi'], patdp['flair'], patdp['swi'],
+                                    patdp['t1'])
+#all_four = set.intersection(set(dwi_flair_t2s), set(dwi_flair_swi))
+print(f"#Patients with dwi, flair, swi: {len(dwi_flair_swi)}")
+print(f"Including t1 {len(dwi_flair_swi_t1)}")
+print(f"#Patients with dwi, flair, t2s: {len(dwi_flair_t2s)}")
+print(f"Including t1 {len(dwi_flair_t2s_t1)}")
+#print(f"#Patients with all 4: {len(all_four)}")
+labels = ['dwi, flair, swi', 'dwi, flair, swi\n +t1',
+          'dwi, flair, t2*', 'dwi, flair, t2*\n +t1',]
+counts_n = np.array([len(dwi_flair_swi), len(dwi_flair_swi_t1), 
+                     len(dwi_flair_t2s), len(dwi_flair_t2s_t1)])
+counts_p = np.array([len(dwi_flair_swip), len(dwi_flair_swi_t1p), 
+                     len(dwi_flair_t2sp), len(dwi_flair_t2s_t1p)])
+fig, ax = svis.bar(labels, counts_n, figsize=(14,6), width=.6, 
+                   label='neg')
+svis.bar(labels, counts_p, label='pos', bottom=counts_n, width=.6,  fig=fig, ax=ax,
+                   kwargs={'xlabel':'Sequence Type Combinations', 
+                           'ylabel':'Patient Count',
+                           'yrange':(0,7500)}, color=(0,1), 
+                   save=True, figname=f"{fig_dir}/basic_stats/sequence_comb_pat_count.png")
+for i in range(4):
+    ax.text(i-.1, counts_n[i]+counts_p[i]+200, counts_n[i]+counts_p[i], fontsize=20)
+
+# In[Write to files]
+write_dir = f"{base_dir}/share/Cerebriu/download_patients"
+with open(f"{write_dir}/dwi_flair_t2s.txt", 'w') as f:
+    for item in dwi_flair_t2s:
+        f.write("%s\n" % item)
 # In[Count number of relevant patients in 2019]
 print(len(df_2019[mask_dict.t1 | mask_dict.t2 | mask_dict.t2s | mask_dict.t1gd
                   | mask_dict.t2gd | mask_dict.gd | mask_dict.swi | mask_dict.flair
