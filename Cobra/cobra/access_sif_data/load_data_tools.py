@@ -8,7 +8,7 @@ import vis
 from glob import iglob
 from pathlib import Path
 import datetime as dt
-from utilss.basic import DotDict
+from utilities.basic import DotDict
 import nibabel as nib
 
 

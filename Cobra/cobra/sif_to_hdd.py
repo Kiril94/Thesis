@@ -13,25 +13,10 @@ import glob
 import time
 import numpy as np
 import pandas as pd
-
+from utilities.utils import target_path
 
 print("We will download only dwi, swi, flair, t1, t2, t2*")
 print("Start with smallest group of patients (1104) dwi, flair, t2*, t1, mostly negative patients,")
-
-def target_path(src_path, target_base_dir="G:/CoBra/Data"):
-    """Turns source path (Y:/...) into target path, by default
-    G:/Cobra/Data/... . If target path does not exist, creates it. 
-    We follow the structure month_dir/patient_id/scan_id/*.dcm"""
-    path_no_drive = os.path.splitdrive(src_path)[1][1:] # first symbol is /
-    split_path = Path(path_no_drive).parts
-    main_path = split_path[0]
-    patient_path = split_path[1]
-    scan_path = split_path[4]
-    target_path = os.path.join(
-        target_base_dir, main_path, patient_path, scan_path)
-    if not(os.path.exists(target_path)):
-        os.makedirs(target_path)
-    return target_path
 
     
 # In[tables directories]
@@ -59,10 +44,15 @@ volume_dir_dic = pd.Series(
     volume_dir_df.Directory.values, index=volume_dir_df.SeriesInstanceUID).to_dict()
 
 
-# In[move]
+# In[get index of last patient]
 # 1st patient was already written
 # last patient: 0385ef30676c4602159171edac0cc2d6
-for pat in df_patients_0.PatientID.unique()[1:]:
+patient_list = df_patients_0.PatientID.unique()
+last_patient = "0385ef30676c4602159171edac0cc2d6"
+last_patient_idx = np.where(patient_list==last_patient)[0][0]
+print(patient_list[last_patient_idx:])
+# In[move]
+for pat in patient_list[last_patient_idx:]:
     start = time.time()
     print(f"patient: {pat}:", end=' ')
     volumes = df_patients_0[df_patients_0.PatientID==pat]['SeriesInstanceUID']

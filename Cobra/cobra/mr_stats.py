@@ -49,16 +49,25 @@ fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/tables"
 
 # In[load positive csv]
-#pos_tab_dir = f"{table_dir}/pos_nn.csv"
-#neg_tab_dir = f"{table_dir}/neg_all.csv"
-#df_p = utils.load_scan_csv(pos_tab_dir)
+pos_tab_dir = f"{table_dir}/pos_nn.csv"
+neg_tab_dir = f"{table_dir}/neg_all.csv"
+
+df_p = utils.load_scan_csv(pos_tab_dir)
 #df_n = utils.load_scan_csv(neg_tab_dir)
 all_tab_dir = f"{table_dir}/neg_pos.csv"
-df_all = utils.load_scan_csv(all_tab_dir)
+#df_all = utils.load_scan_csv(all_tab_dir)
 
 #keys = df_p.keys()
 #p(f"Number of patients = {len(df_p.PatientID.unique())}")
+# In[Add column with pos tag]
 
+pos_patients = df_p.PatientID.unique()
+pos_mask = df_all.PatientID.isin(pos_patients)
+df_all["Pos"] = np.where(pos_mask, 1, 0)
+df_all.to_csv()
+# In[]
+p(df_all.keys())
+#svis.plot_decorator(plot_func, plot_func_args, plot_func_kwargs)
 
 # In[]
 #df_all = df_all.dropna(subset=[PID_k, SD_k])

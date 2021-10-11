@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import math
 import numpy as np
-from accaccess_sif_data import load_data_tools as ld
+from access_sif_data import load_data_tools as ld
 import glob
 
 
