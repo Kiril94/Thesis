@@ -53,25 +53,29 @@ table_dir = f"{base_dir}/tables"
 # In[load positive csv]
 pos_tab_dir = f"{table_dir}/pos_nn.csv"
 neg_tab_dir = f"{table_dir}/neg_all.csv"
-
 #df_p = utils.load_scan_csv(pos_tab_dir)
 #df_n = utils.load_scan_csv(neg_tab_dir)
 all_tab_dir = f"{table_dir}/neg_pos.csv"
 df_all = utils.load_scan_csv(all_tab_dir)
-print(f"All scans in df_all={len(df_all)}")
-pred_seq = utils.load_scan_csv(f"{base_dir}/share/pred_seq.csv")
-print(f"All scans in pred_seq={len(pred_seq)}")
-#keys = df_p.keys()
-#p(f"Number of patients = {len(df_p.PatientID.unique())}")
-# In[Add column with predicted sequence]
+print(f"All scans in df_all ={len(df_all)}")
+exclude_other = True
+if exclude_other:
+    mask_other = df_all.Sequence=='other'
+    df_all = df_all[~mask_other] 
+    fig_dir = f"{base_dir}/figs/basic_stats/exclude_other"
+    print(f"All scans in df_all after excluding 'other' sequences ={len(df_all)}")
+
+#pred_seq = utils.load_scan_csv(f"{base_dir}/share/pred_seq.csv")
+
+# In[adding columns and merging]
 
 #pos_patients = df_p.PatientID.unique()
 #pos_mask = df_all.PatientID.isin(pos_patients)
 #df_all["Pos"] = np.where(pos_mask, 1, 0)
 #df_all.to_csv(all_tab_dir, index=False)
-p(len(df_all))
-df_all = pd.merge(df_all, pred_seq[[SID_k, 'Sequence', 'true_label']], on=SID_k)
-p(len(df_all))
+#df_all = pd.merge(
+#    df_all, pred_seq[[SID_k, 'Sequence', 'true_label']], on=SID_k)
+
 # In[Plot patient count]
 labels = ['2019', 'positive']
 pos_mask = df_all.Pos==1
@@ -81,9 +85,10 @@ counts = np.array([neg_pat_count, pos_pat_count])
 kwargs={'xlabel':'', 'show':False, 'yrange':(0,26000),
         'ylabel':'Patient Count', 'title':'Number of Patients with MRI scans'}
 fig, ax = svis.bar(labels, counts, kwargs=kwargs)
-ax.text(1-.05,1200,pos_pat_count, fontsize=22)
-ax.text(0-.1,24200,neg_pat_count, fontsize=22)
+ax.text(1-.05, pos_pat_count+300, pos_pat_count, fontsize=22)
+ax.text(0-.1, neg_pat_count+300, neg_pat_count, fontsize=22)
 fig.savefig(f"{fig_dir}/pat_count.png", dpi=100)
+
 # In[Plot MR field strength]
 
 neg_value_counts = sort_dict(
@@ -102,17 +107,12 @@ svis.bar(pos_value_counts.keys(), pos_value_counts.values(),
                                  'lgd_loc':2}, save=True,
          figname=join(fig_dir, 'B0.png'))
 
-# In[]
-#df_all = df_all.dropna(subset=[PID_k, SD_k])
-pos_unique = df_p[PID_k].unique()
-pos_mask = df_all[PID_k].isin(pos_unique)
+# In[Plot distribution of Rows and Columns]
+fig, ax = svis.plot_decorator(sns.displot, plot_func_kwargs={
+    'data':df_all,'x':"Rows", 'y':"Columns", 'hue':"Pos",'bins':[20,20]} )
 
-df_all['pos'] = 0
-df_all.loc[pos_mask,'pos'] = 1
-print(df_n[PID_k].nunique()+df_p[PID_k].nunique()-df_all[PID_k].nunique())
-# In[Remove those where patient id and series description is none]
-df_n = df_n[df_n[PID_k].notna()]
-df_n = df_n[df_n[SD_k].notna()]
+#sns.displot(df_all, x="Rows", y="Columns", hue="Pos", alpha=1)
+
 # In[Write Patient IDs to text]
 neg_pat_ids = list(df_n[PID_k].unique())
 with open(f'{base_dir}/results/neg_ids.txt', 'w') as filehandle:
