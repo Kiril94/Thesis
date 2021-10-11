@@ -46,12 +46,19 @@ rel_cols = [SID_k, SD_k, TE_k, TR_k, FA_k, TI_k,
             ETL_k, SS_k, SV_k, PID_k, DT_k, ICD_k, ]
 table_all_dir = f"{table_dir}/neg_pos.csv"
 df_all = utils.load_scan_csv(table_all_dir)[rel_cols]
+print("Fraction of missing values for every column")
+print(df_all.isna().mean(axis=0))
 
 # In[Select only relevant columns]
 print(f"all elements {len(df_all)}")
-df_all = df_all[rel_cols].dropna(subset=[SID_k, PID_k, SS_k, SV_k, TR_k])
-print(f"after dropping nans {len(df_all)}")
-
+df_all = df_all[rel_cols].dropna(subset=[SID_k])
+df_all[SS_k][df_all[SS_k].isna()] = ['No_SS',]
+df_all[SV_k][df_all[SV_k].isna()] = ['No_SV',]
+print(f"after dropping nans in Sequence id: {len(df_all)}")
+print("Number of missing values for every column")
+print(df_all.isna().sum(axis=0))
+print(df_all[SS_k].astype(str).unique())
+print(df_all[SV_k].astype(str).unique())
 # In[Get masks for the different series descriptions]
 mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
 
@@ -75,7 +82,7 @@ print(seq_count)
 # In[visualize number of volumes sequences]
 svis.bar(seq_count.keys(), seq_count.values, figsize=(13, 6),
          kwargs={'xlabel':'Sequence', 'xtickparams_ls':16,
-              'title':'All Patients'}, 
+              'title':'All Patients','ylabel':'Volume Count'}, 
          save=True, figname=f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
 
 
@@ -84,24 +91,35 @@ s = df_all[SS_k].explode()
 columns_list = list(df_all.columns)
 columns_list.remove(SS_k)
 df_all = df_all[columns_list].join(pd.crosstab(s.index, s))
+print("Unique Scanning Sequences:")
+print(set(df_all.columns)-set(columns_list))
 del s
+
 # In[Turn SequenceVariant into multi-hot encoded]
 s = df_all[SV_k].explode()
 columns_list = list(df_all.columns)
 columns_list.remove(SV_k)
 df_all = df_all[columns_list].join(pd.crosstab(s.index, s))
-del s
+print("Unique Sequence Variants:")
+print(set(df_all.columns)-set(columns_list))
+del s, columns_list
 # In[Fraction of missing values in each column]
-print(df_all.isna().mean(axis=0))
+print("Number of missing values")
+print(df_all.isna().sum(axis=0))
 # In[Lets set missing inversion times, Flip Angles and Echo times to 0]
 df_all[TI_k] = np.where((df_all[TI_k].isna()), 0, df_all[TI_k])
 df_all[FA_k] = np.where((df_all[FA_k].isna()), 0, df_all[FA_k])
 df_all[TE_k] = np.where((df_all[TE_k].isna()), 0, df_all[TE_k])
+# Lets set missing TR to the median TR
+df_all[TR_k] = np.where((df_all[TR_k].isna()), df_all[TR_k].median(), df_all[TR_k])
+df_all[ETL_k] = np.where((df_all[ETL_k].isna()), 0, df_all[ETL_k])
+print("Missing values:")
+print(df_all.isna().sum(axis=0))
 
 # In[Now we can show the histograms, except non numeric values]
 columns_list = list(df_all.columns)
 sparse_columns = ['EP', 'GR', 'IR', 'RM', 'SE', 'DE', 'MP', 'MTC',
-                  'OSP', 'SK', 'SP', 'SS', 'TOF']
+                  'OSP', 'SK', 'SP', 'SS', 'TOF', 'No_SV', 'No_SS']
 rmv_list = [SID_k, PID_k] + sparse_columns
 
 for itm in rmv_list:
@@ -117,7 +135,7 @@ svis.bar(bin_counts.keys(), bin_counts.values,
               figname=f"{fig_dir}/sequence_pred/X_distr_bin.png")
 # In[We can drop the TOF, EP, DE and MTC columns]
 try:
-    df_all = df_all.drop(['TOF', 'EP', 'DE', 'MTC'], axis=1)
+    df_all = df_all.drop(['TOF', 'DE', 'MTC'], axis=1)
 except:
     print("those columns are not present")
 # In[Before encoding we have to split up the sequences we want to predict (test set)]
@@ -166,6 +184,9 @@ X_train, X_val, y_train, y_val = train_test_split(
 # In[Initialize and train]
 xgb_cl = xgb.XGBClassifier()
 xgb_cl.fit(X_train, y_train)
+# In[Plot feature importance]
+xgb.plot_importance(xgb_cl, importance_type = 'gain') # other options available
+plt.show()
 # In[Predict]
 pred_prob_val = xgb_cl.predict_proba(X_val)
 # In[Plot roc curve]
@@ -201,7 +222,7 @@ pred_val = clss.prob_to_class(pred_prob_val, final_th, 0)
 cm = confusion_matrix(y_val, pred_val)
 
 plot_func_args = [y_val, pred_val]
-plot_func_kwargs = {'normalize': True, 'text_fontsize': 16, 
+plot_func_kwargs = {'normalize': False, 'text_fontsize': 16, 
                     'title_fontsize': 18, }
 svis.plot_decorator(skplot.metrics.plot_confusion_matrix, 
                     plot_func_args, plot_func_kwargs,
@@ -215,9 +236,9 @@ svis.plot_decorator(skplot.metrics.plot_confusion_matrix,
 pred_prob_test = xgb_cl.predict_proba(X_test)
 pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
 svis.bar(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
-         kwargs={'xlabel':'Sequence', 'title':'Predicted sequences',},
-              save=True,
-              figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
+         kwargs={'xlabel':'Sequence', 'title':'Predicted sequences',
+                 },
+         save=True, figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
 
 # In[show predicted and true]
 pred_counts = np.unique(pred_test, return_counts=True)[1]
@@ -242,19 +263,10 @@ df_final = pd.concat([df_train, df_test])
 
 #del df_test, df_train
 # In[Examine final df]
-df_final = df_final.dropna(subset=[ICD_k])
-df_final[[PID_k, SID_k, sq, ICD_k, 'true_label']].to_csv(f"{base_dir}/share/pred_seq.csv")
-print(len(df_final[[PID_k, SID_k, sq, ICD_k]]))
-print(df_final.Sequence)
+df_final[[PID_k, SID_k, sq, ICD_k, 'true_label']].to_csv(
+    f"{base_dir}/share/pred_seq.csv", index=False)
+print(len(df_final))
 print(df_final.isna().sum())
-
-
-
-# In[Final sequence distribution]
-svis.bar(target_dict.keys(), df_final[sq].value_counts(),
-         kwargs={'xlabel':'Sequence', 'title':'All sequences after prediction',},
-         save=(True), figname=f"{fig_dir}/sequence_pred/seq_dist_all_pred.png")
-
 
 # In[visualize sequences scatter]
 fig, ax = plt.subplots(2, 2, figsize=(10, 10))
@@ -272,8 +284,6 @@ sns.scatterplot(x=IR_k, y=FA_k, legend=None, hue='Sequence',
 fig.suptitle('All Sequences', fontsize=20)
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/scatter_for_all.png")
-
-
 
 
 # In[https://towardsdatascience.com/beginners-guide-to-xgboost-for-classification-problems-50f75aac5390]
