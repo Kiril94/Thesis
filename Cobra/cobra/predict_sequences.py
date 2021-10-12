@@ -41,6 +41,7 @@ SO_k = 'ScanOptions'
 ETL_k = 'EchoTrainLength'
 DT_k = 'DateTime'
 ICD_k = 'InstanceCreationDate'
+
 # In[load all csv]
 rel_cols = [SID_k, SD_k, TE_k, TR_k, FA_k, TI_k,
             ETL_k, SS_k, SV_k, PID_k, DT_k, ICD_k, ]
@@ -48,6 +49,9 @@ table_all_dir = f"{table_dir}/neg_pos.csv"
 df_all = utils.load_scan_csv(table_all_dir)[rel_cols]
 print("Fraction of missing values for every column")
 print(df_all.isna().mean(axis=0))
+# In[]
+
+print(df_all.keys())
 
 # In[Select only relevant columns]
 print(f"all elements {len(df_all)}")
@@ -65,7 +69,7 @@ mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
 # In[Add sequence column and set it to one of the relevant values]
 sq = 'Sequence'
 rel_keys = ['t1', 't1gd', 't2', 't2gd', 't2s', 'swi', 'flair', 'none_nid',
-            'gd', 'dwi', ]
+            'gd', 'dwi']
 rel_masks = [mask_dict[key] for key in rel_keys]
 df_all[sq] = "other"
 for mask, key in zip(rel_masks, rel_keys):

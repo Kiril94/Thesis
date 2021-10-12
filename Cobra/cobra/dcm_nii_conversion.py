@@ -15,7 +15,7 @@ import nibabel as nib
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
-
+from utilities import basic
 
 
 # In[main directories]
@@ -28,7 +28,7 @@ healthy_dirs = sorted([f"{base_data_dir}/{x}" for x \
 print(f"main directories: {data_dirs}")
 
 # In[Get all positive patients]
-pos_patients_list = utils.list_subdir(positive_dir)
+pos_patients_list = basic.list_subdir(positive_dir)
 
 # In[Number of converted patients]
 conv_patients_list = os.listdir(out_pos_path)

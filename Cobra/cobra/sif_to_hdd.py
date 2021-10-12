@@ -48,7 +48,7 @@ volume_dir_dic = pd.Series(
 # 1st patient was already written
 # last patient: 0385ef30676c4602159171edac0cc2d6
 patient_list = df_patients_0.PatientID.unique()
-last_patient = "0385ef30676c4602159171edac0cc2d6"
+last_patient = "0dd36889b4cec792d57c9597c7176637"
 last_patient_idx = np.where(patient_list==last_patient)[0][0]
 print(patient_list[last_patient_idx:])
 # In[move]
@@ -69,6 +69,4 @@ for pat in patient_list[last_patient_idx:]:
         print("|",  end='')
     stop = time.time()
     print(f" {(stop-start)/60} mins")
-
-
 

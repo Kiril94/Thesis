@@ -58,7 +58,7 @@ neg_tab_dir = f"{table_dir}/neg_all.csv"
 all_tab_dir = f"{table_dir}/neg_pos.csv"
 df_all = utils.load_scan_csv(all_tab_dir)
 print(f"All scans in df_all ={len(df_all)}")
-exclude_other = True
+exclude_other = False
 if exclude_other:
     mask_other = df_all.Sequence=='other'
     df_all = df_all[~mask_other] 
@@ -67,6 +67,27 @@ if exclude_other:
 
 #pred_seq = utils.load_scan_csv(f"{base_dir}/share/pred_seq.csv")
 
+# In[how many have scanner manufacturer, scanner type, b0 field strength]
+print(df_all.keys())
+print(df_all.Manufacturer.isna().sum())
+print(df_all.ManufacturerModelName.isna().sum())
+print(df_all[MFS_k].isna().sum())
+print(len(df_all))
+
+# In[Give T2* GRE ]
+mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
+
+# In[How many?]
+print(f"{len(df_all.loc[mask_dict['t2s']])} T2* sequences")
+print(f"{stats.check_tags(df_t2s, tag_dict['gre']).sum()} T2* GRE sequences")
+print()
+# In[]
+df_t2s = df_all.loc[mask_dict['t2s']]
+print(stats.check_tags(df_t2s, tag_dict['gre']))
+print(stats.check_tags(
+    df_t2s, ['GR'], key='ScanningSequence') & stats.check_tags(df_t2s, ['SE'], key='ScanningSequence')   )
+#print(df_t2s.SeriesDescription)
+#print(tag_dict['gre'])
 # In[adding columns and merging]
 
 #pos_patients = df_p.PatientID.unique()
@@ -108,9 +129,13 @@ svis.bar(pos_value_counts.keys(), pos_value_counts.values(),
          figname=join(fig_dir, 'B0.png'))
 
 # In[Plot distribution of Rows and Columns]
-fig, ax = svis.plot_decorator(sns.displot, plot_func_kwargs={
-    'data':df_all,'x':"Rows", 'y':"Columns", 'hue':"Pos",'bins':[20,20]} )
+fig, g = svis.plot_decorator(sns.jointplot, plot_func_kwargs={
+    'data':df_all[df_all.Rows<3000],
+    'x':"Rows", 'y':"Columns", 'hue':"Pos"},
+    )
+g.figure.savefig(f"{fig_dir}/scan_sizes.png", dpi=80)
 
+#
 #sns.displot(df_all, x="Rows", y="Columns", hue="Pos", alpha=1)
 
 # In[Write Patient IDs to text]

@@ -75,7 +75,13 @@ def plot_decorator(plot_func, plot_func_args=[], plot_func_kwargs={},
     kwargs and ax to produce a plot"""
     fig, ax = plt.subplots(figsize=figsize)
     ax = plot_func(*plot_func_args, **plot_func_kwargs, ax=ax)
-    fig, ax = ax_decorator(fig, ax, **kwargs)
+    try:
+        fig, ax = ax_decorator(fig, ax, **kwargs)
+    except:
+        if save:
+            ax.figure.savefig(figname, dpi=dpi)
+            save=False
+        pass
     if caption != '':
         fig.text(caption_pos[0], caption_pos[1], caption, ha='center',
                  wrap=True, fontsize=caption_fs)  

@@ -22,7 +22,7 @@ def get_masks_dict(df, return_tags=True):
     tag_dict['t2'] = ['T2', 't2']
     #tag_dict['fse'] = ['FSE', 'fse', 'TSE', 'tse']
     tag_dict['t2s'] = ['T2\*', 't2\*', 'T 2']
-    # tag_dict['gre']  = ['GRE', 'gre'] # can be t2*, t1 or pd
+    tag_dict['gre']  = ['GRE', 'gre'] # can be t2*, t1 or pd
     tag_dict['dti'] = ['DTI', 'dti']
     tag_dict['pwi'] = ['Perfusion_Weighted']
     #print("There is one perfusion weighted image (PWI)")
