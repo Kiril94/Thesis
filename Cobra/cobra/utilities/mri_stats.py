@@ -22,7 +22,7 @@ def get_masks_dict(df, return_tags=True):
     tag_dict['t2'] = ['T2', 't2']
     #tag_dict['fse'] = ['FSE', 'fse', 'TSE', 'tse']
     tag_dict['t2s'] = ['T2\*', 't2\*', 'T 2']
-    tag_dict['gre']  = ['GRE', 'gre'] # can be t2*, t1 or pd
+    tag_dict['gre']  = ['GRE', 'gre', 'FGRE'] # can be t2*, t1 or pd
     tag_dict['dti'] = ['DTI', 'dti']
     tag_dict['pwi'] = ['Perfusion_Weighted']
     #print("There is one perfusion weighted image (PWI)")
@@ -47,13 +47,15 @@ def get_masks_dict(df, return_tags=True):
                            'CAL', ]
     tag_dict['loc'] = ['Loc', 'loc', 'Scout', 'LOC', 'lokal', 'LOKAL']
     tag_dict['bold'] = ['BOLD']
+    tag_dict['mip'] = ['MINIP', 'MInimum Intensity', 
+                       'Min Intensity Projection', 'Min Intensity ',
+                       'Minimum Intensity Projection','Tra SWIp MinIP']
     tag_dict['more'] = ['vessel_scout', 'VRT', 'csf_flow', 'WIP',
                         'svs', 'SVS', 'animation', 'ACOM', 'Verification',
                         'BA', 'BLACK_BLOOD', 'Batch', 'Cerebral Blood Flow',
-                        'DISPLAY', 'IMPAX Volume', 'MINIP', 'MInimum Intensity',
-                        'Min Intensity Projection', 'Min Intensity ', 'MYELO',
+                        'DISPLAY', 'IMPAX Volume', 'MYELO',
                         'MI Reading', 'MM Oncology Reading', 'SCREENSAVE',
-                        'Minimum Intensity Projection', 'SPINE',
+                        'SPINE',
                         ]
     #print("TOF:time of flight angriography, SWAN: susceptibility-weighted angiography")
     tag_dict = DotDict(tag_dict)

@@ -64,8 +64,7 @@ if exclude_other:
     df_all = df_all[~mask_other] 
     fig_dir = f"{base_dir}/figs/basic_stats/exclude_other"
     print(f"All scans in df_all after excluding 'other' sequences ={len(df_all)}")
-
-#pred_seq = utils.load_scan_csv(f"{base_dir}/share/pred_seq.csv")
+pred_seq = utils.load_scan_csv(f"{base_dir}/share/pred_seq.csv")
 
 # In[how many have scanner manufacturer, scanner type, b0 field strength]
 print(df_all.keys())
@@ -74,20 +73,6 @@ print(df_all.ManufacturerModelName.isna().sum())
 print(df_all[MFS_k].isna().sum())
 print(len(df_all))
 
-# In[T2* GRE ]
-#mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
-mask_t2s_gre = mask_dict['t2s'] & mask_dict['gre']
-print(f"{mask_dict['t2s'].sum()} T2* sequences")
-print(f"{mask_t2s_gre.sum()} T2* GRE sequences")
-df_all.Sequence = np.where(mask_t2s_gre, 't2sgre', df_all.Sequence)
-#df_all.to_csv(all_tab_dir, index=False)
-# In[]
-df_t2s = df_all.loc[mask_dict['t2s']]
-print(stats.check_tags(df_t2s, tag_dict['gre']))
-print(stats.check_tags(
-    df_t2s, ['GR'], key='ScanningSequence') & stats.check_tags(df_t2s, ['SE'], key='ScanningSequence')   )
-#print(df_t2s.SeriesDescription)
-#print(tag_dict['gre'])
 # In[adding columns and merging]
 
 #pos_patients = df_p.PatientID.unique()
@@ -95,8 +80,36 @@ print(stats.check_tags(
 #df_all["Pos"] = np.where(pos_mask, 1, 0)
 #df_all.to_csv(all_tab_dir, index=False)
 #df_all = pd.merge(
-#    df_all, pred_seq[[SID_k, 'Sequence', 'true_label']], on=SID_k)
+#    df_all, pred_seq[[SID_k, 'Sequence', 'TrueSequenceType']], on=SID_k)
+#print(df_all.keys())
 
+# In[Volume Count by Sequences]
+print("For now we are not interested in 't2s', 'flair_ce', 'swi_mip'")
+true_mask = df_all.TrueSequenceType==1
+df_all.Sequence = np.where(
+    df_all.Sequence.isin(['t2s', 'flair_ce', 'swi_mip']), 
+    'other', df_all.Sequence )
+true_seq_counts = df_all[true_mask].Sequence.value_counts()
+to_append = pd.Series([0],index=['t2s_gre'] )
+pred_seq_counts = df_all[~true_mask].Sequence.value_counts().append(to_append)
+
+# In[Plot Volume Count]
+fig, ax = svis.bar(true_seq_counts.keys(), true_seq_counts.values, label='true',
+                   )
+svis.bar(pred_seq_counts.keys(), 
+         pred_seq_counts.values, fig=fig, ax=ax,
+              bottom=true_seq_counts.values, label='pred', color=(0,1), 
+              kwargs={'save_plot':True, 'lgd':True, 'xlabel':'Sequence Type',
+                      'color':(1,3), 'yrange':(0,130000), 
+                      'title':'Volume Count - All Patients',
+                      'ylabel':'Volume Count'},save=False,
+              figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
+
+# In[Patient Count by Sequences]
+pos_mask = df_all.Pos=1
+pos_pat_count_seq = df_all[pos_mask].groupby(by='Sequence').PatientID.nunique()
+print(df_all.groupby(by='Sequence').PatientID.nunique())
+# In[test]
 # In[Plot patient count]
 labels = ['2019', 'positive']
 pos_mask = df_all.Pos==1
@@ -119,7 +132,6 @@ pos_value_counts = sort_dict(
 print(neg_value_counts.values())
 fig, ax = svis.bar(neg_value_counts.keys(), neg_value_counts.values(),
                    label='neg', )
-#ax.legend(loc='upper right')
 svis.bar(pos_value_counts.keys(), pos_value_counts.values(), 
          bottom=[v for v in neg_value_counts.values()], 
          color=(0,1), label='pos', 
@@ -454,12 +466,13 @@ svis.bar(year_month_unique[:-2], year_month_counts[:-2], figsize=(13, 7),
 
 
 
+
 # In[Find intersection of FLAIR, DWI, SWI or T2*]
 
-pos_pat = pd.read_csv(f"{base_dir}/tables/pos_nn.csv")[PID_k].unique()
-pos_mask = df_final[PID_k].isin(pos_pat)
 
-rel_seq = ['dwi', 'flair', 'swi', 't2s', 't1']
+pos_mask = df_all.Pos==1
+
+rel_seq = ['dwi', 'flair', 'swi', 't2s_gre', 't1']
 mask_dict = {}
 for seq in rel_seq:
     mask_dict[seq] = df_final[sq]==seq

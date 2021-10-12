@@ -49,9 +49,6 @@ table_all_dir = f"{table_dir}/neg_pos.csv"
 df_all = utils.load_scan_csv(table_all_dir)[rel_cols]
 print("Fraction of missing values for every column")
 print(df_all.isna().mean(axis=0))
-# In[]
-
-print(df_all.keys())
 
 # In[Select only relevant columns]
 print(f"all elements {len(df_all)}")
@@ -247,11 +244,13 @@ svis.bar(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
 # In[show predicted and true]
 pred_counts = np.unique(pred_test, return_counts=True)[1]
 fig, ax = svis.bar(target_dict.keys(), seq_count.values[1:], label='true',
-                   kwargs = {'title':'Volumes Count - All Patients'},)
+                   )
 svis.bar(target_dict.keys(), pred_counts, fig=fig, ax=ax,
               bottom=seq_count.values[1:], label='pred', color=(0,1), 
               kwargs={'save_plot':True, 'lgd':True, 'xlabel':'Sequence Type',
-                      'color':(1,3), 'yrange':(0,130000)},
+                      'color':(1,3), 'yrange':(0,126000), 
+                      'title':'Volume Count - All Patients',
+                      'ylabel':'Volumes Count'},
               figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
 # In[Get labels from prediction]
 def dict_mapping(t): return basic.inv_dict(target_dict)[t]
@@ -261,13 +260,13 @@ pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
 df_test[sq] = pred_test_labels
 df_test = pd.concat([df_test, df_test_ids], axis=1)
 df_train = pd.concat([df_train, df_train_ids], axis=1)
-df_test['true_label'] = 0
-df_train['true_label'] = 1
+df_test['TrueSequenceType'] = 0
+df_train['TrueSequenceType'] = 1
 df_final = pd.concat([df_train, df_test])
 
 #del df_test, df_train
 # In[Examine final df]
-df_final[[PID_k, SID_k, sq, ICD_k, 'true_label']].to_csv(
+df_final[[PID_k, SID_k, sq, ICD_k, 'TrueSequenceType']].to_csv(
     f"{base_dir}/share/pred_seq.csv", index=False)
 print(len(df_final))
 print(df_final.isna().sum())

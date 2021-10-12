@@ -25,6 +25,9 @@ def sort_dict(dict_, by='key'):
                          choose 'key' or 'value' ")
     return k
 
+def find_substring_in_list(list_, substring):
+    return list(filter(lambda x: substring in x, list_))
+
 class DotDict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get
