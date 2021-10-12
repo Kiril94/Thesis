@@ -74,13 +74,13 @@ print(df_all.ManufacturerModelName.isna().sum())
 print(df_all[MFS_k].isna().sum())
 print(len(df_all))
 
-# In[Give T2* GRE ]
-mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
-
-# In[How many?]
-print(f"{len(df_all.loc[mask_dict['t2s']])} T2* sequences")
-print(f"{stats.check_tags(df_t2s, tag_dict['gre']).sum()} T2* GRE sequences")
-print()
+# In[T2* GRE ]
+#mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
+mask_t2s_gre = mask_dict['t2s'] & mask_dict['gre']
+print(f"{mask_dict['t2s'].sum()} T2* sequences")
+print(f"{mask_t2s_gre.sum()} T2* GRE sequences")
+df_all.Sequence = np.where(mask_t2s_gre, 't2sgre', df_all.Sequence)
+#df_all.to_csv(all_tab_dir, index=False)
 # In[]
 df_t2s = df_all.loc[mask_dict['t2s']]
 print(stats.check_tags(df_t2s, tag_dict['gre']))
