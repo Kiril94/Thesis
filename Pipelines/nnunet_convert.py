@@ -10,16 +10,15 @@ from pathlib import Path
 from os.path import join
 from os.path import split
 import os
-from utilss import basic
-from xml.dom import minidom
-import xml.etree.ElementTree as ET
-
+import sys
+sys.path.append("D:/Thesis/Cobra")
+from cobra.utilities import basic
 from bs4 import BeautifulSoup
-
+import gzip
 # In[Define directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
-data_folder = join(base_dir, "data/data_folder")
+data_folder = join(base_dir, "data")
 task_folder = join(
     base_dir, data_folder,
     "nnUNet_raw_data_base/nnUNet_raw_data/Task500_Test")
@@ -40,14 +39,16 @@ rename=False
 if rename:
     for file in train_labels_files:
         dir_, name = split(file)
+        name = "MICCAI_"+name[1:5]+'0000.nii'
         target_file = join(
-            dir_, name+'.gz')
+            dir_, name)
         os.rename(file, target_file)
 # In[test]
 test = 'a_1128_3_0000.nii'
 print(test[:2]+test[3:7]+test[8:])
+
 # In[Get labels]
-xml_dir = join(data_folder, "labels_dict.xml")
+xml_dir = join(task_folder, "labels_dict.xml")
 with open(xml_dir, 'r') as f:
     data = f.read()
  
