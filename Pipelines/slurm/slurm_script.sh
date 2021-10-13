@@ -8,4 +8,4 @@
 #Skipping many options! see man sbatch
 # From here on, we can start our program
 
-python3 test_slurm.py 
+python3 test.py 
