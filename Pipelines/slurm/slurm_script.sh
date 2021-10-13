@@ -8,4 +8,4 @@
 # Skipping many options! see man sbatch
 # From here on, we can start our program
 echo $CUDA_VISIBLE_DEVICES
-python3 
+python3 plan_preprocess.py
