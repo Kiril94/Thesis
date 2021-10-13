@@ -94,13 +94,13 @@ utils.generate_dataset_json(join(task_folder, 'dataset.json'),
                             dataset_name="Task500_Test", 
                            )
 
-# In[tar files]
+# In[Compress tar files]
 import tarfile
-with tarfile.open("test2.tar.gz", "w:gz") as tar:
-    tar.add("test", arcname="test")
+with tarfile.open(join(data_folder, 'share',"Task500_Test.tar.gz"), "w:gz") as tar:
+    tar.add(task_folder, arcname="Task500_Test")
 
 
-# In[]
+# In[To decompress the file run]
 
 with tarfile.open('test2.tar.gz') as file:
     file.extractall('test_extract')
