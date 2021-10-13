@@ -10,5 +10,4 @@ import numpy as np
 a = np.zeros(10)
 b = np.ones(10)
 c = a + b
-np.savetxt('test.txt', c, fmt='%.18e', delimiter=' ', newline='\n', 
-              header='', footer='', comments='# ', encoding=None)
+np.savetxt('test.txt', c, fmt='%.18e')
