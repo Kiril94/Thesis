@@ -48,7 +48,7 @@ volume_dir_dic = pd.Series(
 # 1st patient was already written
 # last patient: 0385ef30676c4602159171edac0cc2d6
 patient_list = df_patients_0.PatientID.unique()
-last_patient = "142f12fa4858d6cc5093b824fe9510db"
+last_patient = "15473b3462554d4f81eb36caefca4978"
 last_patient_idx = np.where(patient_list==last_patient)[0][0]
 print(patient_list[last_patient_idx:])
 # In[move]

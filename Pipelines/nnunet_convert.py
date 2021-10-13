@@ -15,6 +15,8 @@ sys.path.append("D:/Thesis/Cobra")
 from cobra.utilities import basic
 from bs4 import BeautifulSoup
 import gzip
+import shutil
+
 # In[Define directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
@@ -28,13 +30,12 @@ test_folder = join(task_folder, "imagesTs")
 train_labels_folder = join(task_folder, "labelsTr")
 train_files = basic.list_subdir(train_folder)
 
-
-# In[Rename files]
-# The last index should correspond to the modality
-
 train_files = basic.list_subdir(train_folder)
 test_files = basic.list_subdir(test_folder)
 train_labels_files = basic.list_subdir(train_labels_folder)
+
+# In[Rename files]
+# The last index should correspond to the modality
 rename=False
 if rename:
     for file in train_labels_files:
@@ -43,6 +44,19 @@ if rename:
         target_file = join(
             dir_, name)
         os.rename(file, target_file)
+# In[gzip files]
+# test
+zip_files=False
+if zip_files:
+    for nii_file in test_files:    
+        with open(nii_file, 'rb') as f_in:
+            with gzip.open(nii_file+'.gz', 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+                
+for nii_file in train_labels_files:    
+        if nii_file[-3:]=='nii':
+            if os.path.exists(nii_file):
+                os.remove(nii_file)
 # In[test]
 test = 'a_1128_3_0000.nii'
 print(test[:2]+test[3:7]+test[8:])
@@ -68,7 +82,9 @@ print(b_label[0].find('Name').string)
 #print(b_label.getitem())
 # In[Create Labels]
 labels_dic = {tuple_[0]:tuple_[1] for tuple_ in result_list}
-    
+with open(join(task_folder, 'labels_dict.txt'), 'w') as f:
+    print(labels_dic, file=f)
+
 # In[generate dataset json]
 utils.generate_dataset_json(join(task_folder, 'dataset.json'), 
                             train_folder, 
@@ -77,3 +93,18 @@ utils.generate_dataset_json(join(task_folder, 'dataset.json'),
                             labels=labels_dic, 
                             dataset_name="Task500_Test", 
                            )
+
+# In[tar files]
+import tarfile
+with tarfile.open("test2.tar.gz", "w:gz") as tar:
+    tar.add("test", arcname="test")
+
+
+# In[]
+
+with tarfile.open('test2.tar.gz') as file:
+    file.extractall('test_extract')
+
+
+
+
