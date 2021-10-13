@@ -9,13 +9,13 @@ Convert dicom files to niftiis
 
 import access_sif_data.load_data_tools as ld
 import os
-from utilities import utils, dicom2nifti
+from dcm2nii import dcm2nii
 import time
 import nibabel as nib
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
-from utilities import basic
+from utilities import basic, utils
 
 
 # In[main directories]
@@ -56,7 +56,7 @@ for patient_dir in pos_patients_list[100:101]:
         os.makedirs(out_patient_dir)
         print(f"{out_patient_dir} created")
     for scan_dir in scan_dirs[:1]:
-        dicom2nifti.dcm2nii(scan_dir, out_patient_dir)
+        dcm2nii.convert_dcm2nii(scan_dir, out_patient_dir)
         print('|',end=(''))
     #patient_counter -= 1
     #print(patient_counter)

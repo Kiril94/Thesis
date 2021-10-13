@@ -61,10 +61,6 @@ svis.bar_plot(seqs, pat_pp_counts, dpi=100, save_plot=True,
               title="# Patients with pre and post disease scan",
               xlabel='Sequence')
 
-# In[Get patient lists]
-        xlabel='Sequence')
-
-# In[Get patient lists]
 
 
 
