@@ -48,7 +48,7 @@ print(mask)
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 fig_dir = f"{base_dir}/figs"
-table_dir = f"{base_dir}/tables"
+table_dir = f"{base_dir}/data/tables"
 
 # In[load positive csv]
 pos_tab_dir = f"{table_dir}/pos_nn.csv"
@@ -64,7 +64,7 @@ if exclude_other:
     df_all = df_all[~mask_other] 
     fig_dir = f"{base_dir}/figs/basic_stats/exclude_other"
     print(f"All scans in df_all after excluding 'other' sequences ={len(df_all)}")
-pred_seq = utils.load_scan_csv(f"{base_dir}/share/pred_seq.csv")
+pred_seq = utils.load_scan_csv(f"{base_dir}/data/share/pred_seq.csv")
 
 # In[how many have scanner manufacturer, scanner type, b0 field strength]
 print(df_all.keys())
@@ -512,6 +512,10 @@ fig, ax = svis.bar(comb_labels, Pos_combs_list, label='pos', bottom=Neg_combs_li
 for i in range(4):
     ax.text(i-.1, Pos_combs_list[i]+Neg_combs_list[i]+200, 
             Pos_combs_list[i]+Neg_combs_list[i], fontsize=20)
+    ax.text(i+.35, Neg_combs_list[i]+50, Pos_combs_list[i],
+            color=svis.Color_palette(0)[1],
+            fontsize=20, ha='left')
+    
 fig.savefig(fname=f"{fig_dir}/basic_stats/sequence_comb_pat_count.png", dpi=100)
 # In[Write to files]
 write_dir = f"{base_dir}/share/Cerebriu/download_patients"
