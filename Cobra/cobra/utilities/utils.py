@@ -13,7 +13,7 @@ from access_sif_data import load_data_tools as ld
 import csv
 import datetime
 from pathlib import Path
-
+import logging
 
 
 def write_csv(csv_path, patient_list, append=False):
@@ -200,3 +200,6 @@ def target_path(src_path, target_base_dir="G:/CoBra/Data"):
         os.makedirs(target_path)
     return target_path
 
+def _logpath(path, names):
+    logging.info('Working in %s' % path)
+    return []   # nothing will be ignored

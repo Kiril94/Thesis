@@ -7,19 +7,18 @@ Created on Fri Sep 17 10:58:38 2021
 # In[import]
 import shutil
 import os
-from os.path import join, split
+from os.path import join, split, exists
 from pathlib import Path
 import glob
 import time
 import numpy as np
 import pandas as pd
-from utilities.utils import target_path
+from utilities.utils import target_path, _logpath
 from utilities import stats
-
 print("We will download only dwi, swi, flair, t1, t2, t2*")
 print("Start with smallest group of patients (1104) dwi, flair, t2*, t1, mostly negative patients,")
 
-    
+
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
@@ -84,24 +83,40 @@ dwi_t2s_gre = np.loadtxt(join(download_pat_path, "ge_dwi_t2s_gre.txt"),
 gdtg = df_all[df_all['PatientID'].isin(dwi_t2s_gre)]
 gdtg = gdtg.sort_values('PatientID')
 patient_list_gdtg = gdtg.PatientID.unique()
-#last_patient = "15473b3462554d4f81eb36caefca4978"
-#last_patient_idx = np.where(patient_list==last_patient)[0][0]
-#print(patient_list[last_patient_idx:])
-batch0 = patient_list_gdtg[:50]
-
-print(len(patient_list_gdtg))
+batches = []
+for i in range(6):
+    if i<5:
+        batches.append(patient_list_gdtg[i*50:(i+1)*50])
+    else:
+        batches.append(patient_list_gdtg[5*50:])
+print(len(batches[-1]))
 # In[copy whole tree]
 ge_dir = os.path.normpath("G:\CoBra\Data\GE")
-np.savetxt(join(ge_dir, 'batch_0'), np.array(batch0))
-
-for pat in batch0[:1]:
-    # Get patient directory
-    patient_dir = volume_dir_df[
-        stats.check_tags(volume_dir_df, tags=[pat], key='Directory')].iloc[0,1]
-    patient_dir = os.path.normpath(patient_dir)
-    patient_dir = join(*list(patient_dir.split(os.sep)[:2]))
-    patient_dir = f"Y:\{patient_dir}"
-    print(patient_dir)
-    if not os.path.exists(join(ge_dir)):
-        os.makedirs('my_folder')
+for i, batch in enumerate(batches):
+    batch_dir = join(ge_dir, "batch_{i}")
+    for pat in batch:
+        start = time.time()
+        
+        patient_dir = volume_dir_df[
+            stats.check_tags(
+                volume_dir_df, tags=[pat], key='Directory')].iloc[0,1]
+        patient_dir = os.path.normpath(patient_dir)
+        patient_dir = join(*list(patient_dir.split(os.sep)[:2]))
+        patient_dir = f"Y:\{patient_dir}"
+        _, patient_id = split(patient_dir)
+        dst_dir = join(batch_dir, patient_id)
+        if exists(dst_dir):
+            print(f"{dst_dir} exists" )
+            continue
+        print(f"{patient_dir}\n->{dst_dir}")
+        shutil.copytree(patient_dir, dst_dir, ignore=_logpath)
+        stop = time.time()
+        print(f" {(stop-start)/60} mins")
+# In[Save metadata]
+ge_meta = df_all[df_all.PatientID.isin(patient_list_gdtg)]
+ge_meta['batch'] = None
+for i, batch in enumerate(batches):
+    ge_meta.loc[ge_meta.PatientID.isin(batch), 'batch'] = i
+ge_meta.to_csv("G:\CoBra\Data\GE\metadata.csv",
+               index=False,encoding='utf-8-sig')
     
