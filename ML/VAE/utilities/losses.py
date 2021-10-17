@@ -8,7 +8,7 @@ import tensorflow as tf
 import numpy as np
 
 
-optimizer = tf.keras.optimizers.Adam(1e-4)
+
 
 
 def log_normal_pdf(sample, mean, logvar, raxis=1):

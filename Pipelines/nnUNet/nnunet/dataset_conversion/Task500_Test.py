@@ -5,7 +5,7 @@ Created on Wed Oct  6 16:54:47 2021
 
 @author: kiril
 """
-from nnUNet.nnunet.dataset_conversion import utils
+from Pipelines.nnUNet.nnunet.dataset_conversion import utils
 from pathlib import Path
 from os.path import join
 from os.path import split
@@ -19,28 +19,28 @@ import shutil
 
 # In[Define directories]
 script_dir = os.path.realpath(__file__)
-base_dir = Path(script_dir).parent
+base_dir = Path(script_dir).parent.parent.parent.parent
 data_folder = join(base_dir, "data")
 task_folder = join(
     base_dir, data_folder,
     "nnUNet_raw_data_base/nnUNet_raw_data/Task500_Test")
 
-train_folder = join(task_folder, "imagesTr")
-test_folder = join(task_folder, "imagesTs")
-train_labels_folder = join(task_folder, "labelsTr")
-train_files = basic.list_subdir(train_folder)
-
-train_files = basic.list_subdir(train_folder)
-test_files = basic.list_subdir(test_folder)
-train_labels_files = basic.list_subdir(train_labels_folder)
+tr_files = basic.list_subdir(join(task_folder, "imagesTr"))
+ts_files = basic.list_subdir(join(task_folder, "imagesTs"))
+tr_lbl_files = basic.list_subdir(join(task_folder, "labelsTr"))
+ts_lbl_files = basic.list_subdir(join(task_folder, "labelsTs"))
 
 # In[Rename files]
 # The last index should correspond to the modality
 rename=False
-if rename:
-    for file in train_labels_files:
-        dir_, name = split(file)
-        name = "MICCAI_"+name[1:5]+'0000.nii'
+
+for file in ts_lbl_files:
+    dir_, name = split(file)
+    #name = "MICCAI_"+name[1:5]+'.nii'
+    print(name)
+    name = name[:-8] + name[-7:]
+    print(name)
+    if rename:
         target_file = join(
             dir_, name)
         os.rename(file, target_file)
@@ -48,18 +48,23 @@ if rename:
 # test
 zip_files=False
 if zip_files:
-    for nii_file in test_files:    
+    for nii_file in ts_lbl_files:    
         with open(nii_file, 'rb') as f_in:
             with gzip.open(nii_file+'.gz', 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
                 
-for nii_file in train_labels_files:    
+for nii_file in ts_lbl_files:    
         if nii_file[-3:]=='nii':
             if os.path.exists(nii_file):
                 os.remove(nii_file)
-# In[test]
-test = 'a_1128_3_0000.nii'
-print(test[:2]+test[3:7]+test[8:])
+
+# In[Convert labels to nnunet]
+def convert_to_nnunet():
+    pass
+
+def convert_back_to_miccai():
+    pass
+
 
 # In[Get labels]
 xml_dir = join(task_folder, "labels_dict.xml")
