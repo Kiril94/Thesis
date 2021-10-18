@@ -8,9 +8,6 @@ import tensorflow as tf
 import numpy as np
 
 
-
-
-
 def log_normal_pdf(sample, mean, logvar, raxis=1):
     log2pi = tf.math.log(2. * np.pi)
     return tf.reduce_sum(
@@ -28,16 +25,3 @@ def compute_loss(model, x):
     logpz = log_normal_pdf(z, 0., 0.)
     logqz_x = log_normal_pdf(z, mean, logvar)
     return -tf.reduce_mean(logpx_z + logpz - logqz_x)
-
-
-@tf.function
-def train_step(model, x, optimizer):
-    """Executes one training step and returns the loss.
-    
-    This function computes the loss and gradients, and uses the latter to
-    update the model's parameters.
-    """
-    with tf.GradientTape() as tape:
-      loss = compute_loss(model, x)
-    gradients = tape.gradient(loss, model.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, model.trainable_variables))

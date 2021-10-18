@@ -13,8 +13,12 @@ import glob
 import time
 import numpy as np
 import pandas as pd
+import sys
+cobra_dir = "D:/Thesis/Cobra/cobra"
+if cobra_dir not in sys.path:
+    sys.path.append(cobra_dir)
 from utilities.utils import target_path, _logpath
-from utilities import stats
+from utilities import stautilities
 print("We will download only dwi, swi, flair, t1, t2, t2*")
 print("Start with smallest group of patients (1104) dwi, flair, t2*, t1, mostly negative patients,")
 
@@ -90,13 +94,16 @@ for i in range(6):
     else:
         batches.append(patient_list_gdtg[5*50:])
 print(len(batches[-1]))
+
+
+    
 # In[copy whole tree]
+current_batch = 1
 ge_dir = os.path.normpath("G:\CoBra\Data\GE")
-for i, batch in enumerate(batches):
-    batch_dir = join(ge_dir, "batch_{i}")
+for i, batch in enumerate(batches[current_batch:]):
+    batch_dir = join(ge_dir, f"batch_{i+current_batch}")
     for pat in batch:
         start = time.time()
-        
         patient_dir = volume_dir_df[
             stats.check_tags(
                 volume_dir_df, tags=[pat], key='Directory')].iloc[0,1]

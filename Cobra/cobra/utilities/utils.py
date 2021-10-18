@@ -199,7 +199,3 @@ def target_path(src_path, target_base_dir="G:/CoBra/Data"):
     if not(os.path.exists(target_path)):
         os.makedirs(target_path)
     return target_path
-
-def _logpath(path, names):
-    logging.info('Working in %s' % path)
-    return []   # nothing will be ignored
