@@ -4,7 +4,8 @@ Created on Fri Sep 17 10:58:38 2021
 
 @author: klein
 """
-# In[import]
+#%% 
+# Import
 import shutil
 import os
 from os.path import join, split, exists
@@ -22,8 +23,8 @@ from utilities import stats
 print("We will download only dwi, swi, flair, t1, t2, t2*")
 print("Start with smallest group of patients (1104) dwi, flair, t2*, t1, mostly negative patients,")
 
-
-# In[tables directories]
+#%%# 
+# tables directories
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 src_dirs = os.listdir("Y:")
@@ -50,22 +51,26 @@ volume_dir_df = pd.read_csv(join(base_dir, 'data/tables', 'sid_directories.csv')
 volume_dir_dic = pd.Series(
     volume_dir_df.Directory.values, index=volume_dir_df.SeriesInstanceUID).to_dict()
 
-# In[get index of last patient]
+#%%
+#  In[get index of last patient]
 # 1st patient was already written
 # last patient: 0385ef30676c4602159171edac0cc2d6
 patient_list_dfft = dftt.PatientID.unique()
 last_patient = "15473b3462554d4f81eb36caefca4978"
 last_patient_idx = np.where(patient_list_dfft==last_patient)[0][0]
 
-# In[test]
+#%%
+#  In[test]
 print(patient_list_dfft[last_patient_idx:])
-# In[move crb]
+#%%
+#  In[move crb]
 for pat in patient_list_dfft[last_patient_idx:]:
     start = time.time()
     print(f"patient: {pat}:", end=' ')
     volumes = dftt[dftt.PatientID==pat]['SeriesInstanceUID']
     print(f"{len(volumes)} volumes")
     for volume in volumes:
+
         volume_dir = volume_dir_dic[volume]
         counter = 0
         for dcm_file in glob.iglob(f"Y:/{volume_dir}/*"):
@@ -81,7 +86,8 @@ for pat in patient_list_dfft[last_patient_idx:]:
     stop = time.time()
     print(f" {(stop-start)/60} mins")
 
-# In[move GE (Akshay)]
+#%%
+#  In[move GE (Akshay)]
 dwi_t2s_gre = np.loadtxt(join(download_pat_path, "ge_dwi_t2s_gre.txt"),
                                    dtype='str')
 gdtg = df_all[df_all['PatientID'].isin(dwi_t2s_gre)]
@@ -96,7 +102,8 @@ for i in range(6):
 print(len(batches[-1]))
 
     
-# In[copy whole tree]
+#%%
+#  In[copy whole tree]
 current_batch = 1
 ge_dir = os.path.normpath("G:\CoBra\Data\GE")
 for i, batch in enumerate(batches[current_batch:]):
@@ -118,6 +125,7 @@ for i, batch in enumerate(batches[current_batch:]):
         shutil.copytree(patient_dir, dst_dir)
         stop = time.time()
         print(f" {(stop-start)/60} mins")
+#%%
 # In[Save metadata]
 ge_meta = df_all[df_all.PatientID.isin(patient_list_gdtg)]
 ge_meta['batch'] = None
