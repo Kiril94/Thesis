@@ -4,10 +4,10 @@ Created on Thu Sep  9 11:06:00 2021
 
 @author: klein
 """
-
+# %%
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+# import os
 from os.path import join
 from pathlib import PurePath as Path
 import numpy as np
@@ -18,7 +18,7 @@ from utilities import stats, utils, mri_stats, basic
 from utilities.basic import DotDict, p, sort_dict
 import importlib
 
-
+# %%
 # In[Usefule keys]
 TE_k = 'EchoTime'
 TR_k = 'RepetitionTime'
@@ -37,6 +37,7 @@ SO_k = 'ScanOptions'
 ETL_k = 'EchoTrainLength'
 MFS_k = 'MagneticFieldStrength'
 
+# %%
 # In[Test functions]
 masks = [np.array([1, 0, 0]), np.array([0, 0, 0]), np.array([1, 1, 0])]
 mask = masks[0]
@@ -44,12 +45,14 @@ for i in range(1, len(masks)):
     mask = mask | masks[i]
 print(mask)
 
+# %%
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 fig_dir = f"{base_dir}/figs"
 table_dir = f"{base_dir}/data/tables"
 
+# %%
 # In[load positive csv]
 pos_tab_dir = f"{table_dir}/pos_nn.csv"
 neg_tab_dir = f"{table_dir}/neg_all.csv"
@@ -65,14 +68,14 @@ if exclude_other:
     fig_dir = f"{base_dir}/figs/basic_stats/exclude_other"
     print(f"All scans in df_all after excluding 'other' sequences ={len(df_all)}")
 pred_seq = utils.load_scan_csv(f"{base_dir}/data/share/pred_seq.csv")
-
+# %%
 # In[how many have scanner manufacturer, scanner type, b0 field strength]
 print(df_all.keys())
 print(df_all.Manufacturer.isna().sum())
 print(df_all.ManufacturerModelName.isna().sum())
 print(df_all[MFS_k].isna().sum())
 print(len(df_all))
-
+# %%
 # In[adding columns and merging]
 
 #pos_patients = df_p.PatientID.unique()
@@ -83,6 +86,7 @@ print(len(df_all))
 #    df_all, pred_seq[[SID_k, 'Sequence', 'TrueSequenceType']], on=SID_k)
 #print(df_all.keys())
 
+# %%
 # In[Volume Count by Sequences]
 print("For now we are not interested in 't2s', 'flair_ce', 'swi_mip'")
 true_mask = df_all.TrueSequenceType==1
@@ -92,7 +96,7 @@ df_all.Sequence = np.where(
 true_seq_counts = df_all[true_mask].Sequence.value_counts()
 to_append = pd.Series([0],index=['t2s_gre'] )
 pred_seq_counts = df_all[~true_mask].Sequence.value_counts().append(to_append)
-
+# %%
 # In[Plot Volume Count]
 fig, ax = svis.bar(true_seq_counts.keys(), true_seq_counts.values, label='true',)
 svis.bar(pred_seq_counts.keys(), pred_seq_counts.values, fig=fig, ax=ax,
@@ -103,7 +107,7 @@ svis.bar(pred_seq_counts.keys(), pred_seq_counts.values, fig=fig, ax=ax,
                   },
          save=True, 
          figname=f"{fig_dir}/sequence_pred/seq_dist_volume_count.png",)
-
+# %%
 # In[Patient Count by Sequences]
 pos_mask = df_all.Pos==1
 pos_pat_count_seq = df_all[pos_mask].groupby(by='Sequence')\
@@ -119,7 +123,7 @@ svis.bar(pos_pat_count_seq.keys(),pos_pat_count_seq.values, fig=fig, ax=ax,
          save=True, 
          figname=f"{fig_dir}/sequence_pred/seq_dist_patient_count.png",)
 
-
+# %%
 # In[Plot patient count]
 labels = ['2019', 'positive']
 pos_mask = df_all.Pos==1
@@ -132,7 +136,7 @@ fig, ax = svis.bar(labels, counts, kwargs=kwargs)
 ax.text(1-.05, pos_pat_count+300, pos_pat_count, fontsize=22)
 ax.text(0-.1, neg_pat_count+300, neg_pat_count, fontsize=22)
 fig.savefig(f"{fig_dir}/pat_count.png", dpi=100)
-
+# %%
 # In[Plot MR field strength]
 
 neg_value_counts = sort_dict(
@@ -149,7 +153,7 @@ svis.bar(pos_value_counts.keys(), pos_value_counts.values(),
                                  'xlabel':r'$B_0$',
                                  'lgd_loc':2}, save=True,
          figname=join(fig_dir, 'B0.png'))
-
+# %%
 # In[Plot distribution of Rows and Columns]
 fig, g = svis.plot_decorator(sns.jointplot, plot_func_kwargs={
     'data':df_all[df_all.Rows<3000],
@@ -157,7 +161,7 @@ fig, g = svis.plot_decorator(sns.jointplot, plot_func_kwargs={
     )
 g.figure.savefig(f"{fig_dir}/scan_sizes.png", dpi=80)
 
-#
+# %%
 #sns.displot(df_all, x="Rows", y="Columns", hue="Pos", alpha=1)
 
 # In[Write Patient IDs to text]
