@@ -5,6 +5,7 @@ Created on Mon Oct 18 15:29:02 2021
 @author: klein
 """
 
+print('import')
 import shutil
 import os
 from os.path import join, split, exists
@@ -23,6 +24,7 @@ from multiprocessing import Pool
 
 
 #define directories
+print('define directories')
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 src_dirs = os.listdir("Y:")
@@ -30,12 +32,12 @@ src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
                        in src_dirs if x.startswith('2019')])
 dst_data_dir = "G:/CoBra/Data"
 download_pat_path = join(base_dir, "data/share/Cerebriu/download_patients")
-#load dataframes
+print('load dataframes')
 volume_dir_df = pd.read_csv(join(base_dir, 'data/tables', 'sid_directories.csv'))
 volume_dir_dic = pd.Series(
     volume_dir_df.Directory.values, index=volume_dir_df.SeriesInstanceUID).to_dict()
 df_all = pd.read_csv(join(base_dir, "data/tables/neg_pos.csv"))
-# get batches
+print('get batches')
 dwi_t2s_gre = np.loadtxt(join(download_pat_path, "ge_dwi_t2s_gre.txt"),
                                    dtype='str')
 gdtg = df_all[df_all['PatientID'].isin(dwi_t2s_gre)]
@@ -47,7 +49,7 @@ for i in range(6):
         batches.append(patient_list_gdtg[i*50:(i+1)*50])
     else:
         batches.append(patient_list_gdtg[5*50:])
-# actual download
+print('start download')
 ge_dir = os.path.normpath("G:\CoBra\Data\GE")
 
 
@@ -80,7 +82,7 @@ def copy_batch(args):
 if __name__=='__main__':
     first_batch = 1
     arg_list = [(batches[i], join(ge_dir, f"batch_{i}")) for \
-                i in range(first_batch, 6)]
-    with Pool(5) as p:
+                i in range(first_batch, 4)]
+    with Pool(3) as p:
         p.map(copy_batch, arg_list)
     
