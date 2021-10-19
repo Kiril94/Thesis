@@ -17,8 +17,8 @@ import sys
 cobra_dir = "D:/Thesis/Cobra/cobra"
 if cobra_dir not in sys.path:
     sys.path.append(cobra_dir)
-from utilities.utils import target_path, _logpath
-from utilities import stautilities
+from utilities.utils import target_path
+from utilities import stats
 print("We will download only dwi, swi, flair, t1, t2, t2*")
 print("Start with smallest group of patients (1104) dwi, flair, t2*, t1, mostly negative patients,")
 
@@ -95,7 +95,6 @@ for i in range(6):
         batches.append(patient_list_gdtg[5*50:])
 print(len(batches[-1]))
 
-
     
 # In[copy whole tree]
 current_batch = 1
@@ -116,7 +115,7 @@ for i, batch in enumerate(batches[current_batch:]):
             print(f"{dst_dir} exists" )
             continue
         print(f"{patient_dir}\n->{dst_dir}")
-        shutil.copytree(patient_dir, dst_dir, ignore=_logpath)
+        shutil.copytree(patient_dir, dst_dir)
         stop = time.time()
         print(f" {(stop-start)/60} mins")
 # In[Save metadata]
