@@ -70,36 +70,42 @@ patient_list_dfft = df_group.PatientID.unique()
 
 #%%
 # In[test]
-print(patient_list_dfft[last_patient_idx:])
+print(base_dir)
 #%%
 # In[move crb]
-for pat in patient_list_dfft[:3]:
+for pat in patient_list_dfft[:1]:
     patient_dir = patient_dir_dic[pat]
     start = time.time()
-    print(f"patient: {pat}:", end=' ')
-    for doc_folder in glob.iglob(f"Y:/{patient_dir}/*/DOC/*/*.pdf"):
-        doc_folder = os.path.normpath(doc_folder)
-        study_id = doc_folder.split(os.sep)[3]
-        print(study_id)
-        print(doc_folder)
-        counter = 0
-        dest = join(base_dir, 'DOC', f"{study_id}_{counter}")
-        shutil.copy(doc_folder,)
-    # volumes = dftt[dftt.PatientID==pat]['SeriesInstanceUID']
-    #print(f"{len(volumes)} volumes")
-    # for volume in volumes:
-    #     volume_dir = volume_dir_dic[volume]
-    #     counter = 0
-    #     for dcm_file in glob.iglob(f"Y:/{volume_dir}/*"):
-    #         counter+=1
-    #         dst_file_dir = target_path(
-    #             Path(os.path.split(dcm_file)[0]), Path("G:/CoBra/Data/dcm"))
-    #         try:
-    #             shutil.move(dcm_file, dst_file_dir)
-    #         except:
-    #             if counter==1:
-    #                 print(f"Destination path {dst_file_dir} already exists")
-    #     print("|",  end='')
+    print(f"{patient_dir}", end='\n')
+    print(datetime.now().strftime("%H:%M"))
+    for doc_path_src in glob.iglob(f"Y:/{patient_dir}/*/DOC/*/*.pdf"):
+        doc_path_src = os.path.normpath(doc_path_src)
+        study_id = doc_path_src.split(os.sep)[3]
+        doc_id = doc_path_src.split(os.sep)[5]
+        print(doc_path_src)
+        dst_doc_dir = join(base_dir,'test', patient_dir, 'DOC')
+        doc_path_dst = join(dst_doc_dir, f"{study_id}_{doc_id}.pdf")
+        shutil.copy(doc_path_src, doc_path_dst)
+    volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID']
+    print(f"download {len(volumes)} volumes")
+    for volume in volumes:
+         volume_dir = volume_dir_dic[volume]
+         counter = 0
+         volume_src = f"Y:/{volume_dir}"
+         # TODO: implement this
+         #volume_dst = target_path(
+         #        Path(os.path.split(dcm_file)[0]), Path("G:/CoBra/Data/dcm"))
+         shutil.copytree(volume_src, volume_dst)
+         for dcm_path_src in glob.iglob(f"Y:/{volume_dir}/*"):
+             counter+=1
+             dst_file_dir = target_path(
+                 Path(os.path.split(dcm_file)[0]), Path("G:/CoBra/Data/dcm"))
+             try:
+                 shutil.move(dcm_file, dst_file_dir)
+             except:
+                 if counter==1:
+                     print(f"Destination path {dst_file_dir} already exists")
+         print("|",  end='')
     stop = time.time()
     print(f" {(stop-start):2.2} s")
 
