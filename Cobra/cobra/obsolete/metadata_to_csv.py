@@ -7,12 +7,16 @@ Get data from dicom headers and write to csv
 """
 
 import os
+from os.path import join, split
 from access_sif_data import load_data_tools as ld
 import pandas as pd
 from utilities import basic, utils
+from pathlib import Path
 
 
 # In[Specify main directories]
+script_dir = os.path.realpath(__file__)
+base_dir = Path(script_dir).parent
 base_data_dir = "Y:/"
 out_pos_path = "Y:\\nii\\positive"
 data_dirs = os.listdir(base_data_dir)
@@ -20,11 +24,11 @@ positive_dir = f"{base_data_dir}/positive"
 healthy_dirs = sorted([f"{base_data_dir}/{x}" for x
                        in data_dirs if x.startswith('2019')])
 csv_folder = "D:/Thesis/Cobra/tables"
-
+table_dir = join(base_dir, 'data', 'tables')
 
 # In[delete last patient from ]
 last_csv_file = "healthy_10_nn.csv"
-last_csv_path = os.path.join(csv_folder, last_csv_file)
+last_csv_path = join(csv_folder, last_csv_file)
 
 # In[get last patient value]
 df_last = utils.load_scan_csv(last_csv_path)
@@ -60,7 +64,7 @@ utils.write_csv(last_csv_path, new_patient_list,
 # In[write positive to csv]
 pos_patient_list = sorted(utils.list_subdir(positive_dir))
 csv_file = "pos_nn.csv"
-csv_path = os.path.join(csv_folder, csv_file)
+csv_path = join(csv_folder, csv_file)
 utils.write_csv(csv_path, pos_patient_list)
 
 # In[Write neg to csv]
@@ -71,18 +75,20 @@ for month, subdir in enumerate(healthy_dirs[starting_month-1:starting_month]):
     print(f"converting files from {subdir}")
     csv_file = f"healthy_{month+starting_month}_nn.csv"
     #csv_file = f"test.csv"
-    csv_path = os.path.join(csv_folder, csv_file)
+    csv_path = join(csv_folder, csv_file)
     patient_list = sorted(utils.list_subdir(subdir))
     utils.write_csv(csv_path, patient_list)
 
 # In[Create one csv for all 2019]
 neg_tab_dirs = sorted([f"{csv_folder}/{x}" for x
-                       in os.listdir(csv_folder) if x.startswith('healthy')])
+                       in os.listdir(csv_folder) \
+                           if x.startswith('healthy')])
 df_neg_list = [utils.load_scan_csv(csv_path) for csv_path in
                neg_tab_dirs]
 df_all_neg_2019 = pd.concat(df_neg_list, axis=0, join="outer")
 # In[Write it to a csv]
-df_all_neg_2019.to_csv(f"{csv_folder}/neg_all.csv", index=False, header=True)
+df_all_neg_2019.to_csv(f"{csv_folder}/neg_all.csv", index=False,
+ header=True)
 
 # In[Combine pos and negative into one csv]
 df_all_neg = utils.load_scan_csv(f"{csv_folder}/neg_all.csv")
@@ -103,3 +109,17 @@ df_uids = pd.read_csv(csv_path_ids)
 mask = df_uids['Directory'].str.contains('2019', na=False)
 df_uids = df_uids[~mask]
 df_uids.to_csv(csv_path_ids, index=False, header=True)
+# %% 
+volume_dir_df = pd.read_csv(join(table_dir, 'sid_directories.csv'))
+# Create patient_id directory csv
+patient_dir_df = volume_dir_df.copy()
+patient_dir_df.Directory = patient_dir_df.Directory.map(
+    lambda x: split(split(split(x)[0])[0])[0])
+patient_dir_df.SeriesInstanceUID = patient_dir_df.Directory.map(
+    lambda x: split(x)[1])
+patient_dir_df.rename({'SeriesInstanceUID':'PatientID'}, axis=1, inplace=True)
+patient_dir_df = patient_dir_df.drop_duplicates(subset='PatientID')
+print(patient_dir_df.head())
+#patient_dir_df.to_csv(join(table_dir, 'patient_directories.csv'),index=False)
+print(len(patient_dir_df))
+
