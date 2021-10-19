@@ -5,15 +5,14 @@ Created on Fri Sep 17 10:58:38 2021
 @author: klein
 """
 #%% 
-# Import
+# In[Import]
 import shutil
 import os
 from os.path import join, split, exists
 from pathlib import Path
 import glob
 import time
-from datetime import timed
-import sklearn
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import sys
@@ -27,7 +26,7 @@ print("Start with smallest group of patients (1104) dwi, flair, t2*, t1, mostly 
 
 
 #%% 
-# tables directories
+# In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 src_dirs = os.listdir("Y:")
@@ -35,29 +34,20 @@ src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
                        in src_dirs if x.startswith('2019')])
 disk_dir = "G:"
 dst_data_dir = f"{disk_dir}/CoBra/Data"
-download_pat_path = join(base_dir, "data/share/Cerebriu/download_patients")
+download_pat_path = join(base_dir, "data/share/Cerebriu/patient_groups")
 table_dir = join(base_dir, 'data', 'tables')
-#%% In[Load df]
+#%% 
+# In[Load df]
 
 volume_dir_df = pd.read_csv(join(table_dir, 'sid_directories.csv'))
+patient_dir_df = pd.read_csv(join(table_dir, 'patient_directories.csv'))
 volume_dir_dic = pd.Series(
     volume_dir_df.Directory.values, index=volume_dir_df.SeriesInstanceUID)\
         .to_dict()
+patient_dir_dic = pd.Series(
+    patient_dir_df.Directory.values, index=patient_dir_df.PatientID)\
+        .to_dict()
 df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
-# %% 
-# Create patient_id directory csv
-patient_dir_df = volume_dir_df.copy()
-patient_dir_df.Directory = patient_dir_df.Directory.map(
-    lambda x: split(split(split(x)[0])[0])[0])
-patient_dir_df.SeriesInstanceUID = patient_dir_df.Directory.map(
-    lambda x: split(x)[1])
-patient_dir_df.rename({'SeriesInstanceUID':'PatientID'}, axis=1, inplace=True)
-patient_dir_df = patient_dir_df.drop_duplicates(subset='PatientID')
-print(patient_dir_df.head())
-#patient_dir_df.to_csv(join(table_dir, 'patient_directories.csv'),index=False)
-print(len(patient_dir_df))
-#%%
-print(df_all)
 
 #%%
 # In[Get relevant patients and volumes]
@@ -66,18 +56,15 @@ print(os.listdir(download_pat_path))
 # download all sequences
 dftt_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
                                    dtype='str')
-dftt = df_all[df_all['PatientID'].isin(dftt_list)]
+df_group = df_all[df_all['PatientID'].isin(dftt_list)]
 #df_patients_0 = df_patients_0[df_patients_0['Sequence'].isin(rel_seq)]
-dftt = dftt.sort_values('PatientID')
-volume_dir_df = pd.read_csv(join(base_dir, 'data/tables', 'sid_directories.csv'))
-volume_dir_dic = pd.Series(
-    volume_dir_df.Directory.values, index=volume_dir_df.SeriesInstanceUID).to_dict()
+df_group = df_group.sort_values('PatientID')
 
 #%%
 # In[get index of last patient]
 # 1st patient was already written
 # last patient: 0385ef30676c4602159171edac0cc2d6
-patient_list_dfft = dftt.PatientID.unique()
+patient_list_dfft = df_group.PatientID.unique()
 #last_patient = "15473b3462554d4f81eb36caefca4978"
 #last_patient_idx = np.where(patient_list_dfft==last_patient)[0][0]
 
@@ -86,13 +73,20 @@ patient_list_dfft = dftt.PatientID.unique()
 print(patient_list_dfft[last_patient_idx:])
 #%%
 # In[move crb]
-for pat in patient_list_dfft[:]:
+for pat in patient_list_dfft[:3]:
+    patient_dir = patient_dir_dic[pat]
     start = time.time()
     print(f"patient: {pat}:", end=' ')
-    for doc_file in glob.iglob(f"Y:/{volume_dir}/*")
-    
-    volumes = dftt[dftt.PatientID==pat]['SeriesInstanceUID']
-    print(f"{len(volumes)} volumes")
+    for doc_folder in glob.iglob(f"Y:/{patient_dir}/*/DOC/*/*.pdf"):
+        doc_folder = os.path.normpath(doc_folder)
+        study_id = doc_folder.split(os.sep)[3]
+        print(study_id)
+        print(doc_folder)
+        counter = 0
+        dest = join(base_dir, 'DOC', f"{study_id}_{counter}")
+        shutil.copy(doc_folder,)
+    # volumes = dftt[dftt.PatientID==pat]['SeriesInstanceUID']
+    #print(f"{len(volumes)} volumes")
     # for volume in volumes:
     #     volume_dir = volume_dir_dic[volume]
     #     counter = 0
@@ -107,10 +101,10 @@ for pat in patient_list_dfft[:]:
     #                 print(f"Destination path {dst_file_dir} already exists")
     #     print("|",  end='')
     stop = time.time()
-    print(f" {(stop-start)/60} mins")
+    print(f" {(stop-start):2.2} s")
 
 #%%
-#  In[move GE (Akshay)]
+# In[move GE (Akshay)]
 dwi_t2s_gre = np.loadtxt(join(download_pat_path, "ge_dwi_t2s_gre.txt"),
                                    dtype='str')
 gdtg = df_all[df_all['PatientID'].isin(dwi_t2s_gre)]
@@ -126,7 +120,7 @@ print(len(batches[-1]))
 
     
 #%%
-#  In[copy whole tree]
+# In[copy whole tree]
 current_batch = 1
 ge_dir = os.path.normpath("G:\CoBra\Data\GE")
 for i, batch in enumerate(batches[current_batch:]):
