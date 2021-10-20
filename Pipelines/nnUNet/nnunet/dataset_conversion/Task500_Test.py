@@ -63,13 +63,6 @@ for nii_file in ts_lbl_files:
         if nii_file[-3:]=='nii':
             if os.path.exists(nii_file):
                 os.remove(nii_file)
-#%%
-# In[Convert labels to nnunet]
-def convert_to_nnunet():
-    pass
-
-def convert_back_to_miccai():
-    pass
 
 #%%
 # In[Get labels]
@@ -81,13 +74,7 @@ Bs_data = BeautifulSoup(data, "xml")
 result_list = []
 b_label = Bs_data.find_all('Label')
 for b in b_label:
-    number = b.find('Number').string
-    if len(number)==1:
-        number = '00'+number
-    elif len(number)==2:
-        number = '0'+number
-    else: 
-        pass
+    number = int(b.find('Number').string)
     name = b.find('Name').string
     color = b.find('RGBColor').string
     result_list.append((number, name, color))
@@ -100,11 +87,36 @@ with open(join(task_folder, 'labels.txt'), 'w') as f:
         f.write(f"{item[0]}, {item[1]}, {item[2]}\n")
 #print(result)
 #print(b_label.getitem())
+
+#%%
+def fill_dict(counter, key):
+    if counter==key:
+        counter += 1
+        pass
+    else:
+        new_dic[counter] = 'None'
+        counter += 1
+        counter = fill_dict(counter, key)
+    return counter
 # %%
 # In[Create Labels]
 labels_dic = {tuple_[0]:tuple_[1] for tuple_ in result_list}
-labels_dic['000'] = 'background'
+labels_dic[0] = 'background'
 labels_dic = dict(sorted(labels_dic.items(), key=lambda t:t[0]))
+new_dic = {}
+counter = 0
+for key in labels_dic.keys():
+    counter = fill_dict(counter, key)
+labels_dic = {**labels_dic, **new_dic}
+labels_dic = dict(sorted(labels_dic.items(), key=lambda t:t[0]))
+for old_key in labels_dic.keys():
+    if len(str(old_key))==1:
+         new_key = '00'+str(old_key)
+    elif len(str(old_key))==2:
+         new_key = '0'+str(old_key)
+    else: 
+         new_key = str(old_key)
+    labels_dic[new_key] = labels_dic.pop(old_key)
 with open(join(task_folder, 'labels_dict.txt'), 'w') as f:
     print(labels_dic, file=f)
 
