@@ -13,7 +13,6 @@ from os.path import join
 from os.path import split
 import os
 import sys
-import json
 sys.path.append("D:/Thesis/Cobra")
 from cobra.utilities import basic
 from bs4 import BeautifulSoup
