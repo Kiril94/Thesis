@@ -19,10 +19,7 @@ import sys
 cobra_dir = "D:/Thesis/Cobra/cobra"
 if cobra_dir not in sys.path:
     sys.path.append(cobra_dir)
-from utilities.utils import target_path
 from utilities import stats
-print("We will download only dwi, swi, flair, t1, t2, t2*")
-print("Start with smallest group of patients (1104) dwi, flair, t2*, t1, mostly negative patients,")
 
 
 #%% 
@@ -51,48 +48,45 @@ df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 
 #%%
 # In[Get relevant patients and volumes]
-print(os.listdir(download_pat_path))
-#rel_seq = ['dwi', 'swi', 't1', 't2', 't2s', 'flair']
-# download all sequences
+print("Start with smallest group of patients (1104) dwi, \
+    flair, t2*, t1, mostly negative patients,")
 dftt_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
                                    dtype='str')
 df_group = df_all[df_all['PatientID'].isin(dftt_list)]
-#df_patients_0 = df_patients_0[df_patients_0['Sequence'].isin(rel_seq)]
+# In case you want to download only specific sequences uncomment next lines
+# rel_seq = ['dwi', 'swi', 't1', 't2', 't2s', 'flair']
+# df_group = df_group[df_group['Sequence'].isin(rel_seq)]
 df_group = df_group.sort_values('PatientID')
 
 #%%
 # In[get index of last patient]
-# 1st patient was already written
-# last patient: 0385ef30676c4602159171edac0cc2d6
 patient_list_group = df_group.PatientID.unique()
+# if you want to start with a specific patient uncomment and set last_patient
 #last_patient = "15473b3462554d4f81eb36caefca4978"
-#last_patient_idx = np.where(patient_list_dfft==last_patient)[0][0]
+#last_patient_idx = np.where(patient_list_group==last_patient)[0][0]
 
 #%%
-# In[test]
-print(base_dir)
-#%%
 # In[move crb]
-disk_dcm_dir = join(disk_dir)
-for pat in patient_list_group[10:11]:
+crb_dst = join(dst_data_dir, 'dcm')
+for pat in patient_list_group[:]:
     patient_dir = patient_dir_dic[pat]
     start = time.time()
     print(f"Patient: {patient_dir}", end='\n')
     print(datetime.now().strftime("%H:%M:%S"))
     # Copy doc files
-    if not os.path.exists(join(base_dir, 'test', patient_dir, 'DOC')):
-        os.makedirs(join(base_dir, 'test', patient_dir, 'DOC'))
+    if not os.path.exists(join(crb_dst, patient_dir, 'DOC')):
+        os.makedirs(join(crb_dst, patient_dir, 'DOC'))
     for doc_path_src in glob.iglob(f"Y:/{patient_dir}/*/DOC/*/*.pdf"):
         doc_path_src = os.path.normpath(doc_path_src)
         study_id = doc_path_src.split(os.sep)[3]
         doc_id = doc_path_src.split(os.sep)[5]
-        dst_doc_dir = join(base_dir,'test', patient_dir, 'DOC')
+        dst_doc_dir = join(crb_dst, patient_dir, 'DOC')
         doc_path_dst = join(dst_doc_dir, f"{study_id}_{doc_id}.pdf")
         shutil.copy(doc_path_src, doc_path_dst)
     # copy dcm files
     volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID']
     print(f"download {len(volumes)} volumes")
-    for volume in volumes[:2]:
+    for volume in volumes:
         volume_dir = volume_dir_dic[volume]
         counter = 0
         volume_src = os.path.normpath(f"Y:/{volume_dir}")
@@ -101,7 +95,7 @@ for pat in patient_list_group[10:11]:
             continue
         else:        
             series_uid = volume_src.split(os.sep)[-1]
-            volume_dst = join(base_dir, 'test', patient_dir, series_uid)
+            volume_dst = join(crb_dst, patient_dir, series_uid)
             shutil.copytree(volume_src, volume_dst)
             print("|",  end='')
     stop = time.time()
