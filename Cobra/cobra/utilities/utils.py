@@ -184,18 +184,3 @@ def convert_to_sparse_pandas(df, exclude_columns=[]):
         df[columnName] = pd.SparseArray(columnData.values, dtype='uint8')
 
     return df
-
-def target_path(src_path, target_base_dir="G:/CoBra/Data"):
-    """Turns source path (Y:/...) into target path, by default
-    G:/Cobra/Data/... . If target path does not exist, creates it. 
-    We follow the structure month_dir/patient_id/scan_id/*.dcm"""
-    path_no_drive = os.path.splitdrive(src_path)[1][1:] # first symbol is /
-    split_path = Path(path_no_drive).parts
-    main_path = split_path[0]
-    patient_path = split_path[1]
-    scan_path = split_path[4]
-    target_path = os.path.join(
-        target_base_dir, main_path, patient_path, scan_path)
-    if not(os.path.exists(target_path)):
-        os.makedirs(target_path)
-    return target_path

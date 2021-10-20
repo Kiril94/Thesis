@@ -29,7 +29,7 @@ print("Start with smallest group of patients (1104) dwi, flair, t2*, t1, mostly 
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
-src_dirs = os.listdir("Y:")
+src_dirs = os.listdir("Y:/")
 src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
                        in src_dirs if x.startswith('2019')])
 disk_dir = "G:"
@@ -64,7 +64,7 @@ df_group = df_group.sort_values('PatientID')
 # In[get index of last patient]
 # 1st patient was already written
 # last patient: 0385ef30676c4602159171edac0cc2d6
-patient_list_dfft = df_group.PatientID.unique()
+patient_list_group = df_group.PatientID.unique()
 #last_patient = "15473b3462554d4f81eb36caefca4978"
 #last_patient_idx = np.where(patient_list_dfft==last_patient)[0][0]
 
@@ -73,41 +73,39 @@ patient_list_dfft = df_group.PatientID.unique()
 print(base_dir)
 #%%
 # In[move crb]
-for pat in patient_list_dfft[:1]:
+disk_dcm_dir = join(disk_dir)
+for pat in patient_list_group[10:11]:
     patient_dir = patient_dir_dic[pat]
     start = time.time()
-    print(f"{patient_dir}", end='\n')
-    print(datetime.now().strftime("%H:%M"))
+    print(f"Patient: {patient_dir}", end='\n')
+    print(datetime.now().strftime("%H:%M:%S"))
+    # Copy doc files
+    if not os.path.exists(join(base_dir, 'test', patient_dir, 'DOC')):
+        os.makedirs(join(base_dir, 'test', patient_dir, 'DOC'))
     for doc_path_src in glob.iglob(f"Y:/{patient_dir}/*/DOC/*/*.pdf"):
         doc_path_src = os.path.normpath(doc_path_src)
         study_id = doc_path_src.split(os.sep)[3]
         doc_id = doc_path_src.split(os.sep)[5]
-        print(doc_path_src)
         dst_doc_dir = join(base_dir,'test', patient_dir, 'DOC')
         doc_path_dst = join(dst_doc_dir, f"{study_id}_{doc_id}.pdf")
         shutil.copy(doc_path_src, doc_path_dst)
+    # copy dcm files
     volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID']
     print(f"download {len(volumes)} volumes")
-    for volume in volumes:
-         volume_dir = volume_dir_dic[volume]
-         counter = 0
-         volume_src = f"Y:/{volume_dir}"
-         # TODO: implement this
-         #volume_dst = target_path(
-         #        Path(os.path.split(dcm_file)[0]), Path("G:/CoBra/Data/dcm"))
-         shutil.copytree(volume_src, volume_dst)
-         for dcm_path_src in glob.iglob(f"Y:/{volume_dir}/*"):
-             counter+=1
-             dst_file_dir = target_path(
-                 Path(os.path.split(dcm_file)[0]), Path("G:/CoBra/Data/dcm"))
-             try:
-                 shutil.move(dcm_file, dst_file_dir)
-             except:
-                 if counter==1:
-                     print(f"Destination path {dst_file_dir} already exists")
-         print("|",  end='')
+    for volume in volumes[:2]:
+        volume_dir = volume_dir_dic[volume]
+        counter = 0
+        volume_src = os.path.normpath(f"Y:/{volume_dir}")
+        if len(os.listdir(volume_src))==0:
+            print('-')
+            continue
+        else:        
+            series_uid = volume_src.split(os.sep)[-1]
+            volume_dst = join(base_dir, 'test', patient_dir, series_uid)
+            shutil.copytree(volume_src, volume_dst)
+            print("|",  end='')
     stop = time.time()
-    print(f" {(stop-start):2.2} s")
+    print(f" {(stop-start)/60:.2} min")
 
 #%%
 # In[move GE (Akshay)]
