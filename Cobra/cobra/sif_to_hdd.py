@@ -29,7 +29,7 @@ base_dir = Path(script_dir).parent
 src_dirs = os.listdir("Y:/")
 src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
                        in src_dirs if x.startswith('2019')])
-disk_dir = "G:"
+disk_dir = "F:"
 dst_data_dir = f"{disk_dir}/CoBra/Data"
 download_pat_path = join(base_dir, "data/share/Cerebriu/patient_groups")
 table_dir = join(base_dir, 'data', 'tables')
@@ -50,9 +50,9 @@ df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 # In[Get relevant patients and volumes]
 print("Start with smallest group of patients (1104) dwi, \
     flair, t2*, t1, mostly negative patients,")
-dftt_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
+group_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
                                    dtype='str')
-df_group = df_all[df_all['PatientID'].isin(dftt_list)]
+df_group = df_all[df_all['PatientID'].isin(group_list)]
 # In case you want to download only specific sequences uncomment next lines
 # rel_seq = ['dwi', 'swi', 't1', 't2', 't2s', 'flair']
 # df_group = df_group[df_group['Sequence'].isin(rel_seq)]
@@ -96,8 +96,11 @@ for pat in patient_list_group[:]:
         else:        
             series_uid = volume_src.split(os.sep)[-1]
             volume_dst = join(crb_dst, patient_dir, series_uid)
-            shutil.copytree(volume_src, volume_dst)
-            print("|",  end='')
+            try:
+                shutil.copytree(volume_src, volume_dst)
+                print("|",  end='')
+            except Exception as e:
+	            print("ERROR : "+str(e))
     stop = time.time()
     print(f" {(stop-start)/60:.2} min")
 
