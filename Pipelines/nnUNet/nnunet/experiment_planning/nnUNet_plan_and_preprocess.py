@@ -22,8 +22,9 @@ import shutil
 from nnunet.utilities.task_name_id_conversion import convert_id_to_task_name
 from nnunet.preprocessing.sanity_checks import verify_dataset_integrity
 from nnunet.training.model_restore import recursive_find_python_class
+import nibabel
 
-
+nibabel.Nifti1Header.quaternion_threshold = -1e-06
 def main():
     import argparse
 

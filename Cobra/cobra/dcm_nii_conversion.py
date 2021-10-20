@@ -79,7 +79,7 @@ for compression in range(9,10):
         os.makedirs(out_patient_dir)
         print(f"{out_patient_dir} created")    
     for scan_dir in scan_dirs:   
-        dicom2nifti.dcm2nii(scan_dir, out_patient_dir, compression=compression,
+        dcm2nii.dcm2nii(scan_dir, out_patient_dir, compression=compression,
                             verbose=1)
     stop = time.time()
     conversion_times.append(stop-start)
