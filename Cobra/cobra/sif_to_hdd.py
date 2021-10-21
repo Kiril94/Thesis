@@ -91,7 +91,7 @@ for pat in patient_list_group[:]:
         counter = 0
         volume_src = os.path.normpath(f"Y:/{volume_dir}")
         if len(os.listdir(volume_src))==0:
-            print('-')
+            print('-',  end='')
             continue
         else:        
             series_uid = volume_src.split(os.sep)[-1]
