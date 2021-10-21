@@ -102,7 +102,7 @@ for pat in patient_list_group[:]:
             except Exception as e:
 	            print("ERROR : "+str(e))
     stop = time.time()
-    print(f" {(stop-start)/60:.2} min")
+    print(f"\n {(stop-start)/60:.3} min")
 
 #%%
 # In[move GE (Akshay)]
