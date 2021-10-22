@@ -36,7 +36,7 @@ table_dir = join(base_dir, 'data', 'tables')
 #%% 
 # In[Load df]
 
-volume_dir_df = pd.read_csv(join(table_dir, 'sid_directories.csv'))
+volume_dir_df = pd.read_csv(join(table_dir, 'series_directories.csv'))
 patient_dir_df = pd.read_csv(join(table_dir, 'patient_directories.csv'))
 volume_dir_dic = pd.Series(
     volume_dir_df.Directory.values, index=volume_dir_df.SeriesInstanceUID)\
