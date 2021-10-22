@@ -68,10 +68,13 @@ patient_list_group = df_group.PatientID.unique()
 #%%
 # In[move crb]
 crb_dst = join(dst_data_dir, 'dcm')
-for pat in patient_list_group[:]:
+first_patient_idx = 210
+counter = first_patient_idx
+for pat in patient_list_group[first_patient_idx:]:
     patient_dir = patient_dir_dic[pat]
+    counter += 1
     with open(f"{base_dir}/patient_log.txt", mode="w") as f:
-        f.write(f"{patient_dir}\n")
+        f.write(f"{patient_dir}\n index: {counter}")
     start = time.time()
     print(f"Patient: {patient_dir}", end='\n')
     print(datetime.now().strftime("%H:%M:%S"))
