@@ -28,8 +28,9 @@ def ax_decorator(fig, ax,
                  ytickparams_ls=25, ytickparams_rot=0,
                  xlogscale=False, ylogscale=False,
                  xrange=(None,None), yrange=(None,None),
-                 tight_layout=True,
+                 tight_layout=True,plot_style='ggplot',
                  **kwargs):
+    plt.style.use(plot_style)
     _, labels = ax.get_legend_handles_labels()
     if len(labels)>0:
         legend = ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor='white',
@@ -63,16 +64,12 @@ def ax_decorator(fig, ax,
 
 def plot_decorator(plot_func, plot_func_args=[], plot_func_kwargs={},
                    figsize=(9, 9), save=False, dpi=80, figname='',
-                   lgd=False, lgd_loc=0, lgd_fs=25, lgd_color='white',
-                   lgd_ncol=1, lgd_shadow=True,
-                   set_ttl=False, ttl='Title', ttl_fs=20, ttl_clr='k',
-                   set_xlabel=False, xlabel='count', xlabel_fs=25,
-                   set_ylabel=False, ylabel='count', ylabel_fs=25,
-                   xlogscale=False, ylogscale=False, 
                    caption='', caption_fs=20, caption_pos=(.5, -.05),
+                   plot_style='ggplot',
                    kwargs={}):
     """Takes a function plot_func which takes args, 
     kwargs and ax to produce a plot"""
+    plt.style.use(plot_style)
     fig, ax = plt.subplots(figsize=figsize)
     ax = plot_func(*plot_func_args, **plot_func_kwargs, ax=ax)
     try:
