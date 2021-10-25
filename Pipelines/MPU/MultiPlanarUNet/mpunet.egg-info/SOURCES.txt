@@ -45,6 +45,7 @@ mpunet/database/__init__.py
 mpunet/database/db_conn.py
 mpunet/database/default_inserts.py
 mpunet/database/default_tables.py
+mpunet/dataset_conversion/convert_miccai.py
 mpunet/errors/__init__.py
 mpunet/errors/deprecated_warnings.py
 mpunet/errors/image_errors.py

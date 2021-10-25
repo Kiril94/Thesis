@@ -3,6 +3,8 @@
 import nibabel as nib
 nib.Nifti1Header.quaternion_threshold = -1e-06
 import numpy as np
+from bs4 import BeautifulSoup
+import gzip
 import os 
 from os.path import join, split
 from pathlib import Path
@@ -29,6 +31,7 @@ print(os.listdir(data_path))
 
 #%% 
 # In[transform]
+convert = False
 def convert_image(im_path):
     im = nib.load(im_path)
     if len(im.shape)==3:
@@ -38,7 +41,8 @@ def convert_image(im_path):
 
 for paths in paths_all:
     for im_path in paths:
-        convert_image(im_path)
+        if convert:
+            convert_image(im_path)
 #%%
 # In[Rename]
 rename=False
@@ -54,3 +58,36 @@ for files in label_files:
             target_file = join(
                 dir_, name)
             os.rename(file, target_file)
+#%%
+# In[Get the dict]
+xml_dir = join(task_folder, "labels_dict.xml")
+with open(xml_dir, 'r') as f:
+    data = f.read()
+ 
+Bs_data = BeautifulSoup(data, "xml")
+result_list = []
+b_label = Bs_data.find_all('Label')
+for b in b_label:
+    number = int(b.find('Number').string)
+    name = b.find('Name').string
+    color = b.find('RGBColor').string
+    result_list.append((number, name, color))
+
+print(result_list[0])
+#print(dir(b_label[0].find('Name')))
+print(b_label[0].find('Name').string)
+with open(join(task_folder, 'labels.txt'), 'w') as f:
+    for item in result_list:
+        f.write(f"{item[0]}, {item[1]}, {item[2]}\n")
+
+
+#%%
+# In[Convert labels to consecutive]
+a = np.array([[1,2,3],
+              [3,2,4]])
+my_dict = {1:23, 2:34, 3:36, 4:45}
+print(np.vectorize(my_dict.get)(a))
+print(os.listdir(data_path))       
+def convert_to_consecutive(im):
+
+    pass
