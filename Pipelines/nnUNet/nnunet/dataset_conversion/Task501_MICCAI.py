@@ -168,8 +168,8 @@ utils.generate_dataset_json(join(task_folder, 'dataset.json'),
 #%%
 # In[Compress tar files]
 import tarfile
-with tarfile.open(join(data_folder, 'share',"Task500_Test.tar.gz"), "w:gz") as tar:
-    tar.add(task_folder, arcname="Task500_Test")
+with tarfile.open(join(data_folder, 'share',"Task501_MICCAI.tar.gz"), "w:gz") as tar:
+    tar.add(task_folder, arcname="Task501_MICCAI")
 
 #%%
 # In[To decompress the file run]
