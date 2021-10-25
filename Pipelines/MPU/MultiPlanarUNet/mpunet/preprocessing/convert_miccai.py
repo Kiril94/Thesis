@@ -4,7 +4,8 @@ import nibabel as nib
 nib.Nifti1Header.quaternion_threshold = -1e-06
 import numpy as np
 from bs4 import BeautifulSoup
-import gzip
+sys.path.append("D:/Thesis/Pipelines")
+from utilities import preprocess
 import os 
 from os.path import join, split
 from pathlib import Path
@@ -102,12 +103,8 @@ irr_labels = list(set(orig_labels_dic.keys() - set(labels_list)))
 new_labels_dic = orig_labels_dic.copy()
 for key in irr_labels:
     new_labels_dic.pop(key)
-def rename_keys(d, trafo_dic):
-    d_new = d.copy()
-    for item in trafo_dic.items():
-        d_new[item[1]] = d_new.pop(item[0])
-    return d_new
-new_labels_dic = rename_keys(new_labels_dic, trafo_dic)
+
+new_labels_dic = preprocess.rename_keys(new_labels_dic, trafo_dic)
 new_labels_dic[0] = 'background'
 new_labels_dic = dict(sorted(
     new_labels_dic.items(),key=lambda x:x[0]))
@@ -125,14 +122,8 @@ with open(f"{data_path}/trafo_dic.txt", 'w') as f:
 #inv_trafo_dic = {v: k for k, v in trafo_dic.items()}
 #%%
 # In[Transform images]
-def transform_labels(im_path, trafo_dic):
-    im = nib.load(im_path)
-    arr = im.get_fdata().astype(np.int32)
-    new_arr = np.vectorize(trafo_dic.get)(arr)
-    nib.save(nib.Nifti1Image(new_arr, affine=im.affine), im_path)
-
 labels_paths = labels_tr + labels_val + labels_ts
 transform = False
 if transform:
     for im_path in labels_paths:
-        transform_labels(im_path, trafo_dic)
+        preprocess.transform_labels(im_path, trafo_dic)

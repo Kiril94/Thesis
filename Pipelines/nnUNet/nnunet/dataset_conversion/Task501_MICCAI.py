@@ -13,6 +13,8 @@ from os.path import join
 from os.path import split
 import os
 import sys
+sys.path.append("D:/Thesis/Pipelines")
+from utilities import preprocess
 sys.path.append("D:/Thesis/Cobra")
 from cobra.utilities import basic
 from bs4 import BeautifulSoup
@@ -103,19 +105,21 @@ labels_list = [46,4,49,51,50,52,23,36,57,55,
 149,177,169,109,115,135,161,129,145,157,197,44,45,11,35,38,40,39,41,71,72,73]
 labels_list = sorted(labels_list)
 trafo_dic = {x:(i+1) for i, x in enumerate(labels_list)}
-def rename_keys(d, trafo_dic):
-    d_new = d.copy()
-    for item in trafo_dic.items():
-        d_new[item[1]] = d_new.pop(item[0])
-    return d_new
-new_labels_dic = rename_keys(orig_labels_dic, trafo_dic)
+
+# Remove all the irrelevant keys
+irr_labels = list(set(orig_labels_dic.keys() - set(labels_list)))
+new_labels_dic = orig_labels_dic.copy()
+for key in irr_labels:
+    new_labels_dic.pop(key)
+
+new_labels_dic = preprocess.rename_keys(new_labels_dic, trafo_dic)
 new_labels_dic[0] = 'background'
+new_labels_dic = dict(sorted(
+    new_labels_dic.items(),key=lambda x:x[0]))
 with open(f"{task_folder}/new_labels_dic.txt", 'w') as f:
     print(new_labels_dic, file=f)
-
 #%%
 # In[Get trafo dict for images]
-irr_labels = sorted(list(set(orig_labels_dic.keys()) - set(labels_list)))
 for label in irr_labels: #map irrelevant labels to 0
     trafo_dic[label] = 0
 print(trafo_dic)
@@ -126,16 +130,12 @@ with open(f"{task_folder}/trafo_dic.txt", 'w') as f:
 
 #%%
 # In[Transform images]
-def transform_labels(im_path, trafo_dic):
-    im = nib.load(im_path)
-    arr = im.get_fdata().astype(np.int32)
-    new_arr = np.vectorize(trafo_dic.get)(arr)
-    nib.save(nib.Nifti1Image(new_arr, affine=im.affine), im_path)
+
 
 transform = False
 if transform:
     for im_path in tr_lbl_files:
-        transform_labels(im_path, trafo_dic)
+        preprocess.transform_labels(im_path, trafo_dic)
         print(f"transformed {im_path}")
 #%%
 # In[test transformed]
@@ -145,21 +145,24 @@ print(np.unique(arr))
 print('looks good')
 
 #%%
-# In[generate dataset json]
-print(new_labels_dic)
+# In[The dict needs to be in the right format]
 new_labels_dic_sorted = {}
-for key, value in new_labels_dic.itmes():
+for key, value in new_labels_dic.items():
     key = str(key)
     if len(key)==1:
         key = '00'+key
     elif len(key)==2:
         key = '0'+key
-    new_labels_dic_sorted[]
+    new_labels_dic_sorted[key] = value
+print(new_labels_dic_sorted)
+
+#%%
+# In[generate dataset json]
 utils.generate_dataset_json(join(task_folder, 'dataset.json'), 
                             tr_folder,  
                             None,
                             modalities=('T1',),
-                            labels=new_labels_dic, 
+                            labels=new_labels_dic_sorted, 
                             dataset_name="Task501_MICCAI", 
                            )
 #%%
