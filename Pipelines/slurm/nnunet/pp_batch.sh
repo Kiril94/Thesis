@@ -8,4 +8,4 @@
 ##SBATCH –-output=/home/fjn197/Thesis/Pipelines/slurm/out.out
 # Skipping many options! see man sbatch
 # From here on, we can start our program
-nnUNet_plan_and_preprocess -t 500 --verify_dataset_integrity
+nnUNet_plan_and_preprocess -t 501 --verify_dataset_integrity

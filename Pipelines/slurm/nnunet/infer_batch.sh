@@ -8,4 +8,4 @@
 ##SBATCH –-output=/home/fjn197/Thesis/Pipelines/slurm/out.out
 # Skipping many options! see man sbatch
 # From here on, we can start our program
-nnUNet_predict -i /home/fjn197/Thesis/Pipelines/data/nnUNet_raw_data_base/nnUNet_raw_data/Task500_Test/imagesTs -o /home/fjn197/Thesis/Pipelines/data/nnunet/nnUNet_predictions -t 500 -m 2d
+nnUNet_predict -i /home/fjn197/Thesis/Pipelines/data/nnunet/nnUNet_raw_data_base/nnUNet_raw_data/Task500_Test/imagesTs -o /home/fjn197/Thesis/Pipelines/data/nnunet/nnUNet_predictions -t 500 -m 2d
