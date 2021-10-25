@@ -1,5 +1,6 @@
 #%%
 # In[Import]
+import pickle
 import nibabel as nib
 nib.Nifti1Header.quaternion_threshold = -1e-06
 import numpy as np
@@ -15,7 +16,7 @@ import sys
 if Cobra_dir not in sys.path:
     sys.path.append(Cobra_dir)
 from cobra.utilities import basic
-
+import ast
 #%% 
 # In[Paths]
 data_path = join(base_dir,'Pipelines', 'data', 
@@ -76,16 +77,52 @@ result_list = sorted(result_list)
 result_list.insert(0, (0, 'background', '0 0 0'))
 print(result_list[0])
 print(b_label[0].find('Name').string)
-with open(join(data_path, 'labels.txt'), 'w') as f:
+with open(join(data_path, 'original_labels.txt'), 'w') as f:
     for item in result_list:
         f.write(f"{item[0]}, {item[1]}, {item[2]}\n")
-labels_dic = {tuple_[0]:tuple_[1] for tuple_ in result_list}
-
+orig_labels_dic = {tuple_[0]:tuple_[1] for tuple_ in result_list}
+with open(f"{data_path}/original_labels_dic.txt", 'w') as f:
+    print(orig_labels_dic, file=f)
 #%%
 # In[Convert labels to consecutive]
 # The strategy is to fill missing labels by the last existing label,
 # e.g. if 1 and 5 is missing we take 250 and make it 1, 249 is made 5
-# List of labels will come, ignore all the others
+# List of relevant labels, all the rest is set to 0 (background)
+labels_list = [46,4,49,51,50,52,23,36,57,55,
+59,61,76,30,37,58,56,60,62,75,31,47,116,122,170,132,154,200,180,184,206,202,100,
+138,166,102,172,104,136,146,178,112,118,120,124,140,152,186,142,162,164,190,204,
+150,182,192,106,174,194,198,148,176,168,108,114,134,160,128,144,156,196,32,48,
+117,123,171,133,155,201,181,185,207,203,101,139,167,103,173,105,137,147,179,
+113,119,121,125,141,153,187,143,163,165,191,205,151,183,193,107,175,195,199,
+149,177,169,109,115,135,161,129,145,157,197,44,45,11,35,38,40,39,41,71,72,73]
+labels_list = sorted(labels_list)
+new_labels_dic = {x:(i+1) for i, x in enumerate(labels_list)}
+def rename_keys(d, trafo_dic):
+    d_new = d.copy()
+    for item in trafo_dic.items():
+        d_new[item[1]] = d_new.pop(item[0])
+    return d_new
+new_labels_dic = rename_keys(orig_labels_dic, new_labels_dic)
+new_labels_dic[0] = 'background'
+with open(f"{data_path}/new_labels_dic.txt", 'w') as f:
+    print(new_labels_dic, file=f)
+
+#%%
+# In[Transform the images]
+transform = False
+if transform:
+    pass
+#%%
+irr_labels = sorted(list(set(labels_dic.keys()) - set(labels_list)))
+
+for x in irr_labels: #map irrelevant labels to 0
+    transform_labels_dict[x] = 0
+with open(f"{data_path}/transform_labels_dic.txt", 'w') as f:
+    print(transform_labels_dict, file=f)
+with open(f"{data_path}/transform_labels_dic.txt", "r") as f:
+    contents = f.read()
+    dic = ast.literal_eval(contents)
+#print(labels_dic)
 def label_count(im_paths):
     count_dic = {}
     for label in range(208):
@@ -98,7 +135,7 @@ def label_count(im_paths):
     return count_dic
 labels_tr_val = labels_tr + labels_val
 # check which labels are not present in the data
-count_dic = label_count(labels_tr_val)
+# count_dic = label_count(labels_tr_val)
 #%%
 trafo_dic = {label:label+1 for label in labels_dic.keys()}
 inv_trafo_dic = {v: k for k, v in trafo_dic.items()}
@@ -126,3 +163,4 @@ a = np.array([[1,2,3],
 my_dict = {1:23, 2:34, 3:36, 4:45}
 #print(np.vectorize(my_dict.get)(a))
 #print(os.listdir(data_path))       
+
