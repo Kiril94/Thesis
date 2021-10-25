@@ -132,11 +132,16 @@ def transform_labels(im_path, trafo_dic):
     new_arr = np.vectorize(trafo_dic.get)(arr)
     nib.save(nib.Nifti1Image(new_arr, affine=im.affine), im_path)
 
-transform = True
+transform = False
 if transform:
-    for im_path in tr_files:
+    for im_path in tr_lbl_files:
         transform_labels(im_path, trafo_dic)
         print(f"transformed {im_path}")
+#%%
+# In[test transformed]
+im = nib.load(tr_lbl_files[10])
+arr = im.get_fdata().astype(np.int32)
+print(np.unique(arr))
 
 #%%
 # In[wqw]
