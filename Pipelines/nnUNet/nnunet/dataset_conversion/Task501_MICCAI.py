@@ -142,17 +142,25 @@ if transform:
 im = nib.load(tr_lbl_files[10])
 arr = im.get_fdata().astype(np.int32)
 print(np.unique(arr))
+print('looks good')
 
 #%%
-# In[wqw]
-#%%
 # In[generate dataset json]
+print(new_labels_dic)
+new_labels_dic_sorted = {}
+for key, value in new_labels_dic.itmes():
+    key = str(key)
+    if len(key)==1:
+        key = '00'+key
+    elif len(key)==2:
+        key = '0'+key
+    new_labels_dic_sorted[]
 utils.generate_dataset_json(join(task_folder, 'dataset.json'), 
-                            tr_folder, 
-                            ts_folder, 
+                            tr_folder,  
+                            None,
                             modalities=('T1',),
-                            labels=labels_dic, 
-                            dataset_name="Task500_Test", 
+                            labels=new_labels_dic, 
+                            dataset_name="Task501_MICCAI", 
                            )
 #%%
 # In[Compress tar files]
