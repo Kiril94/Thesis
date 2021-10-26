@@ -11,9 +11,10 @@ from glob import iglob
 import pandas as pd
 from access_sif_data import load_data_tools as ld
 import csv
-import datetime
+from datetime import datetime as dt
 from pathlib import Path
 import logging
+
 
 
 def write_csv(csv_path, patient_list, append=False):
@@ -98,27 +99,48 @@ def literal_converter(val):
 def date_time_converter(val):
     try:
         result = None if (val == '' or val=='NONE') \
-            else datetime.datetime.strptime(val,'%Y-%m-%d %H:%M:%S')
+            else dt.strptime(val,'%Y-%m-%d %H:%M:%S')
     except:
         result = val
     return result
+
+def date_converter(val):
+    try:
+        return dt.strptime(val, "%Y-%m-%d").date()
+    except:
+        return pd.NaT
+def time_converter(val):
+    try:
+        return dt.strptime(val, "%H:%M:%S").time()
+    except:
+        return pd.NaT
 
 def load_scan_csv(csv_path):
     """Returns a dataframe
     Takes into account that some columns store lists."""
     try:
         df = pd.read_csv(
-            csv_path, encoding='unicode_escape',
-            converters={**{
+            csv_path, 
+            converters={
+                **{
                 k: literal_converter for k in\
-                    ['ScanningSequence','ImageType', 'SequenceVariant', 'ScanOptions',
-                     'PixelSpacing']},**{'DateTime':date_time_converter}})
+                    ['ScanningSequence','ImageType', 'SequenceVariant',
+                     'ScanOptions',
+                     'PixelSpacing']},
+                **{'DateTime':date_time_converter, 
+                'InstanceCreationDate':date_converter, 
+                'InstanceCreationTime':time_converter,}, 
+                    },
+                     )
     except: 
         df = pd.read_csv(
-            csv_path, encoding='unicode_escape',
+            csv_path, 
             converters={
-                k: literal_converter for k in\
-                    ['ScanningSequence', 'ImageType', 'SequenceVariant, ScanOptions']})
+                **{k: literal_converter for k in\
+                    ['ScanningSequence', 'ImageType', 'SequenceVariant, ScanOptions']},
+                    **{'InstanceCreationDate':date_converter, 
+                     'InstanceCreationTime':time_converter,}},
+                    )
         print('Once PixelSpacing is added the try-except statement should be removed')
     return df
 

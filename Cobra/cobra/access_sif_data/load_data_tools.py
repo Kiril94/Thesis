@@ -110,11 +110,11 @@ def get_scan_key_list():
                 ]
     return key_list
 
-def get_scan_dictionary(scan_dir, reconstruct_3d=True):
+def get_scan_dictionary(scan_dir, reconstruct_3d=True, slice=0):
     """Returns a dictionary for scan at scan_dir"""
     if len(os.listdir(scan_dir))!=0:
         try:
-            dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[0])
+            dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[slice])
             dicom = dcmread(dicom_file_dir)
         except:
             print('Dicom file non readable')
@@ -159,6 +159,17 @@ def get_scan_dictionary(scan_dir, reconstruct_3d=True):
 
         scan_dict[k[0]] = value
     return DotDict(scan_dict)
+
+def get_scan_date(scan_dir, slice=0):
+    """Returns the date of the scan"""
+    dicom_file_dir = os.path.join(scan_dir, os.listdir(scan_dir)[slice])
+    dicom = dcmread(dicom_file_dir)
+    key = 'InstanceCreationDate'
+    try:
+        date = str(getattr(dicom, key))
+    except:
+        date = None
+    return date
 
 
 class Patient():
