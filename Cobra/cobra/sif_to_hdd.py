@@ -62,19 +62,20 @@ df_group = df_group.sort_values('PatientID')
 # In[get index of last patient]
 patient_list_group = df_group.PatientID.unique()
 # if you want to start with a specific patient uncomment and set last_patient
-#last_patient = "15473b3462554d4f81eb36caefca4978"
-#last_patient_idx = np.where(patient_list_group==last_patient)[0][0]
+last_patient = "718c50ab4a6b83dcaa4582f628b14d15"
+last_patient_idx = np.where(patient_list_group==last_patient)[0][0]
 
 #%%
 # In[move crb]
 crb_dst = join(dst_data_dir, 'dcm')
-first_patient_idx = 210
-counter = first_patient_idx
-for pat in patient_list_group[first_patient_idx:]:
+counter = last_patient_idx
+for pat in patient_list_group[last_patient_idx:]:
     patient_dir = patient_dir_dic[pat]
     counter += 1
+    log_str = f"{patient_dir}\n index: {counter}\
+            \n {datetime.now().strftime('%H:%M:%S')}"
     with open(f"{base_dir}/patient_log.txt", mode="w") as f:
-        f.write(f"{patient_dir}\n index: {counter}")
+        f.write(log_str)
     start = time.time()
     print(f"Patient: {patient_dir}", end='\n')
     print(datetime.now().strftime("%H:%M:%S"))
@@ -93,7 +94,6 @@ for pat in patient_list_group[first_patient_idx:]:
     print(f"download {len(volumes)} volumes")
     for volume in volumes:
         volume_dir = volume_dir_dic[volume]
-        counter = 0
         volume_src = os.path.normpath(f"Y:/{volume_dir}")
         if len(os.listdir(volume_src))==0:
             print('-',  end='')
