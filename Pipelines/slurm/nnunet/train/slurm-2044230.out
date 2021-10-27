@@ -1,0 +1,41 @@
+
+
+Please cite the following paper when using nnUNet:
+
+Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation." Nat Methods (2020). https://doi.org/10.1038/s41592-020-01008-z
+
+
+If you have questions or suggestions, feel free to open an issue at https://github.com/MIC-DKFZ/nnUNet
+
+###############################################
+I am running the following nnUNet: 2d
+My trainer class is:  <class 'nnunet.training.network_training.nnUNetTrainerV2.nnUNetTrainerV2'>
+For that I will be using the following configuration:
+num_classes:  133
+modalities:  {0: 'T1'}
+use_mask_for_norm OrderedDict([(0, True)])
+keep_only_largest_region None
+min_region_size_per_class None
+min_size_per_class None
+normalization_schemes OrderedDict([(0, 'nonCT')])
+stages...
+
+stage:  0
+{'batch_size': 52, 'num_pool_per_axis': [5, 5], 'patch_size': array([224, 192]), 'median_patient_size_in_voxels': array([230, 212, 165]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'pool_op_kernel_sizes': [[2, 2], [2, 2], [2, 2], [2, 2], [2, 2]], 'conv_kernel_sizes': [[3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3]], 'do_dummy_2D_data_aug': False}
+
+I am using stage 0 from these plans
+I am using batch dice + CE loss
+
+I am using data from this folder:  /home/fjn197/Thesis/Pipelines/data/nnunet/nnUNet_preprocessed/Task501_MICCAI/nnUNetData_plans_v2.1_2D
+###############################################
+loading dataset
+loading all case properties
+2021-10-27 11:42:02.500856: Using splits from existing split file: /home/fjn197/Thesis/Pipelines/data/nnunet/nnUNet_preprocessed/Task501_MICCAI/splits_final.pkl
+2021-10-27 11:42:02.513118: The split file contains 5 splits.
+2021-10-27 11:42:02.515921: Desired fold for training: 0
+2021-10-27 11:42:02.517876: This split has 28 training and 7 validation cases.
+unpacking dataset
+done
+2021-10-27 11:42:20.954721: loading checkpoint /home/fjn197/Thesis/Pipelines/data/nnunet/nnUNet_trained_models/nnUNet/2d/Task501_MICCAI/nnUNetTrainerV2__nnUNetPlansv2.1/fold_0/model_latest.model train= True
+2021-10-27 11:42:23.047418: lr: 0.008639
+using pin_memory on device 0
