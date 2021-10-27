@@ -48,10 +48,19 @@ df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 
 #%%
 # In[Get relevant patients and volumes]
-print("Start with smallest group of patients (1104) dwi, \
-    flair, t2*, t1, mostly negative patients,")
-group_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
+# This batch is not finished yet, however we will first take 
+# the one without t2s, since positive patients have no t2s
+#print("Start with smallest group of patients (1104) dwi, \
+#    flair, t2*, t1, mostly negative patients,")
+#group_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
+#                                   dtype='str')
+
+print("For now download the group (1104) dwi, \
+    flair, swi, t1")
+group_list = np.loadtxt(join(download_pat_path, "dwi_flair_swi_t1.txt"),
                                    dtype='str')
+
+
 df_group = df_all[df_all['PatientID'].isin(group_list)]
 # In case you want to download only specific sequences uncomment next lines
 # rel_seq = ['dwi', 'swi', 't1', 't2', 't2s', 'flair']
@@ -62,8 +71,9 @@ df_group = df_group.sort_values('PatientID')
 # In[get index of last patient]
 patient_list_group = df_group.PatientID.unique()
 # if you want to start with a specific patient uncomment and set last_patient
-last_patient = "81a4e5485a9606409107faa36cf8d027"
-last_patient_idx = np.where(patient_list_group==last_patient)[0][0]
+# last_patient = "85590c5af43c362de4ececed060da656" #dwi flair t2s t1
+# last_patient_idx = np.where(patient_list_group==last_patient)[0][0]
+last_patient_idx = 0
 print(last_patient_idx)
 #%%
 # In[move crb]
@@ -72,9 +82,9 @@ counter = last_patient_idx
 for pat in patient_list_group[last_patient_idx:]:
     patient_dir = patient_dir_dic[pat]
     counter += 1
-    log_str = f"{patient_dir}\n index: {counter}\
-            \n {datetime.now().strftime('%H:%M:%S')}"
-    with open(f"{base_dir}/patient_log.txt", mode="w") as f:
+    log_str = f"{patient_dir}\nindex: {counter}\
+            \n {datetime.now().strftime('%H:%M:%S')}\n"
+    with open(f"{base_dir}/patient_log.txt", mode="a+") as f:
         f.write(log_str)
     start = time.time()
     print(f"Patient: {patient_dir}", end='\n')
