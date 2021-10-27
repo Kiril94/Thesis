@@ -62,9 +62,9 @@ df_group = df_group.sort_values('PatientID')
 # In[get index of last patient]
 patient_list_group = df_group.PatientID.unique()
 # if you want to start with a specific patient uncomment and set last_patient
-last_patient = "718c50ab4a6b83dcaa4582f628b14d15"
+last_patient = "81a4e5485a9606409107faa36cf8d027"
 last_patient_idx = np.where(patient_list_group==last_patient)[0][0]
-
+print(last_patient_idx)
 #%%
 # In[move crb]
 crb_dst = join(dst_data_dir, 'dcm')
