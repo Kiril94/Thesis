@@ -101,4 +101,38 @@ def get_masks_dict(df, return_tags=True):
         return mask_dict
     
 
-
+def get_studies_df(df_sorted, threshold=2):
+    """Returns:
+        Data frame containing patientid, DateTimeStart of study (first scan),
+        and number of volumes
+    """
+    df_studies = pd.DataFrame(columns=['PatientID', 'StudyNum',
+                    'DateTimeStart', 'NumVolumes'])
+    
+    patient_ids = df_sorted['PatientID'].unique()
+    for patient in patient_ids:
+        print('|', end='')
+        study_num = 0
+        patient_mask = df_sorted['PatientID'] == patient
+        date_times = df_sorted[patient_mask]['DateTime']
+        date_time0 = date_times[0]
+        df_studies = df_studies.append({'PatientID':patient, 
+                                        'StudyNum':study_num,
+                                            'DateTimeStart':date_time0}, 
+                                        ignore_index=True)
+        num_volumes = 1
+        for date_time in date_times[1:]:
+            time_diff = date_time-date_time0
+            if time_diff.total_seconds()/3600 > threshold:
+                study_num+=1
+                df_studies.iloc[-1, -1] = num_volumes
+                df_studies = df_studies.append({'PatientID':patient, 
+                                        'StudyNum':study_num,
+                                        'DateTimeStart':date_time}, 
+                                        ignore_index=True)
+                date_time0 = date_time
+                num_volumes = 1
+            else:
+                num_volumes +=1
+        df_studies.iloc[-1, -1] = num_volumes
+    return df_studies
