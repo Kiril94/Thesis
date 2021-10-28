@@ -108,12 +108,18 @@ def date_converter(val):
     try:
         return dt.strptime(val, "%Y-%m-%d").date()
     except:
-        return pd.NaT
+        try:
+            return dt.strptime(val, "%Y-%m-%d %H:%M:%S").date()
+        except:
+            return pd.NaT
 def time_converter(val):
     try:
         return dt.strptime(val, "%H:%M:%S").time()
     except:
-        return pd.NaT
+        try:
+            return dt.strptime(val, "%Y-%m-%d %H:%M:%S").time()
+        except:
+            return pd.NaT
 
 def load_scan_csv(csv_path):
     """Returns a dataframe
