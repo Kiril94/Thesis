@@ -72,6 +72,9 @@ df_group = df_group.sort_values('PatientID')
 patient_list_group = df_group.PatientID.unique()
 # if you want to start with a specific patient uncomment and set last_patient
 # last_patient = "85590c5af43c362de4ececed060da656" #dwi flair t2s t1
+
+
+# last_patient = 026cd9b1a0d88b61f12daf955dc6ca79
 # last_patient_idx = np.where(patient_list_group==last_patient)[0][0]
 last_patient_idx = 0
 print(last_patient_idx)
