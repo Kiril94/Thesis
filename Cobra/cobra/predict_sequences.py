@@ -4,7 +4,7 @@ Created on Mon Sep 13 15:50:50 2021
 
 @author: klein
 """
-
+#%%
 import xgboost as xgb
 import os
 from pathlib import Path
@@ -17,16 +17,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
-import scikitplot as skplot
 
 
+#%%
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 fig_dir = f"{base_dir}/figs/basic_stats"
-table_dir = f"{base_dir}/tables"
+table_dir = f"{base_dir}/data/tables"
 fig_dir = f"{base_dir}/figs"
 
+#%%
 # In[Define useful keys]
 TE_k = 'EchoTime'
 TR_k = 'RepetitionTime'
@@ -41,7 +42,7 @@ SO_k = 'ScanOptions'
 ETL_k = 'EchoTrainLength'
 DT_k = 'DateTime'
 ICD_k = 'InstanceCreationDate'
-
+#%%
 # In[load all csv]
 rel_cols = [SID_k, SD_k, TE_k, TR_k, FA_k, TI_k,
             ETL_k, SS_k, SV_k, PID_k, DT_k, ICD_k, ]
@@ -49,7 +50,7 @@ table_all_dir = f"{table_dir}/neg_pos.csv"
 df_all = utils.load_scan_csv(table_all_dir)[rel_cols]
 print("Fraction of missing values for every column")
 print(df_all.isna().mean(axis=0))
-
+#%%
 # In[Select only relevant columns]
 print(f"all elements {len(df_all)}")
 df_all = df_all[rel_cols].dropna(subset=[SID_k])
