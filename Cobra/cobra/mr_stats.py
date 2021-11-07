@@ -18,6 +18,7 @@ from utilities import stats, utils, mri_stats, basic
 from utilities.basic import DotDict, p, sort_dict
 import importlib
 
+
 # %%
 # In[Usefule keys]
 TE_k = 'EchoTime'
@@ -54,9 +55,9 @@ table_dir = f"{base_dir}/data/tables"
 
 # %%
 # In[load positive csv]
-pos_tab_dir = f"{table_dir}/pos_nn.csv"
-neg_tab_dir = f"{table_dir}/neg_all.csv"
-df_p = utils.load_scan_csv(pos_tab_dir)
+#pos_tab_dir = f"{table_dir}/pos_nn.csv"
+#neg_tab_dir = f"{table_dir}/neg_all.csv"
+#df_p = utils.load_scan_csv(pos_tab_dir)
 #df_n = utils.load_scan_csv(neg_tab_dir)
 all_tab_dir = f"{table_dir}/neg_pos.csv"
 df_all = utils.load_scan_csv(all_tab_dir)
@@ -109,7 +110,7 @@ svis.bar(pred_seq_counts.keys(), pred_seq_counts.values, fig=fig, ax=ax,
          figname=f"{fig_dir}/sequence_pred/seq_dist_volume_count.png",)
 # %%
 # In[Patient Count by Sequences]
-pos_mask = df_all.Pos==1
+pos_mask = df_all.Positive==1
 pos_pat_count_seq = df_all[pos_mask].groupby(by='Sequence')\
     .PatientID.nunique().sort_values(ascending=False)
 neg_pat_count_seq = df_all[~pos_mask].groupby(by='Sequence')\
@@ -117,7 +118,8 @@ neg_pat_count_seq = df_all[~pos_mask].groupby(by='Sequence')\
 fig, ax = svis.bar(neg_pat_count_seq.keys(), neg_pat_count_seq.values, 
                    label='neg')
 svis.bar(pos_pat_count_seq.keys(),pos_pat_count_seq.values, fig=fig, ax=ax,
-         bottom=neg_pat_count_seq.values, label='pos', color=(0,1), 
+         bottom=neg_pat_count_seq.values, label='pos',
+         color=svis.Color_palette(0)[1], 
          kwargs={'lgd':True, 'xlabel':'Sequence Type','title':'All Patients',
                  'ylabel':'Patient Count'},
          save=True, 
@@ -150,16 +152,19 @@ svis.bar(pos_value_counts.keys(), pos_value_counts.values(),
          bottom=[v for v in neg_value_counts.values()], 
          color=(0,1), label='pos', 
          fig=fig, ax=ax, kwargs={'ylabel':'Volume Count',
-                                 'xlabel':r'$B_0$',
+                                 'xlabel': 'B0',
                                  'lgd_loc':2}, save=True,
          figname=join(fig_dir, 'B0.png'))
 # %%
 # In[Plot distribution of Rows and Columns]
 fig, g = svis.plot_decorator(sns.jointplot, plot_func_kwargs={
     'data':df_all[df_all.Rows<3000],
-    'x':"Rows", 'y':"Columns", 'hue':"Pos"},
+    'x':"Rows", 'y':"Columns", 'hue':"Positive"},
     )
-g.figure.savefig(f"{fig_dir}/scan_sizes.png", dpi=80)
+g.figure.savefig(f"{fig_dir}/basic_stats/scan_sizes.png", dpi=80)
+#%%
+g = sns.scatterplot(data=df_all[df_all.Rows<3000], x='Rows', y='Columns', hue='Positive')
+g.figure.savefig(f"{fig_dir}/basic_stats/scan_sizes_scatter.png", dpi=400)
 
 # %%
 #sns.displot(df_all, x="Rows", y="Columns", hue="Pos", alpha=1)
@@ -207,37 +212,68 @@ svis.hist(num_studies_a, np.arange(.5, max_studies+.5),
                     save=True, title='Positive Patients',
                     figname=f"{fig_dir}/pos/num_studies.png")
 
-
+#%%
 # In[Get number of acquired volumes per patient]
-scans_per_patient = df_p.groupby('PatientID').size()
+scans_per_patient = df_all.groupby('PatientID').size()
 figure = svis.hist(
     scans_per_patient, np.arange(1, 110, 2),
-    show_plot=True, xlabel='# volumes per patient',
-    save=True, figname=f"{fig_dir}/pos/volumes_per_patient.png",
-    title='Positive Patients')
+    show=True,kwargs={'xlabel':'# volumes per patient',
+    'title':'All Patients'},
+    save=True, figname=f"{fig_dir}/basic_stats/volumes_per_patient.png",
+    )
 
+#%%
+scans_per_patient = df_all[df_all.Positive==0].groupby('PatientID').size()
+figure = svis.hist(
+    scans_per_patient, np.arange(1, 110, 2),
+    show=True,kwargs={'xlabel':'# volumes per patient',
+    'title':'Negative Patients'},
+    save=True, figname=f"{fig_dir}/basic_stats/volumes_per_patient_neg.png",
+    )
 
+#%%
 # In[Sort scans by manufacturer]
-manufactureres = df_p['Manufacturer'].unique()
+manufactureres = df_all['Manufacturer'].unique()
 p(manufactureres)
 philips_t = ['Philips Healthcare', 'Philips Medical Systems',
              'Philips']
-philips_c = stats.check_tags(df_p, philips_t, 'Manufacturer').sum()
-siemens_c = stats.mask_sequence_type(df_p, 'SIEMENS', 'Manufacturer').sum()
+philips_c = stats.check_tags(df_all, philips_t, 'Manufacturer').sum()
+siemens_c = stats.mask_sequence_type(df_all, 'SIEMENS', 'Manufacturer').sum()
 gms_c = stats.mask_sequence_type(
-    df_p, 'GE MEDICAL SYSTEMS', 'Manufacturer').sum()
-agfa_c = stats.mask_sequence_type(df_p, 'Agfa', 'Manufacturer').sum()
-none_c = df_p['Manufacturer'].isnull().sum()
-
+    df_all, 'GE MEDICAL SYSTEMS', 'Manufacturer').sum()
+agfa_c = stats.mask_sequence_type(df_all, 'Agfa', 'Manufacturer').sum()
+none_c = df_all['Manufacturer'].isnull().sum()
+#%%
+df_all.Manufacturer.unique()
+#%%
+# In[re]
+# Replace manufacturers
+df_all.Manufacturer[stats.check_tags(df_all, philips_t, 'Manufacturer')] = 'Philips'
+df_all.Manufacturer[stats.check_tags(df_all,['Siemens'], 'Manufacturer')] = 'Siemens'
+#%%
+import matplotlib as mpl
+# In[Plot sequence counts]
+mpl.rcParams['figure.dpi'] = 400
+plt.style.use('ggplot')
+#labels = ['Siemens', 'Philips', 'GE', 'Other', 'other']
+g = sns.countplot(x="Manufacturer", hue="Positive", data=df_all, hue_order=[1,0],
+    order = df_all['Manufacturer'].value_counts().iloc[:3].index)
+#g.set(xlabel=('Manufacturer'), ylabel=('Volume Count'), xticklabels=labels)
+fig = g.get_figure()
+fig.tight_layout()
+fig.savefig(f"{fig_dir}/basic_stats/manufacturer.png")
+#%%
 # In[visualize scanner manufacturer counts]
 fig, ax = plt.subplots(1, figsize=(10, 6))
-manufacturers_unq = ['Philips', 'SIEMENS', 'GEMS', 'Agfa', 'none']
-counts = np.array([philips_c, siemens_c, gms_c, agfa_c, none_c])
-svis.bar(manufacturers_unq, counts, xlabel='Manufacturer',
-              save_plot=True, figname=f"{fig_dir}/pos/manufacturers_count.png",
-              title='Positive Patients')
+manufacturers_unq = ['Philips', 'SIEMENS', 'GE']
+counts = np.array([philips_c, siemens_c, gms_c])
+svis.bar(manufacturers_unq, counts, 
+        kwargs={'xlabel':'Manufacturer', 'title':'All Patients'},
+              save=True, 
+              figname=f"{fig_dir}/basic_stats/manufacturers_count_all.png",
+              )
 
-
+#%%
 # In[Model Name]
 philips_m = stats.check_tags(df_p, philips_t, 'Manufacturer')
 siemens_m = stats.mask_sequence_type(df_p, 'SIEMENS', 'Manufacturer')

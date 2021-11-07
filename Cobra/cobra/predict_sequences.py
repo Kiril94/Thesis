@@ -90,9 +90,9 @@ print(df_all[df_all.Sequence=='dti'].PatientID.nunique())
 seq_count = df_all[sq].value_counts()
 print(seq_count)
 #%%
-df_all.keys()
-#%%
+# In[Plot sequence counts]
 mpl.rcParams['figure.dpi'] = 400
+plt.style.use('ggplot')
 labels = ['Not \nidentified', 'other', 'T1', 'T2', 'DWI', 'FLAIR', 'SWI', 'T2*']
 g = sns.countplot(x="Sequence", hue="Positive", data=df_all, hue_order=[1,0],
     order = df_all['Sequence'].value_counts().index)
@@ -100,6 +100,26 @@ g.set(xlabel=('Sequence Type'), ylabel=('Volume Count'), xticklabels=labels)
 fig = g.get_figure()
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
+
+#%%
+# In[plot sequence counts grouped by patients]
+
+pos_mask = df_all.Positive==1
+pos_pat_count_seq = df_all[pos_mask].groupby(by='Sequence')\
+    .PatientID.nunique().sort_values(ascending=False)
+neg_pat_count_seq = df_all[~pos_mask].groupby(by='Sequence')\
+    .PatientID.nunique().sort_values(ascending=False)
+n_labels = ['Other', 'Flair', 'T2', 'Not\n identified', 'DWI', 'T1', 'SWI', 'T2*']
+fig, ax = svis.bar(n_labels, neg_pat_count_seq.values, 
+                   label='neg', color=svis.Color_palette(0)[1])
+
+svis.bar(n_labels,pos_pat_count_seq.values, fig=fig, ax=ax,
+         bottom=neg_pat_count_seq.values, label='pos',
+         color=svis.Color_palette(0)[0], 
+         kwargs={'lgd':True, 'xlabel':'Sequence Type','title':'All Patients',
+                 'ylabel':'Patient Count'},
+         save=True, 
+         figname=f"{fig_dir}/sequence_pred/seq_patient_count.png")
 
 #%%
 # In[Turn ScanningSequence into multi-hot encoded]
@@ -279,6 +299,7 @@ svis.bar(target_dict.keys(), pred_counts, fig=fig, ax=ax,
                       'title':'Volume Count - All Patients',
                       'ylabel':'Volumes Count'},
               figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
+
 #%%
 # In[Get labels from prediction]
 def dict_mapping(t): return basic.inv_dict(target_dict)[t]
@@ -309,6 +330,25 @@ g.set(xlabel=('Sequence Type'), ylabel=('Volume Count'), )
 fig = g.get_figure()
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count_predicted.png")
+#%%
+# In[Show predicted and true grouped by patients]
+pos_mask = df_final.Positive==1
+pos_pat_count_seq = df_final[pos_mask].groupby(by='Sequence')\
+    .PatientID.nunique().sort_values(ascending=False)
+neg_pat_count_seq = df_final[~pos_mask].groupby(by='Sequence')\
+    .PatientID.nunique().sort_values(ascending=False)
+n_labels = ['Other', 'Flair', 'T2',  'DWI', 'T1', 'SWI', 'T2*']
+fig, ax = svis.bar(n_labels, neg_pat_count_seq.values, 
+                   label='neg', color=svis.Color_palette(0)[1])
+
+svis.bar(n_labels,pos_pat_count_seq.values, fig=fig, ax=ax,
+         bottom=neg_pat_count_seq.values, label='pos',
+         color=svis.Color_palette(0)[0], 
+         kwargs={'lgd':True, 'xlabel':'Sequence Type','title':'All Patients',
+                 'ylabel':'Patient Count'},
+         save=True, 
+         figname=f"{fig_dir}/sequence_pred/seq_patient_count_predicted.png")
+
 #%%
 # In[visualize sequences scatter]
 fig, ax = plt.subplots(2, 2, figsize=(10, 10))
