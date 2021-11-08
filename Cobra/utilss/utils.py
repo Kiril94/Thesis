@@ -14,6 +14,19 @@ import csv
 import datetime
 import numpy as np
 
+def read_pos_data():
+    tab_dir = '/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/tables/pos_nn.csv'
+    df = pd.read_csv(tab_dir,encode='unicode_escape')
+    
+    #In[Convert time and date to datetime for efficient access]
+    time_k = 'InstanceCreationTime'
+    date_k = 'InstanceCreationDate'
+    df['DateTime'] = df[date_k] + ' ' +  df[time_k]
+    #date_time_m = df['DateTime'].isnull()
+    df['DateTime'] = pd.to_datetime(df['DateTime'], format='%Y%m%d %H:%M:%S')
+    
+    return df     
+
 def read_whole_data():
     tab_dir = '/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/tables/'
     intersection_cols = ['PatientID',

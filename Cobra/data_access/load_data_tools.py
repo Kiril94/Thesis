@@ -8,6 +8,7 @@ import vis
 from glob import iglob
 from pathlib import Path
 import datetime as dt
+import pandas as pd 
 #from utilss.basic import DotDict
 
 
@@ -17,6 +18,31 @@ data_dir = f"{BASE_DIR}/data"
 
 patient_dirs = os.listdir(BASE_DIR)
 patient_dir = f"{data_dir}/patient1"
+
+def save_patientsIDlist(csv_path_old,csv_path_new,encoding='utf-8',id_label='PatientID'):
+    '''
+    saves a file with the IDs
+
+    Parameters
+    ----------
+    csv_path_old : str
+        csv file path to read.
+    csv_path_new : str
+        csv file path to save into.
+    encoding : str, optional
+        read encoding method. The default is 'utf-8'.
+    id_label : str, optional
+        id label in the reading file. The default is 'PatientID'.
+
+    Returns
+    -------
+    None.
+
+    '''
+    df_old = pd.read_csv(csv_path_old,encoding=encoding)
+    df_new = pd.DataFrame({'PatientID':df_old[id_label]})
+    df_new.to_csv(csv_path_new,encoding='utf-8')
+    return 
 
 def get_docs_path_list(scan_dir):
     reports = iglob(f"{scan_dir}/*/*/*/DOC/*/*.pdf")

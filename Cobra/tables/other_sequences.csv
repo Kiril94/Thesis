@@ -1,0 +1,495 @@
+,0
+0,1*1 ax
+1,1*1 cor
+2,2D_PCA_SINUS
+3,3 pl. loc.
+4,3-Plane Localizer
+5,3-pl LOCALIZER
+6,3D Ax DISCO Dyn
+7,3D Ax LAVA Post GD
+8,3D Ax LAVA pre GD
+9,3D Ax SWAN
+10,3D Saved State - AutoSave
+11,3D_BrainVIEW+GD_BLACK BLOOD MSDE
+12,3D_Brain_VIEW_DIR_SHC (dobbelt inversion)
+13,3Plane Loc whole
+14,<MIP Range>
+15,<MIP Range[1]>
+16,<MIP Range[2]>
+17,<MIP Range[3]>
+18,<MIP Range[4]>
+19,<MIP Range[5]>
+20,<MIP Thin Range>
+21,<MIP Thin Range[1]>
+22,<MIP Thin Range[2]>
+23,<MIP Thin Range[3]>
+24,<MIP Thin Range[4]>
+25,<MPR 1/1 Cor Demmens
+26,<MPR 1/1 Tra Demmens
+27,<MPR Range>
+28,<MPR Range[1]>
+29,<MPR Range[2]>
+30,<MPR Range[3]>
+31,<MPR Range[4]>
+32,<MPR Range[5]>
+33,<MPR Range[6]>
+34,<MPR Range[7]>
+35,<MPR Range[8]>
+36,<MPR Thick Range>
+37,<MPR Thick Range[1]>
+38,<MPR Thick Range[2]>
+39,<MPR Thick Range[3]>
+40,<MPR Thick Range[4]>
+41,<MPR Thick Range[5]>
+42,<MPR Thick Range[6]>
+43,<MPR cor 3/3
+44,<MPR cor 3/3 GD
+45,<MPR tra 3/3
+46,<MPR tra 3/3 GD
+47,AAHScout
+48,AAHScout_32ch
+49,AAHScout_32ch_MPR
+50,AAHScout_MPR
+51,AAHead_Scout
+52,AAHead_Scout_64ch-head-coil
+53,AAHead_Scout_64ch-head-coil_MPR_cor
+54,AAHead_Scout_64ch-head-coil_MPR_sag
+55,AAHead_Scout_64ch-head-coil_MPR_tra
+56,AAHead_Scout_MPR_cor
+57,AAHead_Scout_MPR_sag
+58,AAHead_Scout_MPR_tra
+59,ADC (10^-6 mm²/s):Apr 21 2020 15-15-40
+60,ADC (10^-6 mm²/s):Apr 24 2020 14-32-40
+61,ADC (10^-6 mm²/s):Apr 29 2020 10-43-27
+62,ADC (10^-6 mm²/s):Apr 30 2020 12-38-18
+63,ADC (10^-6 mm²/s):Aug 04 2020 08-38-01
+64,ADC (10^-6 mm²/s):Aug 26 2020 14-41-57
+65,ADC (10^-6 mm²/s):Dec 07 2020 11-46-06 CET
+66,ADC (10^-6 mm²/s):Dec 08 2020 08-20-20 CET
+67,ADC (10^-6 mm²/s):Dec 14 2020 10-00-37 CET
+68,ADC (10^-6 mm²/s):Dec 15 2020 08-55-01 CET
+69,ADC (10^-6 mm²/s):Dec 18 2020 12-21-09 CET
+70,ADC (10^-6 mm²/s):Dec 23 2020 12-33-27 CET
+71,ADC (10^-6 mm²/s):Dec 25 2020 08-37-49 CET
+72,ADC (10^-6 mm²/s):Dec 30 2020 08-54-01 CET
+73,ADC (10^-6 mm²/s):Feb 01 2021 10-15-26 CET
+74,ADC (10^-6 mm²/s):Feb 03 2021 11-26-11 CET
+75,ADC (10^-6 mm²/s):Feb 05 2021 10-35-45 CET
+76,ADC (10^-6 mm²/s):Feb 12 2021 16-27-55 CET
+77,ADC (10^-6 mm²/s):Feb 14 2020 12-52-57 CET
+78,ADC (10^-6 mm²/s):Feb 15 2021 09-19-38 CET
+79,ADC (10^-6 mm²/s):Feb 15 2021 14-25-02 CET
+80,ADC (10^-6 mm²/s):Feb 24 2021 08-37-00 CET
+81,ADC (10^-6 mm²/s):Jan 06 2021 11-21-28 CET
+82,ADC (10^-6 mm²/s):Jan 07 2021 14-09-02 CET
+83,ADC (10^-6 mm²/s):Jan 08 2021 10-45-19 CET
+84,ADC (10^-6 mm²/s):Jan 20 2021 08-31-34 CET
+85,ADC (10^-6 mm²/s):Jan 21 2021 11-08-06 CET
+86,ADC (10^-6 mm²/s):Jan 21 2021 18-27-59 CET
+87,ADC (10^-6 mm²/s):Jan 22 2020 08-13-44 CET
+88,ADC (10^-6 mm²/s):Jan 26 2021 15-59-32 CET
+89,ADC (10^-6 mm²/s):Jan 28 2021 10-59-35 CET
+90,ADC (10^-6 mm²/s):Jan 30 2020 13-59-37 CET
+91,ADC (10^-6 mm²/s):Jan 31 2021 12-38-48 CET
+92,ADC (10^-6 mm²/s):Jul 01 2020 08-04-42
+93,ADC (10^-6 mm²/s):Jul 01 2020 11-47-06
+94,ADC (10^-6 mm²/s):Jul 01 2020 13-40-12
+95,ADC (10^-6 mm²/s):Jul 02 2020 11-13-55
+96,ADC (10^-6 mm²/s):Jun 10 2020 13-52-48
+97,ADC (10^-6 mm²/s):Jun 11 2020 11-18-33
+98,ADC (10^-6 mm²/s):Jun 19 2020 08-20-34
+99,ADC (10^-6 mm²/s):Jun 22 2020 07-59-19
+100,ADC (10^-6 mm²/s):Jun 22 2020 10-29-55
+101,ADC (10^-6 mm²/s):Jun 23 2020 10-27-46
+102,ADC (10^-6 mm²/s):Mar 03 2021 11-18-49 CET
+103,ADC (10^-6 mm²/s):Mar 03 2021 13-33-09 CET
+104,ADC (10^-6 mm²/s):Mar 05 2021 14-58-34 CET
+105,ADC (10^-6 mm²/s):Mar 10 2020 12-55-18 CET
+106,ADC (10^-6 mm²/s):Mar 18 2020 12-06-28 CET
+107,ADC (10^-6 mm²/s):May 27 2020 13-00-16
+108,ADC (10^-6 mm²/s):Nov 03 2020 08-08-20 CET
+109,ADC (10^-6 mm²/s):Nov 05 2020 13-02-40 CET
+110,ADC (10^-6 mm²/s):Nov 06 2020 08-13-15 CET
+111,ADC (10^-6 mm²/s):Nov 06 2020 16-35-11 CET
+112,ADC (10^-6 mm²/s):Nov 07 2020 08-49-01 CET
+113,ADC (10^-6 mm²/s):Nov 10 2020 14-18-56 CET
+114,ADC (10^-6 mm²/s):Nov 19 2020 11-52-07 CET
+115,ADC (10^-6 mm²/s):Nov 23 2020 11-37-55 CET
+116,ADC (10^-6 mm²/s):Nov 28 2020 19-25-02 CET
+117,ADC (10^-6 mm²/s):Oct 12 2020 12-22-33
+118,ADC (10^-6 mm²/s):Oct 15 2020 08-40-06
+119,ADC (10^-6 mm²/s):Oct 15 2020 13-33-03
+120,ADC (10^-6 mm²/s):Oct 21 2020 10-06-15
+121,ADC (10^-6 mm²/s):Oct 21 2020 11-26-56
+122,ADC (10^-6 mm²/s):Oct 22 2020 14-52-43
+123,ADC (10^-6 mm²/s):Sep 07 2020 08-49-11
+124,ADC (10^-6 mm²/s):Sep 09 2020 10-41-00
+125,ADC (10^-6 mm²/s):Sep 11 2020 14-34-54
+126,ADC (10^-6 mm²/s):Sep 21 2020 08-00-22
+127,ADC (10^-6 mm²/s):Sep 23 2020 09-05-58
+128,ADC (10^-6 mm²/s):Sep 28 2020 12-42-00
+129,APT_CEST_TEST
+130,ASL_tra
+131,ASSET calibration
+132,Apparent Diffusion Coefficient (mm2/s)
+133,Ax 1x1
+134,Ax 2D MERGE
+135,Ax 3D FIESTA-C + GD
+136,Ax 3D SWAN
+137,Ax Diffusion Asset
+138,Ax FSPGR 3D +GD
+139,Ax FSPGR 3D+GD
+140,Ax GRE
+141,Ax SWAN
+142,Ax SWAN 3D
+143,B1_Calibration
+144,BFFECranienerver
+145,BOLD_TR120_2500_TEST
+146,B_FFE Flow1
+147,B_FFE_150 slices skal laves
+148,B_FFE_cranie nerver
+149,COL:Sag 3D Inhance Venc.
+150,CSF_DRIVE
+151,CSF_DRIVE FlowVoid 20 Snit
+152,CSF_PCA
+153,CSF_QF
+154,Cal Head 24
+155,Calibration Scan
+156,Cor
+157,Cor 1
+158,DIFF_TRA (b0 og b1000)
+159,DIFF_TRA (b0 og b1000)_ADC
+160,DIFF_tra
+161,DIFF_tra_ADC
+162,Diff_resolve_trace_tra_192_p2_diff_P_ADC
+163,Diff_resolve_trace_tra_192_p2_diff_P_TRACEW
+164,Epilepsi  cor 11
+165,Epilepsi  tra 11
+166,Exponential Apparent Diffusion Coefficient
+167,FIESTA CS
+168,FILT_PHA: 3D Ax SWAN
+169,FILT_PHA: Ax SWAN 3D
+170,FILT_PHA: SWAN 3D
+171,Flair Cor
+172,Flair cor
+173,Flair paraax
+174,Flair paracor
+175,Flair tra
+176,HEMO CS
+177,HEMO_tra
+178,Hemo_tra
+179,II_AASpine_Scout
+180,II_AASpine_Scout_CPR
+181,II_AASpine_Scout_MPR_sag
+182,II_AASpine_Scout_MPR_tra
+183,IMPAX Volume Viewing
+184,I_AASpine_Scout
+185,I_AASpine_Scout_COMP_SP_1
+186,I_AASpine_Scout_COMP_SP_1_CPR
+187,I_AASpine_Scout_COMP_SP_1_MPR_sag
+188,I_AASpine_Scout_CPR
+189,I_AASpine_Scout_MPR_sag
+190,I_AASpine_Scout_MPR_tra
+191,JA    180 SNIT 2 GRADER
+192,LOCALIZER
+193,LOCALIZER Cerv
+194,MINIP
+195,MIP - Sinus Thrombose 3D PC
+196,MIP - cs3.53DI_MC_140FOV
+197,MIP - s3DI_COW
+198,MIP - s3DI_MC
+199,MIP - s3DI_MC_HR
+200,MIP - s3D_PCA_SINUS
+201,MIP horisontal
+202,MIP vertikal
+203,MPR - SmartBrain
+204,MPR AX
+205,MPR AX + GD
+206,MPR AX + GD 3mm
+207,MPR AX + GD 4mm
+208,MPR AX GD
+209,MPR Ax 2MM GD
+210,MPR Ax 3MM
+211,MPR Ax 3MM + GD
+212,MPR Ax 3MM GD
+213,MPR Ax 3MM gad
+214,MPR Ax GD
+215,MPR COR
+216,MPR COR + GD
+217,MPR COR + GD 3mm
+218,MPR COR + GD 4mm
+219,MPR COR GD
+220,MPR Cor
+221,MPR Cor + GD
+222,MPR Cor + GD.
+223,MPR Cor 2MM GD
+224,MPR Cor 3MM GD
+225,MPR Cor GD
+226,MPR Ob_Ax_I -> S_Average_sp:2.0_th:2.0
+227,MPR Ob_Ax_I -> S_Average_sp:3.0_th:3.0
+228,MPR Ob_Ax_I -> S_Min IP_sp:10.0_th:10.0
+229,MPR Ob_Cor_A -> P_Average_sp:2.0_th:2.0
+230,MPR Ob_Cor_A -> P_Average_sp:3.0_th:3.0
+231,MPR Ob_Sag_R -> L_Average_sp:2.0_th:2.0
+232,MPR Ob_Sag_R -> L_Average_sp:3.0_th:3.0
+233,MPR Tra
+234,MPR ax gd
+235,MPR cor
+236,MPR cor + GD 3mm
+237,MPR cor +Gd
+238,MPR cor +gd
+239,MPR cor 1mm
+240,MPR cor 3MM
+241,MPR cor 3MM GD
+242,MPR cor 3MM gad
+243,MPR cor gd
+244,MPR paraax
+245,MPR paraax gd
+246,MPR paracor
+247,MPR paracor gd
+248,MPR sag 1MM
+249,MPR sag 3MM
+250,MPR tra
+251,MPR tra +Gd
+252,MPR tra gd
+253,MPR tra+gd
+254,MPR_cor
+255,MPR_tra
+256,MRP tra
+257,Mag_Images
+258,Min-IP SWAN Ob_Ax_I -> S_Min IP_sp:2.0_th:10.0
+259,MoCoSeries
+260,MobiView tof 1+2
+261,Mpr Cor
+262,Mpr cor gd
+263,Mpr tra
+264,Mpr tra gd
+265,MultiPlanar Reconstruction (MPR) Ob_Ax_I -> S_Average_sp:3.0_th:
+266,MultiPlanar Reconstruction (MPR) Ob_Ax_I -> S_Average_sp:5.0_th:
+267,MultiPlanar Reconstruction (MPR) Ob_Ax_I -> S_Min IP_sp:10.0_th:
+268,MultiPlanar Reconstruction (MPR) Ob_Ax_S -> I_Average_sp:3.0_th:
+269,MultiPlanar Reconstruction (MPR) Ob_Cor_A -> P_Average_sp:0.45_t
+270,MultiPlanar Reconstruction (MPR) Ob_Cor_A -> P_Average_sp:3.0_th
+271,MultiPlanar Reconstruction (MPR) Ob_Cor_A -> P_Average_sp:5.0_th
+272,MultiPlanar Reconstruction (MPR) Ob_Sag_R -> L_Average_sp:3.0_th
+273,MultiPlanar Reconstruction (MPR) Ob_Sag_R -> L_Average_sp:5.0_th
+274,NEJ 180 SNIT 2 GRADER
+275,PC-2D
+276,PC-2D CS
+277,PC-2D_sag_20_og_30_MSUM
+278,PC-2D_sag_20_og_30_P
+279,PC-2D_tra
+280,PC-2D_tra_MSUM
+281,PC-2D_tra_P
+282,PC-3D sag 20 cm ( Husk at lave MIP )_MSUM
+283,PC-3D sag 20 cm ( Husk at lave MIP )_MSUM_MIP_SAG
+284,PC-3D tra20 cms (Husk at lave MIP)_MSUM
+285,PC-3D tra20 cms (Husk at lave MIP)_MSUM_MIP_TRA
+286,PC_2D_sag_MSUM
+287,PC_2D_sag_P
+288,PC_2D_tra
+289,PC_2D_tra_MSUM
+290,PC_2D_tra_P
+291,PC_3D_sag_fast_mip
+292,PC_3D_sag_fast_mip_MSUM
+293,PC_3D_sag_fast_mip_MSUM_MIP_SAG
+294,PC_3D_tra_fast_mip
+295,PC_3D_tra_fast_mip_MSUM
+296,PC_3D_tra_fast_mip_MSUM_MIP_TRA
+297,PD_2-mm_tra
+298,Patient Aligned MPR AWPLAN_SMARTPLAN_TYPE_BRAIN
+299,Perfusion_Weighted
+300,Pha_Images
+301,PosDisp: [10] ep2d_diff_orth
+302,PosDisp: [13] tse3d_rst_tra
+303,PosDisp: [1] localizer
+304,PosDisp: [9] ep2d_diff_orth
+305,Processed Images
+306,Reformatted series
+307,Reformatted series Axial + K
+308,Reformatted series Cor + K
+309,Reformatted series ax
+310,Reformatted series cor
+311,Reformatted series paraax
+312,Reformatted series paracor
+313,Rot_AP_MIP_nov:12.0_angle:15.0
+314,Rot_RL_MIP_nov:12.0_angle:15.0
+315,Rot_SI_MIP_nov:12.0_angle:15.0
+316,SAG FSE STIR
+317,SAVED PR
+318,SORTED
+319,SSh_TSE
+320,STIR/TSE
+321,STIR_TSE
+322,SURVEY
+323,SURVEY_COR
+324,SURVEY_SAG
+325,SWAN 3D
+326,SWAN minIP
+327,Sag
+328,Sag 3D FIESTA-C
+329,Sag 3D FIESTA-C - Flow
+330,Sag 3D Inhance Venc.
+331,Sag FIESTA
+332,Sag FIESTA-C
+333,Screen Save
+334,Sectra Reconstruction
+335,Sinus Thrombose 3D PC
+336,SmartBrain
+337,Survey
+338,Survey_cor
+339,TIRM sag
+340,Tra
+341,VSinus Thrombose 3D PC SENSE
+342,VSmartBrain SENSE
+343,WIP CSF_QF_130745.818
+344,ax mpr
+345,ax reformat
+346,ciss3d_sag_iso_1
+347,cor
+348,cor 2 mm
+349,cor 2 mm + con
+350,cor 2 mm CON
+351,cor 2 mm con
+352,cor 2 mmCON
+353,cor 2mm
+354,cor 2mm CON
+355,cor 2mm con
+356,cor 2mm+con
+357,cor 2mm.CON
+358,cor 2mm/con
+359,cor 2mmCON
+360,cor 2mm_con
+361,cor 2on
+362,cor con
+363,cor mpr
+364,cor reformat
+365,corCON 2 mm
+366,corCON 2mm
+367,corCON2mm
+368,corcon 2mm
+369,coronal
+370,dADC
+371,dADC_iso
+372,dadc
+373,dce_vibe_2deg
+374,dce_vibe_3deg
+375,dce_vibe_4deg
+376,dce_vibe_6deg
+377,dce_vibe_8deg
+378,dce_vibe_dyn
+379,dsc_ep2d_dyn
+380,eADC:Apr 24 2020 14-32-40
+381,eADC:Dec 08 2020 08-20-20 CET
+382,eADC:Dec 18 2020 12-21-09 CET
+383,eADC:Feb 01 2021 10-15-27 CET
+384,eADC:Feb 15 2021 14-25-02 CET
+385,eADC:Jan 30 2020 13-59-37 CET
+386,eADC:Mar 10 2020 12-55-18 CET
+387,eADC:Oct 15 2020 13-33-03
+388,eADC:Oct 22 2020 14-52-44
+389,ep2d diff 3scan trace p2_ADC
+390,ep2d diff 3scan trace p2_TRACEW
+391,ep2d_diff_3scan_trace_p2
+392,ep2d_diff_3scan_trace_p2 (prescan norm. - raw)
+393,ep2d_diff_3scan_trace_p2 (prescan norm. - raw)_ADC
+394,ep2d_diff_3scan_trace_p2_130_ADC
+395,ep2d_diff_3scan_trace_p2_130_TRACEW
+396,ep2d_diff_3scan_trace_p2_ADC
+397,ep2d_diff_3scan_trace_p2_TRACEW
+398,ep2d_diff_3scan_trace_p3
+399,ep2d_diff_3scan_trace_p3_ADC
+400,ep2d_diff_4scan_trace_p3_ADC
+401,ep2d_diff_4scan_trace_p3_TRACEW
+402,ep2d_diff_orth
+403,ep2d_diff_orth_ADC
+404,ep2d_diff_orth_p2_ny
+405,ep2d_diff_orth_p2_ny_ADC
+406,ep2d_diff_orth_p2_tra
+407,ep2d_diff_orth_p2_tra_ADC
+408,ep2d_diff_tra_3scan_trace_p2_ADC
+409,ep2d_diff_tra_3scan_trace_p2_TRACEW
+410,flow_pc2d_sag_p2_venc30_sinus_MSUM
+411,flow_pc2d_tra_p2_venc30_sinus_MSUM
+412,flow_pc3d_sag_p2_venc20_sinus
+413,flow_pc3d_sag_p2_venc20_sinus_MSUM
+414,flow_pc3d_sag_p2_venc20_sinus_MSUM_MIP_SAG
+415,flow_pc3d_tra_p2_venc20_sinus
+416,flow_pc3d_tra_p2_venc20_sinus_MSUM
+417,flow_pc3d_tra_p2_venc20_sinus_MSUM_MIP_SAG
+418,flow_pc3d_tra_p2_venc20_sinus_MSUM_MIP_TRA
+419,gre_field_mapping
+420,isob1000
+421,ja
+422,localizer
+423,localizer til medulla
+424,localizer_cerv_thor
+425,localizer_thor_lumb
+426,mFFE_100mm NY
+427,mIP_Images(SW)
+428,mip2_PCA_SINUS SENSE
+429,mip_PCA_SINUS SENSE
+430,mpr ax 3x3
+431,mpr cor
+432,mpr cor 1mm
+433,mpr cor 3mm
+434,mpr cor gd
+435,mpr paracor
+436,mpr paratra
+437,mpr sag 1mm
+438,mpr sag 3mm
+439,mpr tra
+440,mpr tra gd
+441,nej
+442,pCASL
+443,paracor
+444,paratra
+445,psir comp
+446,recon 3 mm GD AX
+447,relCBF
+448,resolve_3scan_trace_tra_176_p2_ADC
+449,resolve_3scan_trace_tra_176_p2_TRACEW
+450,resolve_3scan_trace_tra_192_p2_ADC
+451,resolve_3scan_trace_tra_192_p2_TRACEW
+452,resolve_3scan_trace_tra_p2_160_ADC
+453,resolve_3scan_trace_tra_p2_160_TRACEW
+454,resolve_4scan_trace_tra_p2_160_ADC
+455,resolve_4scan_trace_tra_p2_160_TRACEW
+456,resolve_4scan_trace_tra_p2_192_ADC
+457,resolve_4scan_trace_tra_p2_192_TRACEW
+458,resolve_diff_b0_800_tra_p2_ADC
+459,resolve_diff_b0_800_tra_p2_TRACEW
+460,s3DI_COW
+461,s3DI_MC
+462,s3DI_MC_HR
+463,s3DI_MC_HR 05.17ok
+464,s3D_PCA_SINUS
+465,sag
+466,sag reformat
+467,sagittal
+468,tof 1
+469,tof_fl3d_tra_multi-slab
+470,tof_fl3d_tra_multi-slab_MIP_COR
+471,tof_fl3d_tra_multi-slab_MIP_SAG
+472,tof_fl3d_tra_multi-slab_MIP_TRA
+473,tra 2 mm
+474,tra 2 mm + con
+475,tra 2 mm CON
+476,tra 2 mm con
+477,tra 2 mmCON
+478,tra 2mm
+479,tra 2mm CON
+480,tra 2mm con
+481,tra 2mm+con
+482,tra 2mm.CON
+483,tra 2mm/con
+484,tra 2mmCON
+485,tra 2mm_com
+486,tra 2mm_con
+487,tra con
+488,tra on
+489,tra rec +k
+490,traCON 2 mm
+491,traCON 2mm
+492,tracon 2mm
+493,tse3d_rst_tra
