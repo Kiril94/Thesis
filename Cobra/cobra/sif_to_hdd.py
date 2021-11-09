@@ -60,9 +60,12 @@ df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 #group_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
 #                                   dtype='str')
 
-print("For now download the group (1104) dwi, \
-    flair, swi, t1")
-group_list = np.loadtxt(join(download_pat_path, "dwi_flair_swi_t1.txt"),
+#print("For now download the group (1104) dwi, \
+#    flair, swi, t1")
+#group_list = np.loadtxt(join(download_pat_path, "dwi_flair_swi_t1.txt"),
+#                                   dtype='str')
+print('lets download t1 pre post')
+group_list = np.loadtxt(join(base_dir, "data/patient_groups","t1_pre_post.txt"),
                                    dtype='str')
 
 
