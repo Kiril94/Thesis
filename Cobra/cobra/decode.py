@@ -23,7 +23,7 @@ def _parse_bytes(field):
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 key = "1b3KCzziTwLPiqneoY8XMEQ2DhWpxixIeiRhLIWwZe4="
-df_DST = pd.read_csv(join(base_dir,'data/share/sp/import/dst.csv'),
+df_DST = pd.read_csv(join(base_dir,'data/share/sp/import/dst2.csv'),
     converters={'DST':_parse_bytes}) 
 fernet = Fernet(key)
 df_DST.DST = df_DST.DST.map(lambda x: bytes(x, encoding='utf8'))
@@ -34,12 +34,20 @@ df_DST = df_DST.rename(columns={'PID':'PatientID', 'SID':'SeriesInstanceUID','DS
 # In[Save new decrypted df]
 df_DST.iloc[:,1:].to_csv(join(base_dir, 'data/tables/days_since_test.csv'), index=False)
 #%%
+
 # In[Load df clean]
 df_clean = pd.read_csv(join(base_dir, 'data/tables/neg_pos_clean.csv'))
 df_clean.keys()
 #%%
-df_clean = pd.merge(df_clean, df_DST[['SeriesInstanceUID', 'days_since_test']], 
-                    how='left', on='SeriesInstanceUID' )  
+df_clean_new = pd.merge(df_clean, 
+                    df_DST[['PatientID','SeriesInstanceUID', 'days_since_test']], 
+                    how='left', on=['PatientID','SeriesInstanceUID'] )  
+
+#%%
+df_clean_new = df_clean_new.drop(columns=['days_since_test_x'])
+df_clean_new  = df_clean_new.rename(columns={'days_since_test_y':'days_since_test'})
+#%%
+df_clean_new
 #%%
 df_clean.to_csv(join(base_dir, 'data/tables/neg_pos_clean.csv'), index=False)
 
@@ -54,8 +62,11 @@ def get_patients_pre_post(df, seq, threshold_pre=(-30), threshold_post=(-3)):
     df = df[df.Sequence==seq]
     return df[df.days_since_test<=threshold_pre].PatientID.unique()
 
-t1_pre_post = get_patients_pre_post(df_clean, 't1')
+t1_pre_post = get_patients_pre_post(df_clean_new, 't1')
+
+t1_post = get_patients_post(df_clean_new, 't1')
+len(t1_post)
 #%%
-np.savetxt(join(base_dir, 'data/patient_groups/t1_pre_post.txt'),
-                t1_pre_post,delimiter=" ", fmt="%s" )
+np.savetxt(join(base_dir, 'data/patient_groups/t1_post.txt'),
+                t1_post,delimiter=" ", fmt="%s" )
 # There are some patient missing!!!
