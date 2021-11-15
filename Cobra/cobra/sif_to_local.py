@@ -60,13 +60,16 @@ patient_list_group = df_group.PatientID.unique()
 with open(f"{base_dir}/volume_log.txt") as f:
     series_lines = f.readlines()
 last_series_path = series_lines[0]
-print(last_series_path)
-#shutil.rmtree(last_series_path)
+print(f"Remove {last_series_path}")
+try:
+    shutil.rmtree(last_series_path)
+except Exception as e:
+	print("ERROR : "+str(e))
 
 with open(f"{base_dir}/patient_log.txt") as f:
     lines = f.readlines()
 last_patient_idx = int(lines[-2][6:11]) 
-print(last_patient_idx)
+print(f"Continue with patient: {last_patient_idx}")
 
 #%%
 # In[move crb]
@@ -94,7 +97,8 @@ for pat in patient_list_group[last_patient_idx:]:
         shutil.copy(doc_path_src, doc_path_dst)
     # copy dcm files
     volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID']
-    print(f"download {len(volumes)} volumes")
+
+    print(f"Download {len(volumes)} volumes")
     for volume in volumes:
         try:
             volume_dir = volume_dir_dic[volume]
