@@ -135,10 +135,10 @@ for pat in patient_list_group[last_patient_idx:]:
             series_uid = volume_src.split(os.sep)[-1]
             volume_dst = join(crb_dst, patient_dir, series_uid)
             try:
-                shutil.copytree(volume_src, volume_dst)
-                print("|",  end='')
                 with open(f"{base_dir}/series_log.txt", mode="w") as f:
                         f.write(volume_dst)
+                shutil.copytree(volume_src, volume_dst)
+                print("|",  end='')
             except Exception as e:
 	            print("ERROR : "+str(e))
             
