@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!python
 """
 Created on Fri Sep 17 10:58:38 2021
 
@@ -96,7 +96,7 @@ for pat in patient_list_group[last_patient_idx:]:
         doc_path_dst = join(dst_doc_dir, f"{study_id}_{doc_id}.pdf")
         shutil.copy(doc_path_src, doc_path_dst)
     # copy dcm files
-    volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID']
+    volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID'].sort_values()
 
     print(f"Download {len(volumes)} volumes")
     for volume in volumes:

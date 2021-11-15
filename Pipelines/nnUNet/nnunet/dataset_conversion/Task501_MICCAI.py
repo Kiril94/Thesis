@@ -32,9 +32,14 @@ data_folder = join(base_dir, "data")
 task_folder = join(
     base_dir, data_folder,
     "nnunet/nnUNet_raw_data_base/nnUNet_raw_data/Task501_MICCAI")
+
 tr_folder = join(task_folder, "imagesTr")
 tr_files = basic.list_subdir(tr_folder)
 tr_lbl_files = basic.list_subdir(join(task_folder, "labelsTr"))
+
+ts_folder = join(task_folder, "imagesTs")
+ts_files = basic.list_subdir(ts_folder)
+ts_lbl_files = basic.list_subdir(join(task_folder, "labelsTs"))
 
 #%%
 # In[Rename files]
@@ -160,7 +165,7 @@ print(new_labels_dic_sorted)
 # In[generate dataset json]
 utils.generate_dataset_json(join(task_folder, 'dataset.json'), 
                             tr_folder,  
-                            None,
+                            ts_folder,
                             modalities=('T1',),
                             labels=new_labels_dic_sorted, 
                             dataset_name="Task501_MICCAI", 
