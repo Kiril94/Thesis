@@ -57,11 +57,11 @@ df_group = df_group.sort_values('PatientID')
 # In[get index of last patient, remove last volume]
 
 patient_list_group = df_group.PatientID.unique()
-with open(f"{base_dir}/series_log.txt") as f:
+with open(f"{base_dir}/volume_log.txt") as f:
     series_lines = f.readlines()
 last_series_path = series_lines[0]
 print(last_series_path)
-shutil.rmtree(last_series_path)
+#shutil.rmtree(last_series_path)
 
 with open(f"{base_dir}/patient_log.txt") as f:
     lines = f.readlines()
@@ -110,7 +110,7 @@ for pat in patient_list_group[last_patient_idx:]:
             volume_dst = join(crb_dst, patient_dir, series_uid)
             try:
                 with open(f"{base_dir}/volume_log.txt", mode="w") as f:
-                    f.write(volume_dir)
+                    f.write(volume_dst)
                 shutil.copytree(volume_src, volume_dst)
                 print("|",  end='')
             except Exception as e:
