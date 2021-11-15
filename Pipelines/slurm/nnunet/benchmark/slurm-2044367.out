@@ -1,0 +1,305 @@
+
+
+Please cite the following paper when using nnUNet:
+
+Isensee, F., Jaeger, P.F., Kohl, S.A.A. et al. "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation." Nat Methods (2020). https://doi.org/10.1038/s41592-020-01008-z
+
+
+If you have questions or suggestions, feel free to open an issue at https://github.com/MIC-DKFZ/nnUNet
+
+###############################################
+I am running the following nnUNet: 2d
+My trainer class is:  <class 'nnunet.training.network_training.nnUNet_variants.benchmarking.nnUNetTrainerV2_2epochs.nnUNetTrainerV2_5epochs'>
+For that I will be using the following configuration:
+num_classes:  133
+modalities:  {0: 'T1'}
+use_mask_for_norm OrderedDict([(0, True)])
+keep_only_largest_region None
+min_region_size_per_class None
+min_size_per_class None
+normalization_schemes OrderedDict([(0, 'nonCT')])
+stages...
+
+stage:  0
+{'batch_size': 52, 'num_pool_per_axis': [5, 5], 'patch_size': array([224, 192]), 'median_patient_size_in_voxels': array([230, 212, 165]), 'current_spacing': array([1., 1., 1.]), 'original_spacing': array([1., 1., 1.]), 'pool_op_kernel_sizes': [[2, 2], [2, 2], [2, 2], [2, 2], [2, 2]], 'conv_kernel_sizes': [[3, 3], [3, 3], [3, 3], [3, 3], [3, 3], [3, 3]], 'do_dummy_2D_data_aug': False}
+
+I am using stage 0 from these plans
+I am using batch dice + CE loss
+
+I am using data from this folder:  /home/fjn197/Thesis/Pipelines/data/nnunet/nnUNet_preprocessed/Task501_MICCAI/nnUNetData_plans_v2.1_2D
+###############################################
+loading dataset
+loading all case properties
+2021-10-27 20:24:52.291656: Using splits from existing split file: /home/fjn197/Thesis/Pipelines/data/nnunet/nnUNet_preprocessed/Task501_MICCAI/splits_final.pkl
+2021-10-27 20:24:52.306102: The split file contains 5 splits.
+2021-10-27 20:24:52.308859: Desired fold for training: 0
+2021-10-27 20:24:52.311453: This split has 28 training and 7 validation cases.
+unpacking dataset
+done
+2021-10-27 20:25:10.649339: lr: 0.01
+/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/torch/cuda/__init__.py:83: UserWarning: 
+    Found GPU%d %s which is of cuda capability %d.%d.
+    PyTorch no longer supports this GPU because it is too old.
+    The minimum cuda capability supported by this library is %d.%d.
+    
+  warnings.warn(old_gpu_warn.format(d, name, major, minor, min_arch // 10, min_arch % 10))
+using pin_memory on device 0
+using pin_memory on device 0
+2021-10-27 20:25:51.944683: Unable to plot network architecture:
+2021-10-27 20:25:52.416239: No module named 'IPython'
+2021-10-27 20:25:52.420714: 
+printing the network instead:
+
+2021-10-27 20:25:52.425003: Generic_UNet(
+  (conv_blocks_localization): ModuleList(
+    (0): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(960, 480, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(480, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(480, 480, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(480, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (1): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (2): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (3): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+    (4): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (conv_blocks_context): ModuleList(
+    (0): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv2d(1, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (instnorm): InstanceNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (instnorm): InstanceNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (1): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+          (instnorm): InstanceNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (instnorm): InstanceNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (2): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+          (instnorm): InstanceNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (instnorm): InstanceNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (3): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+          (instnorm): InstanceNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (instnorm): InstanceNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (4): StackedConvLayers(
+      (blocks): Sequential(
+        (0): ConvDropoutNormNonlin(
+          (conv): Conv2d(256, 480, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+          (instnorm): InstanceNorm2d(480, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+        (1): ConvDropoutNormNonlin(
+          (conv): Conv2d(480, 480, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (instnorm): InstanceNorm2d(480, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+          (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+        )
+      )
+    )
+    (5): Sequential(
+      (0): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(480, 480, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+            (instnorm): InstanceNorm2d(480, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+      (1): StackedConvLayers(
+        (blocks): Sequential(
+          (0): ConvDropoutNormNonlin(
+            (conv): Conv2d(480, 480, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (instnorm): InstanceNorm2d(480, eps=1e-05, momentum=0.1, affine=True, track_running_stats=False)
+            (lrelu): LeakyReLU(negative_slope=0.01, inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (td): ModuleList()
+  (tu): ModuleList(
+    (0): ConvTranspose2d(480, 480, kernel_size=(2, 2), stride=(2, 2), bias=False)
+    (1): ConvTranspose2d(480, 256, kernel_size=(2, 2), stride=(2, 2), bias=False)
+    (2): ConvTranspose2d(256, 128, kernel_size=(2, 2), stride=(2, 2), bias=False)
+    (3): ConvTranspose2d(128, 64, kernel_size=(2, 2), stride=(2, 2), bias=False)
+    (4): ConvTranspose2d(64, 32, kernel_size=(2, 2), stride=(2, 2), bias=False)
+  )
+  (seg_outputs): ModuleList(
+    (0): Conv2d(480, 134, kernel_size=(1, 1), stride=(1, 1), bias=False)
+    (1): Conv2d(256, 134, kernel_size=(1, 1), stride=(1, 1), bias=False)
+    (2): Conv2d(128, 134, kernel_size=(1, 1), stride=(1, 1), bias=False)
+    (3): Conv2d(64, 134, kernel_size=(1, 1), stride=(1, 1), bias=False)
+    (4): Conv2d(32, 134, kernel_size=(1, 1), stride=(1, 1), bias=False)
+  )
+)
+2021-10-27 20:25:52.438055: 
+
+2021-10-27 20:25:52.443568: 
+epoch:  0
+Traceback (most recent call last):
+  File "/home/fjn197/lib/nnunet/bin/nnUNet_train", line 33, in <module>
+    sys.exit(load_entry_point('nnunet==1.7.0', 'console_scripts', 'nnUNet_train')())
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/nnunet-1.7.0-py3.6.egg/nnunet/run/run_training.py", line 179, in main
+    trainer.run_training()
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/nnunet-1.7.0-py3.6.egg/nnunet/training/network_training/nnUNetTrainerV2.py", line 440, in run_training
+    ret = super().run_training()
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/nnunet-1.7.0-py3.6.egg/nnunet/training/network_training/nnUNetTrainer.py", line 317, in run_training
+    super(nnUNetTrainer, self).run_training()
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/nnunet-1.7.0-py3.6.egg/nnunet/training/network_training/network_trainer.py", line 456, in run_training
+    l = self.run_iteration(self.tr_gen, True)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/nnunet-1.7.0-py3.6.egg/nnunet/training/network_training/nnUNetTrainerV2.py", line 247, in run_iteration
+    output = self.network(data)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/nnunet-1.7.0-py3.6.egg/nnunet/network_architecture/generic_UNet.py", line 391, in forward
+    x = self.conv_blocks_context[d](x)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/nnunet-1.7.0-py3.6.egg/nnunet/network_architecture/generic_UNet.py", line 142, in forward
+    return self.blocks(x)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/torch/nn/modules/container.py", line 139, in forward
+    input = module(input)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/nnunet-1.7.0-py3.6.egg/nnunet/network_architecture/generic_UNet.py", line 65, in forward
+    x = self.conv(x)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/torch/nn/modules/module.py", line 1051, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/torch/nn/modules/conv.py", line 443, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/fjn197/lib/nnunet/lib64/python3.6/site-packages/torch/nn/modules/conv.py", line 440, in _conv_forward
+    self.padding, self.dilation, self.groups)
+RuntimeError: CUDA error: no kernel image is available for execution on the device
+CUDA kernel errors might be asynchronously reported at some other API call,so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
