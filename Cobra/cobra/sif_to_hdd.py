@@ -75,15 +75,18 @@ patient_list_group = df_group.PatientID.unique()
 with open(f"{base_dir}/series_log.txt") as f:
     series_lines = f.readlines()
 last_series_path = series_lines[0]
-print(last_series_path)
-shutil.rmtree(last_series_path)
+print(f"Try to remove {last_series_path}")
+try:
+    shutil.rmtree(last_series_path)
+except Exception as e:
+	print("ERROR : "+str(e))
 #last_patient = "0e61b007f82bd46fec2ccc4ea1288c2f"
 #last_patient_idx = np.where(patient_list_group==last_patient)[0][0]
 
 with open(f"{base_dir}/patient_log.txt") as f:
     lines = f.readlines()
 last_patient_idx = int(lines[-2][6:11]) 
-print(last_patient_idx)
+
 
 #%%
 # In[move crb]
@@ -135,8 +138,8 @@ for pat in patient_list_group[last_patient_idx:]:
             series_uid = volume_src.split(os.sep)[-1]
             volume_dst = join(crb_dst, patient_dir, series_uid)
             try:
-                with open(f"{base_dir}/series_log.txt", mode="w") as f:
-                        f.write(volume_dst)
+                with open(f"{base_dir}/volume_log.txt", mode="w") as f:
+                    f.write(volume_dst)
                 shutil.copytree(volume_src, volume_dst)
                 print("|",  end='')
             except Exception as e:

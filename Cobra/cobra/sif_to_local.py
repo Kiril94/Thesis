@@ -69,7 +69,7 @@ except Exception as e:
 with open(f"{base_dir}/patient_log.txt") as f:
     lines = f.readlines()
 last_patient_idx = int(lines[-2][6:11]) 
-print(f"Continue with patient: {last_patient_idx}")
+#print(f"Continue with patient: {last_patient_idx}")
 
 #%%
 # In[move crb]
