@@ -6,7 +6,7 @@ Created on Thu Sep  9 10:52:01 2021
 
 Convert dicom files to niftiis
 """
-
+#%%
 import access_sif_data.load_data_tools as ld
 import os
 from dcm2nii import dcm2nii
@@ -17,7 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utilities import basic, utils
 
-
+#%%
 # In[main directories]
 base_data_dir = "Y:/"
 out_pos_path = "Y:\\nii\\positive"
@@ -26,10 +26,16 @@ positive_dir = f"{base_data_dir}/positive"
 healthy_dirs = sorted([f"{base_data_dir}/{x}" for x \
                        in data_dirs if x.startswith('2019')])
 print(f"main directories: {data_dirs}")
-
+#%% 
+# In[Convert t1 sequences]
+src_main_dir = "D:\Thesis\Cobra\cobra\\figs\Presentation\Study_design\dcm\\t1\series"
+dest_main_dir = "D:\Thesis\Cobra\cobra\\figs\Presentation\Study_design\\nii\\t1"
+for src_dir in basic.list_subdir(src_main_dir):
+    dcm2nii.convert_dcm2nii(src_dir, dest_main_dir)
+#%%
 # In[Get all positive patients]
 pos_patients_list = basic.list_subdir(positive_dir)
-
+#%%
 # In[Number of converted patients]
 conv_patients_list = os.listdir(out_pos_path)
 conv_patients = len(conv_patients_list)
@@ -121,3 +127,4 @@ for i, compression in enumerate(range(1,10)):
     stop = time.time()   
     access_times[i] = stop-start
     print(f"For compression={compression} the access took: {stop-start} s")
+

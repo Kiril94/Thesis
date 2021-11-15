@@ -29,14 +29,14 @@ base_dir = Path(script_dir).parent
 src_dirs = os.listdir("Y:/")
 src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
                        in src_dirs if x.startswith('2019')])
-disk_dir = "F:"
+disk_dir = "D:/F/"
 dst_data_dir = f"{disk_dir}/CoBra/Data"
 download_pat_path = join(base_dir, "data/share/Cerebriu/patient_groups")
 table_dir = join(base_dir, 'data', 'tables')
 #%% 
 # In[Load df]
 
-volume_dir_df = pd.read_csv(join(table_dir, 'series_directories.csv'))
+volume_dir_df = pd.read_csv(join(table_dir, 'series_directories_sif.csv'))
 patient_dir_df = pd.read_csv(join(table_dir, 'patient_directories.csv'))
 volume_dir_dic = pd.Series(
     volume_dir_df.Directory.values, index=volume_dir_df.SeriesInstanceUID)\
@@ -45,6 +45,11 @@ patient_dir_dic = pd.Series(
     patient_dir_df.Directory.values, index=patient_dir_df.PatientID)\
         .to_dict()
 df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
+
+
+#%%
+
+
 
 #%%
 # In[Get relevant patients and volumes]
@@ -55,9 +60,12 @@ df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 #group_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
 #                                   dtype='str')
 
-print("For now download the group (1104) dwi, \
-    flair, swi, t1")
-group_list = np.loadtxt(join(download_pat_path, "dwi_flair_swi_t1.txt"),
+#print("For now download the group (1104) dwi, \
+#    flair, swi, t1")
+#group_list = np.loadtxt(join(download_pat_path, "dwi_flair_swi_t1.txt"),
+#                                   dtype='str')
+print('lets download t1 pre post')
+group_list = np.loadtxt(join(base_dir, "data/patient_groups","t1_pre_post.txt"),
                                    dtype='str')
 
 
