@@ -69,7 +69,7 @@ except Exception as e:
 with open(f"{base_dir}/patient_log.txt") as f:
     lines = f.readlines()
 last_patient_idx = int(lines[-2][6:11]) 
-#print(f"Continue with patient: {last_patient_idx}")
+print(f"Patient Num: {last_patient_idx}")
 
 #%%
 # In[move crb]
@@ -103,7 +103,7 @@ for pat in patient_list_group[last_patient_idx:]:
         try:
             volume_dir = volume_dir_dic[volume]
         except:
-            print("volume not in dict")
+            print("Volume not in dict")
             continue
         volume_src = os.path.normpath(f"Y:/{volume_dir}")
         if len(os.listdir(volume_src))==0:
