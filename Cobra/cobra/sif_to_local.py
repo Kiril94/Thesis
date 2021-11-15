@@ -72,7 +72,7 @@ last_patient_idx = int(lines[-2][6:11])
 print(f"Patient Num: {last_patient_idx}")
 
 #%%
-# In[move crb]
+# In[move local]
 crb_dst = join(dst_data_dir, 'dcm')
 counter = last_patient_idx
 for pat in patient_list_group[last_patient_idx:]:
