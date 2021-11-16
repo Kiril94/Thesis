@@ -217,3 +217,9 @@ def convert_to_sparse_pandas(df, exclude_columns=[]):
         df[columnName] = pd.SparseArray(columnData.values, dtype='uint8')
 
     return df
+
+def df_unique_values(data_frame,columns):
+    unique_values = {}
+    for column in columns:
+        unique_values[column] = data_frame[column].unique()
+    return unique_values

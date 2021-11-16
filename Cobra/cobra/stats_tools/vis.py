@@ -504,9 +504,9 @@ def add_zoom_inset(ax, zoom, loc, x, y, xlim, ylim, sy=None,
 # In[Random Numbers]
 
 ############################
-def create_1d_hist(ax, values, bins, x_range, title):
+def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled'):
     """Helper function for show_int_distribution. (Author: Troels Petersen)"""
-    ax.hist(values, bins, x_range, histtype='step', density=False, lw=2)
+    ax.hist(values, bins, x_range, histtype=histtype, density=False, lw=2)
     ax.set(xlim=x_range, title=title)
     hist_data = np.histogram(values, bins, x_range)
     return hist_data
@@ -568,6 +568,13 @@ def show_int_distribution(integers, save_plot=True,
         plt.show()
 
     return dict_raw, dict_odd_even, dict_high_low, fig, AX
+
+####################################################
+def create_2d_hist(ax,x_values,y_values,bins,range_values=None,title=''):
+    h,xedges,yedges,image = ax.hist2d(x_values,y_values,range=range_values,bins=bins)
+    ax.set_title(title)
+    plt.colorbar(image,ax=ax)
+    return h,xedges,yedges
 
 # In[Helper functions]
 
