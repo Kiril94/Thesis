@@ -65,15 +65,11 @@ df_group = df_all[df_all['PatientID'].isin(group_list)]
 rel_seq = []
 if len(rel_seq)>0:
     df_group = df_group[df_group['Sequence'].isin(rel_seq)]
-# rel_seq = ['dwi', 'swi', 't1', 't2', 't2s', 'flair']
-# df_group = df_group[df_group['Sequence'].isin(rel_seq)]
 df_group = df_group.sort_values('PatientID')
 
 #%%
 # In[get index of last patient]
 patient_list_group = df_group.PatientID.unique()
-# if you want to start with a specific patient uncomment and set last_patient
-# last_patient = "85590c5af43c362de4ececed060da656" #dwi flair t2s t1
 
 with open(f"{base_dir}/series_log.txt") as f:
     series_lines = f.readlines()
@@ -83,12 +79,16 @@ try:
     shutil.rmtree(last_series_path)
 except Exception as e:
 	print("ERROR : "+str(e))
-#last_patient = "0e61b007f82bd46fec2ccc4ea1288c2f"
-#last_patient_idx = np.where(patient_list_group==last_patient)[0][0]
 
-with open(f"{base_dir}/patient_log.txt") as f:
-    lines = f.readlines()
-last_patient_idx = int(lines[-2][6:11]) 
+try:
+    print("Get index of the last patient")
+    with open(join(base_dir,"patient_log.txt")) as f:
+        lines = f.readlines()
+    last_patient_idx = int(lines[-2][6:11]) 
+except Exception as e:
+    last_patient_idx = 0
+    print("ERROR : "+str(e))
+    print("Start with first patient in the list.")
 
 
 #%%

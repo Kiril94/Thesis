@@ -224,20 +224,20 @@ def df_unique_values(data_frame,columns):
         unique_values[column] = data_frame[column].unique()
     return unique_values
 
-def find_slices_path(patientID,studyID,seriesID,sif_path = '/home/neus/sif'):
+def find_slices_path(patientID,studyID,seriesID,sif_path):
     """Find paths of the .dcm files for a certain scan."""
     return iglob(f'{sif_path}/*/{patientID}/{studyID}/MR/{seriesID}/*.dcm') #to find the path
 
-def find_n_slices(patientID,studyID,seriesID,sif_path='/home/neus/sif'):
+def find_n_slices(patientID,studyID,seriesID,sif_path):
     """Find the number of slices for a certain scan."""
     paths = [1 for n in find_slices_path(patientID,studyID,seriesID,sif_path=sif_path)]
     return len(paths)
 
-def save_nscans(data_frame,csv_file_path):
+def save_nscans(data_frame,csv_file_path, sif_path='/home/neus/sif'):
     """Rewrite and save the table with an extra colum for the number of slices."""
     n_slices = []
     for index,row in data_frame.iterrows(): 
-        n_slices.append(find_n_slices(row['PatientID'],row['StudyInstanceUID'],row['SeriesInstanceUID']))
+        n_slices.append(find_n_slices(row['PatientID'],row['StudyInstanceUID'],row['SeriesInstanceUID']), sif_path)
     data_frame['NumberOfSlices'] = n_slices
     data_frame.to_csv(csv_file_path)
 
