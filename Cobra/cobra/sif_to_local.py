@@ -47,8 +47,8 @@ df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 
 #%%
 
-print('lets download t1 pre post')
-group_list = np.loadtxt(join(base_dir, "data/patient_groups","t1_pre_post.txt"),
+print('lets download t1 post')
+group_list = np.loadtxt(join(base_dir, "data/patient_groups","t1_post.txt"),
                                    dtype='str')
 df_group = df_all[df_all['PatientID'].isin(group_list)]
 rel_seq = ['t1']
@@ -70,10 +70,15 @@ try:
 except Exception as e:
 	print("ERROR : "+str(e))
 
-with open(f"{base_dir}/patient_log.txt") as f:
-    lines = f.readlines()
-last_patient_idx = int(lines[-2][6:11]) 
-print(f"Patient Num: {last_patient_idx}")
+try:
+    print("Get index of the last patient")
+    with open(join(base_dir,"patient_log.txt")) as f:
+        lines = f.readlines()
+    last_patient_idx = int(lines[-2][6:11]) 
+except Exception as e:
+    last_patient_idx = 0
+    print("ERROR : "+str(e))
+    print("Start with first patient in the list.")
 
 #%%
 # In[move local]
