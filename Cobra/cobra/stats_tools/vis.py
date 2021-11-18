@@ -13,6 +13,7 @@ from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import ticker
+import seaborn as sns
 
 
 def Color_palette(k):
@@ -504,14 +505,33 @@ def add_zoom_inset(ax, zoom, loc, x, y, xlim, ylim, sy=None,
 # In[Random Numbers]
 
 ############################
-def create_1d_hist(ax, values, bins, x_range, title):
+def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled',display_counts = False):
     """Helper function for show_int_distribution. (Author: Troels Petersen)"""
-    ax.hist(values, bins, x_range, histtype='step', density=False, lw=2)
+    ax.hist(values, bins, x_range, histtype=histtype, density=False, lw=2)
     ax.set(xlim=x_range, title=title)
     hist_data = np.histogram(values, bins, x_range)
+    
+    bin_width = hist_data[1][1] - hist_data[1][0]
+    if (display_counts):
+        for i in range(bins):
+            if (hist_data[0][i]!=0):
+                ax.text(hist_data[1][i]+bin_width/4,hist_data[0][i],str(hist_data[0][i]))
+
     return hist_data
 
 ################################
+
+def create_boxplot(ax,data,data_labels=None,title=''):
+
+    if (data_labels is None):
+        data_labels = [int(i+1) for i in range(len(data))]
+    ax = sns.boxplot(data=data,palette='Set2',medianprops=dict(color="red"))
+    ax = sns.stripplot(data=data, color=".25",alpha=0.3)
+    ax.set_xticklabels(data_labels)
+    ax.get_xaxis().tick_bottom()
+    ax.set_title(title)
+    
+    return ax
 
 
 def get_chi2_ndf(hist, const):
@@ -568,6 +588,13 @@ def show_int_distribution(integers, save_plot=True,
         plt.show()
 
     return dict_raw, dict_odd_even, dict_high_low, fig, AX
+
+####################################################
+def create_2d_hist(ax,x_values,y_values,bins,range_values=None,title=''):
+    h,xedges,yedges,image = ax.hist2d(x_values,y_values,range=range_values,bins=bins)
+    ax.set_title(title)
+    plt.colorbar(image,ax=ax)
+    return h,xedges,yedges
 
 # In[Helper functions]
 

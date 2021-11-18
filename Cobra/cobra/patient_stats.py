@@ -14,9 +14,9 @@ from stats_tools import vis as svis
 
 
 # In[Load and decrypt dataframe]
-base_dir = "D:/Thesis/Cobra"
+base_dir = "/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra"
 fig_dir = f"{base_dir}/figs/cloud_res"
-csv_folder = "D:/Thesis/Cobra/share"
+csv_folder = "/home/neus/sif/tables"
 df = pd.read_csv(f"{csv_folder}/import/dst.csv").iloc[:, 1:]
 df_seq = pd.read_csv(f"{csv_folder}/export/pred_seq.csv").iloc[:, 1:]
 key = b'1b3KCzziTwLPiqneoY8XMEQ2DhWpxixIeiRhLIWwZe4='
