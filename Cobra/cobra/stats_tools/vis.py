@@ -512,6 +512,7 @@ def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled',displ
     hist_data = np.histogram(values, bins, x_range)
     
     bin_width = hist_data[1][1] - hist_data[1][0]
+    #Add the number of counts on top of the bars.
     if (display_counts):
         for i in range(bins):
             if (hist_data[0][i]!=0):
@@ -522,7 +523,7 @@ def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled',displ
 ################################
 
 def create_boxplot(ax,data,data_labels=None,title=''):
-
+    
     if (data_labels is None):
         data_labels = [int(i+1) for i in range(len(data))]
     ax = sns.boxplot(data=data,palette='Set2',medianprops=dict(color="red"))

@@ -124,3 +124,6 @@ celerybeat-schedule
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+#csv data from SIF
+/Cobra/cobra/tables/*.csv
