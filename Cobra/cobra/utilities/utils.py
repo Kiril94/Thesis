@@ -16,6 +16,8 @@ from pathlib import Path
 import logging
 import tarfile
 import os.path
+import numpy as np
+
 
 
 def make_tarfile(output_filename, source_dir):
@@ -125,6 +127,13 @@ def time_converter(val):
             return dt.strptime(val, "%Y-%m-%d %H:%M:%S").time()
         except:
             return pd.NaT
+def acquisition_matrix_converter(val):
+    try:
+        return np.fromstring(val.replace('\n','')
+                        .replace('[','')
+                        .replace(']',''), sep=',')
+    except:
+        return val
 
 def load_scan_csv(csv_path):
     """Returns a dataframe
@@ -140,7 +149,9 @@ def load_scan_csv(csv_path):
                      'PixelSpacing']},
                 **{'DateTime':date_time_converter, 
                 'InstanceCreationDate':date_converter, 
-                'InstanceCreationTime':time_converter,}, 
+                'InstanceCreationTime':time_converter,
+                'AcquisitionMatrix':acquisition_matrix_converter,
+                }, 
                     },
                      )
     except: 
@@ -150,7 +161,9 @@ def load_scan_csv(csv_path):
                 **{k: literal_converter for k in\
                     ['ScanningSequence', 'ImageType', 'SequenceVariant, ScanOptions']},
                     **{'InstanceCreationDate':date_converter, 
-                     'InstanceCreationTime':time_converter,}},
+                     'InstanceCreationTime':time_converter,
+                     'AcquisitionMatrix':acquisition_matrix_converter,
+                     }},
                     )
         print('Once PixelSpacing is added the try-except statement should be removed')
     return df
