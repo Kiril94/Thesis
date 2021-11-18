@@ -51,6 +51,10 @@ print('lets download t1 pre post')
 group_list = np.loadtxt(join(base_dir, "data/patient_groups","t1_pre_post.txt"),
                                    dtype='str')
 df_group = df_all[df_all['PatientID'].isin(group_list)]
+rel_seq = ['t1']
+if len(rel_seq)>0:
+    print(f"Only the sequences {rel_seq} will be downloaded.")
+    df_group = df_group[df_group['Sequence'].isin(rel_seq)]
 df_group = df_group.sort_values('PatientID')
 
 #%%
@@ -82,7 +86,6 @@ for pat in patient_list_group[last_patient_idx:]:
             \n {datetime.now()}\n"
     with open(f"{base_dir}/patient_log.txt", mode="a+") as f:
         f.write(log_str)
-    start = time.time()
     print(f"Patient: {patient_dir}", end='\n')
     print(datetime.now().strftime("%H:%M:%S"))
     # Copy doc files
@@ -119,6 +122,4 @@ for pat in patient_list_group[last_patient_idx:]:
                 print("|",  end='')
             except Exception as e:
 	            print("ERROR : "+str(e))
-    stop = time.time()
-    print(f"\n {(stop-start)/60:.3} min")
     

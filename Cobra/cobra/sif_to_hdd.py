@@ -62,6 +62,9 @@ group_list = np.loadtxt(join(download_pat_path, "dwi_flair_swi_t1.txt"),
 
 df_group = df_all[df_all['PatientID'].isin(group_list)]
 # In case you want to download only specific sequences uncomment next lines
+rel_seq = []
+if len(rel_seq)>0:
+    df_group = df_group[df_group['Sequence'].isin(rel_seq)]
 # rel_seq = ['dwi', 'swi', 't1', 't2', 't2s', 'flair']
 # df_group = df_group[df_group['Sequence'].isin(rel_seq)]
 df_group = df_group.sort_values('PatientID')
