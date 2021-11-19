@@ -127,13 +127,14 @@ def time_converter(val):
             return dt.strptime(val, "%Y-%m-%d %H:%M:%S").time()
         except:
             return pd.NaT
-def acquisition_matrix_converter(val):
+def str_arr_converter(val):
     try:
         return np.fromstring(val.replace('\n','')
                         .replace('[','')
                         .replace(']',''), sep=',')
     except:
         return val
+
 
 def load_scan_csv(csv_path):
     """Returns a dataframe
@@ -150,7 +151,8 @@ def load_scan_csv(csv_path):
                 **{'DateTime':date_time_converter, 
                 'InstanceCreationDate':date_converter, 
                 'InstanceCreationTime':time_converter,
-                'AcquisitionMatrix':acquisition_matrix_converter,
+                'AcquisitionMatrix':str_arr_converter,
+                'PixelSpacing':str_arr_converter,
                 }, 
                     },
                      )
@@ -162,7 +164,8 @@ def load_scan_csv(csv_path):
                     ['ScanningSequence', 'ImageType', 'SequenceVariant, ScanOptions']},
                     **{'InstanceCreationDate':date_converter, 
                      'InstanceCreationTime':time_converter,
-                     'AcquisitionMatrix':acquisition_matrix_converter,
+                     'AcquisitionMatrix':str_arr_converter,
+                     'PixelSpacing':str_arr_converter,
                      }},
                     )
         print('Once PixelSpacing is added the try-except statement should be removed')
@@ -246,11 +249,14 @@ def find_n_slices(patientID,studyID,seriesID,sif_path):
     paths = [1 for n in find_slices_path(patientID,studyID,seriesID,sif_path=sif_path)]
     return len(paths)
 
-def save_nscans(data_frame,csv_file_path, sif_path='/home/neus/sif'):
+def save_nscans(data_frame,csv_file_path, sif_path):
     """Rewrite and save the table with an extra colum for the number of slices."""
     n_slices = []
-    for index,row in data_frame.iterrows(): 
-        print("|", end='')
+    counter=0
+    for index,row in data_frame.iterrows():         
+        counter+=1
+        if counter%100==0:
+            print('|',end='')
         n_slices.append(find_n_slices(row['PatientID'],row['StudyInstanceUID'],row['SeriesInstanceUID'], sif_path))
     data_frame['NumberOfSlices'] = n_slices
     data_frame.to_csv(csv_file_path)

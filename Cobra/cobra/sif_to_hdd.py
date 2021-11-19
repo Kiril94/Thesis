@@ -15,9 +15,6 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import sys
-cobra_dir = "D:/Thesis/Cobra/cobra"
-if cobra_dir not in sys.path:
-    sys.path.append(cobra_dir)
 from utilities import stats
 
 
@@ -28,9 +25,9 @@ base_dir = Path(script_dir).parent
 src_dirs = os.listdir("Y:/")
 src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
                        in src_dirs if x.startswith('2019')])
-disk_dir = "F:"
+disk_dir = "G:"
 dst_data_dir = f"{disk_dir}/CoBra/Data"
-download_pat_path = join(base_dir, "data/share/Cerebriu/patient_groups")
+download_pat_path = join(base_dir, "data/patient_groups")
 table_dir = join(base_dir, 'data', 'tables')
 #%% 
 # In[Load df]
@@ -54,15 +51,14 @@ df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 #group_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
 #                                   dtype='str')
 
-print("For now download the group (1104) dwi, \
-    flair, swi, t1")
-group_list = np.loadtxt(join(download_pat_path, "dwi_flair_swi_t1.txt"),
+print("Download the group t1")
+group_list = np.loadtxt(join(download_pat_path, "t1_neg_0.txt"),
                                    dtype='str')
 
 
 df_group = df_all[df_all['PatientID'].isin(group_list)]
 # In case you want to download only specific sequences uncomment next lines
-rel_seq = []
+rel_seq = ['t1']
 if len(rel_seq)>0:
     df_group = df_group[df_group['Sequence'].isin(rel_seq)]
 df_group = df_group.sort_values('PatientID')
@@ -70,11 +66,14 @@ df_group = df_group.sort_values('PatientID')
 #%%
 # In[get index of last patient]
 patient_list_group = df_group.PatientID.unique()
+try:
+    with open(f"{base_dir}/series_log.txt") as f:
+        series_lines = f.readlines()
+    last_series_path = series_lines[0]
+    print(f"Try to remove {last_series_path}")
+except Exception as e:
+	print("ERROR : "+str(e))
 
-with open(f"{base_dir}/series_log.txt") as f:
-    series_lines = f.readlines()
-last_series_path = series_lines[0]
-print(f"Try to remove {last_series_path}")
 try:
     shutil.rmtree(last_series_path)
 except Exception as e:
@@ -99,13 +98,13 @@ for pat in patient_list_group[last_patient_idx:]:
     patient_dir = patient_dir_dic[pat]
     counter += 1
     log_str = f"{patient_dir}\nindex: {counter}\
-            \n {datetime.now().strftime('%d/%m/%y %H:%M:%S')}\n"
+            \n {datetime.now()}\n"
     with open(f"{base_dir}/patient_log.txt", mode="a+") as f:
         f.write(log_str)
     
     start = time.time()
     print(f"Patient: {patient_dir}", end='\n')
-    print(datetime.now().strftime("%H:%M:%S"))
+    print(datetime.now())
     # Copy doc files
     if not os.path.exists(join(crb_dst, patient_dir, 'DOC')):
         os.makedirs(join(crb_dst, patient_dir, 'DOC'))

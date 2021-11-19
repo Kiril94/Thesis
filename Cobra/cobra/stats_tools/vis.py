@@ -55,8 +55,8 @@ def ax_decorator(fig, ax,
                  lgd_loc=0, lgd_fs=25, 
                  lgd_color='white', lgd_ncol=1,
                  title='', title_fs=25, 
-                 ylabel='count', ylabel_fs=25,
-                 xlabel='x', xlabel_fs=25,
+                 ylabel='', ylabel_fs=25,
+                 xlabel='', xlabel_fs=25,
                  xticks=[], xtick_labels=[],
                  yticks=[], ytick_labels=[],
                  xtickparams_ls=25, xtickparams_rot=0,
@@ -522,19 +522,21 @@ def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled',displ
 ################################
 
 def create_boxplot(data, data_labels=None,title='',fig=None, ax=None,
-                    plot_style='ggplot', figsize=(10, 10)):
+                    plot_style='ggplot', figsize=(10, 10), kwargs={},
+                    stripplot=False):
     if ax == None or fig == None:
         fig, ax = plt.subplots(figsize=figsize)
     plt.style.use(plot_style)
     if (data_labels is None):
         data_labels = [int(i+1) for i in range(len(data))]
-    ax = sns.boxplot(data=data,palette='Set2',medianprops=dict(color="red"))
-    ax = sns.stripplot(data=data, color=".25",alpha=0.3)
+    ax = sns.boxplot(data=data,palette='Set2',medianprops=dict(color="red"), ax=ax)
+    if stripplot:
+        ax = sns.stripplot(data=data, color=".25",alpha=0.3, ax=ax)
     ax.set_xticklabels(data_labels)
     ax.get_xaxis().tick_bottom()
     ax.set_title(title)
-    ax_decorator(fig, ax)
-    return ax
+    fig, ax = ax_decorator(fig, ax, **kwargs)
+    return fig, ax
 
 
 def get_chi2_ndf(hist, const):
