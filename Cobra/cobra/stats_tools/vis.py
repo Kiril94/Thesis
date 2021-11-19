@@ -521,8 +521,11 @@ def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled',displ
 
 ################################
 
-def create_boxplot(fig, ax,data,data_labels=None,title=''):
-
+def create_boxplot(data, data_labels=None,title='',fig=None, ax=None,
+                    plot_style='ggplot', figsize=(10, 10)):
+    if ax == None or fig == None:
+        fig, ax = plt.subplots(figsize=figsize)
+    plt.style.use(plot_style)
     if (data_labels is None):
         data_labels = [int(i+1) for i in range(len(data))]
     ax = sns.boxplot(data=data,palette='Set2',medianprops=dict(color="red"))
