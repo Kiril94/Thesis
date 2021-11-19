@@ -250,7 +250,8 @@ def save_nscans(data_frame,csv_file_path, sif_path='/home/neus/sif'):
     """Rewrite and save the table with an extra colum for the number of slices."""
     n_slices = []
     for index,row in data_frame.iterrows(): 
-        n_slices.append(find_n_slices(row['PatientID'],row['StudyInstanceUID'],row['SeriesInstanceUID']), sif_path)
+        print("|", end='')
+        n_slices.append(find_n_slices(row['PatientID'],row['StudyInstanceUID'],row['SeriesInstanceUID'], sif_path))
     data_frame['NumberOfSlices'] = n_slices
     data_frame.to_csv(csv_file_path)
 

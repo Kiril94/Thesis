@@ -521,7 +521,7 @@ def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled',displ
 
 ################################
 
-def create_boxplot(ax,data,data_labels=None,title=''):
+def create_boxplot(fig, ax,data,data_labels=None,title=''):
 
     if (data_labels is None):
         data_labels = [int(i+1) for i in range(len(data))]
@@ -530,7 +530,7 @@ def create_boxplot(ax,data,data_labels=None,title=''):
     ax.set_xticklabels(data_labels)
     ax.get_xaxis().tick_bottom()
     ax.set_title(title)
-    
+    ax_decorator(fig, ax)
     return ax
 
 
