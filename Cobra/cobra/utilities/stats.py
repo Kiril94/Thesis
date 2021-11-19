@@ -131,3 +131,12 @@ def add_datetime(df):
     df['DateTime'] = df[date_k] + ' ' + df[time_k]
     df['DateTime'] = pd.to_datetime(df['DateTime'], format='%Y%m%d %H:%M:%S')
     return df
+
+
+def weighted_mean(values,weights):
+    """Computes the weighted mean."""
+    return np.average(values,weights=weights)
+
+def weighted_std(stds,weights):
+    """Computes weighted standard deviation."""
+    return np.sqrt(np.average( stds**2, weights=weights ))
