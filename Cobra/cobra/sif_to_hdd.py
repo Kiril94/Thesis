@@ -67,7 +67,7 @@ df_group = df_group.sort_values('PatientID')
 # In[get index of last patient]
 patient_list_group = df_group.PatientID.unique()
 try:
-    with open(f"{base_dir}/series_log.txt") as f:
+    with open(f"{base_dir}/logs/series_log.txt") as f:
         series_lines = f.readlines()
     last_series_path = series_lines[0]
     print(f"Try to remove {last_series_path}")
@@ -81,7 +81,7 @@ except Exception as e:
 
 try:
     print("Get index of the last patient")
-    with open(join(base_dir,"patient_log.txt")) as f:
+    with open(join(base_dir,"/logs/patient_log.txt")) as f:
         lines = f.readlines()
     last_patient_idx = int(lines[-2][6:11]) 
 except Exception as e:
@@ -99,7 +99,7 @@ for pat in patient_list_group[last_patient_idx:]:
     counter += 1
     log_str = f"{patient_dir}\nindex: {counter}\
             \n {datetime.now()}\n"
-    with open(f"{base_dir}/patient_log.txt", mode="a+") as f:
+    with open(f"{base_dir}/logs/patient_log.txt", mode="a+") as f:
         f.write(log_str)
     
     start = time.time()
@@ -140,7 +140,7 @@ for pat in patient_list_group[last_patient_idx:]:
             series_uid = volume_src.split(os.sep)[-1]
             volume_dst = join(crb_dst, patient_dir, series_uid)
             try:
-                with open(f"{base_dir}/volume_log.txt", mode="w") as f:
+                with open(f"{base_dir}/logs/volume_log.txt", mode="w") as f:
                     f.write(volume_dst)
                 shutil.copytree(volume_src, volume_dst)
                 print("|",  end='')
