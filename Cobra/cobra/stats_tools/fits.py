@@ -61,7 +61,7 @@ def produce_hist_values(x_all, N_bins, x_range = None, poisson_error = False,
         Error on counts assuming Poisson distributed bin counts
     binwidth: float
     """
-    if x_range==None:
+    if x_range is None:
         x_range = (x_all.min(), x_all.max())
     if log:
         N_bins = np.logspace(np.log10(x_range[0]),
@@ -134,12 +134,12 @@ def hist_fit(fit_func, x_all, p0, N_bins = None, x_range = None, fit_type = 'ull
         Error on counts assuming Poisson distributed bin counts
     """
     return_dict = {}
-    if x_range == None:
+    if x_range is None:
         x_range = (x_all.min(), x_all.max())
     
     if fit_type == 'chi2':
         if not(hasattr(N_bins, "__len__")):
-            if N_bins==None:
+            if N_bins is None:
                 raise ValueError("You have to provide N_bins.")
         x, y, sy, binwidth = produce_hist_values(x_all, N_bins,x_range = x_range,
                              poisson_error = True)
@@ -154,7 +154,7 @@ def hist_fit(fit_func, x_all, p0, N_bins = None, x_range = None, fit_type = 'ull
     
     elif fit_type == 'bllh':
         if not(hasattr(N_bins, "__len__")):
-            if N_bins==None:
+            if N_bins is None:
                 raise ValueError("You have to provide N_bins.")
         fit_object = BinnedLH(fit_func, x_all, bins=N_bins, 
                               bound=x_range, extended=True)
@@ -186,7 +186,7 @@ def chi2_fit_func(
     Text_pos = (0.01,.99), kwargs = {}):
         
     """Fit a single function to data, calls chi2_fit_mult_func"""
-    if Range==None:
+    if Range is None:
         Range = [(x.min(), x.max())]
     ax, fig, Fit_dict = chi2_fit_mult_func(
         x, y, sy, [func], [p0], Ranges = Range, 
@@ -247,7 +247,7 @@ def chi2_fit_mult_func(
         ax = axes[0]
         ax_r = axes[1]
     else:
-        if not(axis==None):
+        if not(axis is None):
             ax = axis
             fig = figure
         else:
@@ -271,7 +271,7 @@ def chi2_fit_mult_func(
     Pval, Chi2 = [], []
     color_scheme = vis.Color_palette(color_scheme)
     plt.style.use(style)
-    if not(Colors == None):
+    if not(Colors is None):
         color_scheme = Colors
 
     for i in range(len(functions)):
@@ -326,7 +326,7 @@ def chi2_fit_mult_func(
             d[n]=v
     
         text = nice_string_output(d, extra_spacing=0, decimals=2)
-        if not(text_pos ==None):
+        if not(text_pos is None):
             ax.text(text_pos[0], text_pos[1], text, fontsize=text_fs,  family='monospace', 
                     transform=ax.transAxes, color=color, verticalalignment='top', horizontalalignment ='left');
         ax.plot(xaxis, yaxis,color = color, label= fit_label);
@@ -396,7 +396,7 @@ def chi2_fit_mult_func(
                                            'Error on wa' : "{:.3f}".format(res_err)}),
                        family='monospace', transform=axins.transAxes, fontsize=10, verticalalignment='top', color='r')
     
-    if not(x_show_range==None):
+    if not(x_show_range is None):
         ax.set_xlim(x_show_range)
     
     fig.tight_layout()

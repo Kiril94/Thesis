@@ -150,7 +150,7 @@ def line(
 
     """
 
-    if ax == None or fig == None:
+    if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
     try:
         line_color = Color_palette(color[0])[color[1]]
@@ -197,7 +197,7 @@ def bar(labels, counts, width=.8,
         kwargs={}):
 
     plt.style.use(plot_style)
-    if ax == None or fig == None:
+    if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
     if len(bottom) == 0:
         bottom = np.zeros(len(counts))
@@ -230,7 +230,7 @@ def hist(
         kwargs={}):
     """Produce a nice histogram.
     Returns: dictionary with x, y, sy, binwidth, fig, ax."""
-    if not(xrange == None):
+    if not(xrange is None):
         mask_x = (x_all > xrange[0]) & (x_all < xrange[1])
         x_all = x_all[mask_x]
 
@@ -248,7 +248,7 @@ def hist(
     if type(ecolor) == tuple:
         ecolor = Color_palette(ecolor[0])[ecolor[1]]
 
-    if ax == None or fig == None:
+    if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
     plt.style.use(plot_style)
 
@@ -295,7 +295,7 @@ def contour(
         fig, ax
     """
 
-    if ax == None or fig == None:
+    if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
 
     plt.style.use(plot_style)
@@ -486,13 +486,13 @@ def add_zoom_inset(ax, zoom, loc, x, y, xlim, ylim, sy=None,
 
     axins = zoomed_inset_axes(ax, zoom, loc=loc,
                               borderpad=borderpad)
-    if sy == None:
+    if sy is None:
         axins.plot(x, y)
     else:
         axins.errorbar(x, y, yerr=sy, fmt='.b',  ecolor='b', elinewidth=.5,
                        capsize=0, capthick=0.1)
 
-    if not(ylim == None):
+    if not(ylim is None):
         axins.set_ylim(ylim)
 
     axins.set_xlabel(xlabel, fontsize=label_fs)
@@ -524,7 +524,7 @@ def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled',displ
 def create_boxplot(data, data_labels=None,title='',fig=None, ax=None,
                     plot_style='ggplot', figsize=(10, 10), kwargs={},
                     stripplot=False):
-    if ax == None or fig == None:
+    if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
     plt.style.use(plot_style)
     if (data_labels is None):

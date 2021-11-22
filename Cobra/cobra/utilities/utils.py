@@ -5,6 +5,7 @@ Created on Mon Aug 30 17:21:34 2021
 @author: klein
 """
 import os
+from os.path import join
 import json
 import time
 from glob import iglob
@@ -262,3 +263,31 @@ def save_nscans(data_frame,csv_file_path, sif_path):
     data_frame.to_csv(csv_file_path)
 
     return data_frame
+
+def save_nscans_to_txt(data_frame, txt_file_path, sif_path, disk_path):
+    """Save number of scans to text row by row."""
+    n_slices = []
+    counter=0
+    df_pat_dirs = pd.read_csv(
+        "D:\Thesis\Cobra\cobra\data\\tables\patient_directories.csv")
+    dic_pat_dis = pd.Series(
+    df_pat_dirs.Directory.values, index=df_pat_dirs.PatientID)\
+        .to_dict()
+    for index,row in data_frame.iterrows():         
+        counter+=1
+        if counter%1000==0:
+            print(f'{counter} volumes written \n')
+            print(dt.now())
+        patient_id = row['PatientID']
+        series_id = row['SeriesInstanceUID']
+        try:
+            vol_path = join(disk_path, 'Cobra', 'Data', 'dcm', 
+                            dic_pat_dis[patient_id], series_id)
+            n_slices = len(os.listdir(vol_path))
+        except:
+            n_slices = find_n_slices(patient_id, row['StudyInstanceUID'],
+                                    series_id, sif_path)
+        with open(txt_file_path, mode="a+") as f:
+            f.write(f"{series_id}, {n_slices}\n")
+    print(f"Number of scans written to {txt_file_path}: {counter}")
+    return 0
