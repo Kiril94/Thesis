@@ -3,16 +3,20 @@
 Created on Fri Sep 17 10:58:38 2021
 @author: klein
 """
+
 #%% 
 # In[Import]
-import os
-from os.path import join, split, exists
-from pathlib import Path
 import glob
+import os
+import sys
 import time
-import pandas as pd
-from utilities import download
+from os.path import exists, join, split
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
+
+from utilities import download
 
 #%% 
 # In[tables directories]
