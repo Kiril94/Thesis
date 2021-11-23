@@ -18,8 +18,6 @@ from utilities import download
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 src_dirs = os.listdir("Y:/")
-src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
-                       in src_dirs if x.startswith('2019')])
 disk_dir = "C:/Users/kiril/F"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 download_pat_path = join(base_dir, "data/share/Cerebriu/patient_groups")
