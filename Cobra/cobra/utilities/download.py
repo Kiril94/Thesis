@@ -55,24 +55,29 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
         print(datetime.now())
         log_str = f"{patient_dir}\nindex: {counter}\
                 \n {datetime.now()}\n"
-        with open(patient_log_file, mode="a+") as f:
-            f.write(log_str)
+        #with open(patient_log_file, mode="a+") as f:
+        #    f.write(log_str)
         # Copy doc files
         if download_docs:
             print("Download reports")
-            if not os.path.exists(join(dst_dir, patient_dir, 'DOC')):
-                os.makedirs(join(dst_dir, patient_dir, 'DOC'))
-            for doc_path_src in glob.iglob(join(src_dir, patient_dir,"*","DOC","*","*",".pdf")):
+            doc_dst_dir = join(dst_dir, patient_dir, 'DOC')
+            if not os.path.exists(doc_dst_dir):
+                os.makedirs(doc_dst_dir)
+            doc_counter = 0
+            for doc_path_src in glob.iglob(join(src_dir, patient_dir, "*","DOC","*","*.pdf")):
+                doc_counter += 1
+                print(doc_path_src)
                 doc_path_src = os.path.normpath(doc_path_src)
                 study_id = doc_path_src.split(os.sep)[3]
                 doc_id = doc_path_src.split(os.sep)[5]
-                dst_doc_dir = join(dst_dir, patient_dir, 'DOC')
-                doc_path_dst = join(dst_doc_dir, f"{study_id}_{doc_id}.pdf")
+                doc_path_dst = join(doc_dst_dir, f"{study_id}_{doc_id}.pdf")
                 try:
-                    shutil.copy(doc_path_src, doc_path_dst)
+                    pass
+                    #shutil.copy(doc_path_src, doc_path_dst)
                 except Exception as e:
                     print("ERROR : "+str(e))
-                
+            if doc_counter==0:
+                print("No reports files found.")   
         # copy dcm files
         volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID']
         print(f"download {len(volumes)} volumes")
@@ -94,9 +99,9 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                 volume_uid = volume_src.split(os.sep)[-1]
                 volume_dst = join(dst_dir, patient_dir, volume_uid)
                 try:
-                    with open(volume_log_file, mode="w") as f:
-                        f.write(volume_dst)
-                    shutil.copytree(volume_src, volume_dst)
+                    #with open(volume_log_file, mode="w") as f:
+                    #    f.write(volume_dst)
+                    #shutil.copytree(volume_src, volume_dst)
                     print("|",  end='')
                 except Exception as e:
                     print("ERROR : "+str(e))
