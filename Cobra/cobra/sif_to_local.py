@@ -6,16 +6,11 @@ Created on Fri Sep 17 10:58:38 2021
 """
 #%% 
 # In[Import]
-import shutil
 import os
-from os.path import join, split, exists
+from os.path import join
 from pathlib import Path
-import glob
-import time
-from datetime import datetime
 import numpy as np
 import pandas as pd
-import sys
 from utilities import download
 
 #%% 
