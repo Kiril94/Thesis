@@ -66,7 +66,7 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
             doc_counter = 0
             for doc_path_src in glob.iglob(join(src_dir, patient_dir, "*","DOC","*","*.pdf")):
                 doc_counter += 1
-                print(doc_path_src)
+                print('.', end='')
                 doc_path_src = os.path.normpath(doc_path_src)
                 study_id = doc_path_src.split(os.sep)[3]
                 doc_id = doc_path_src.split(os.sep)[5]
@@ -75,6 +75,7 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                     shutil.copy(doc_path_src, doc_path_dst)
                 except Exception as e:
                     print("ERROR : "+str(e))
+            print('\n')
             if doc_counter==0:
                 print("No reports files found.")   
         # copy dcm files
