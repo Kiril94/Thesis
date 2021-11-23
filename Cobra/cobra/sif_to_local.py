@@ -25,7 +25,7 @@ base_dir = Path(script_dir).parent
 src_dirs = os.listdir("Y:/")
 src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
                        in src_dirs if x.startswith('2019')])
-disk_dir = "D:/F/"
+disk_dir = "C:/Users/kiril/F"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 download_pat_path = join(base_dir, "data/share/Cerebriu/patient_groups")
 table_dir = join(base_dir, 'data', 'tables')
@@ -49,5 +49,8 @@ df_group = df_group.sort_values('PatientID')
 
 #%%
 # In[get index of last patient, remove last volume]
+patient_log_file = join(base_dir, 'logs', 't1_1_patient_log.txt')
+volume_log_file = join(base_dir, 'logs', 't1_1_volume_log.txt')
 download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
-                        dst_data_dir, patient_log_file, volume_log_file)
+                        dst_data_dir, patient_log_file, volume_log_file,
+                        )
