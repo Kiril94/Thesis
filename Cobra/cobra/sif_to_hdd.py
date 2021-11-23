@@ -5,41 +5,26 @@ Created on Fri Sep 17 10:58:38 2021
 """
 #%% 
 # In[Import]
-import shutil
 import os
 from os.path import join, split, exists
 from pathlib import Path
 import glob
 import time
-from datetime import datetime
-import numpy as np
 import pandas as pd
-import sys
-from utilities import stats
-
+from utilities import download
 
 #%% 
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
-src_dirs = os.listdir("Y:/")
-src_neg_dirs = sorted([f"{src_dirs}/{x}" for x \
-                       in src_dirs if x.startswith('2019')])
 disk_dir = "G:"
-dst_data_dir = f"{disk_dir}/CoBra/Data"
+dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 download_pat_path = join(base_dir, "data/patient_groups")
 table_dir = join(base_dir, 'data', 'tables')
 #%% 
 # In[Load df]
-
-volume_dir_df = pd.read_csv(join(table_dir, 'series_directories.csv'))
-patient_dir_df = pd.read_csv(join(table_dir, 'patient_directories.csv'))
-volume_dir_dic = pd.Series(
-    volume_dir_df.Directory.values, index=volume_dir_df.SeriesInstanceUID)\
-        .to_dict()
-patient_dir_dic = pd.Series(
-    patient_dir_df.Directory.values, index=patient_dir_df.PatientID)\
-        .to_dict()
+df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
+df_patient_dir = pd.read_csv(join(table_dir, 'patient_directories.csv'))
 df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 
 #%%
@@ -50,12 +35,9 @@ df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 #    flair, t2*, t1, mostly negative patients,")
 #group_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
 #                                   dtype='str')
-
 print("Download the group t1")
 group_list = np.loadtxt(join(download_pat_path, "t1_neg_0.txt"),
                                    dtype='str')
-
-
 df_group = df_all[df_all['PatientID'].isin(group_list)]
 # In case you want to download only specific sequences uncomment next lines
 rel_seq = ['t1']
@@ -64,95 +46,15 @@ if len(rel_seq)>0:
 df_group = df_group.sort_values('PatientID')
 
 #%%
-# In[get index of last patient]
-patient_list_group = df_group.PatientID.unique()
-try:
-    with open(f"{base_dir}/logs/series_log.txt") as f:
-        series_lines = f.readlines()
-    last_series_path = series_lines[0]
-    print(f"Try to remove {last_series_path}")
-except Exception as e:
-	print("ERROR : "+str(e))
-
-try:
-    shutil.rmtree(last_series_path)
-except Exception as e:
-	print("ERROR : "+str(e))
-
-try:
-    print("Get index of the last patient")
-    with open(join(base_dir,"/logs/patient_log.txt")) as f:
-        lines = f.readlines()
-    last_patient_idx = int(lines[-2][6:11]) 
-except Exception as e:
-    last_patient_idx = 0
-    print("ERROR : "+str(e))
-    print("Start with first patient in the list.")
-
+# In[Move]
+patient_log_file = join(base_dir, 'logs', "t1_0_patient_log.txt" )
+volume_log_file = join(base_dir, 'logs', "t1_0_volume_log.txt" )
+download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
+                        dst_data_dir, patient_log_file, volume_log_file)
 
 #%%
-# In[move crb]
-crb_dst = join(dst_data_dir, 'dcm')
-counter = last_patient_idx
-for pat in patient_list_group[last_patient_idx:]:
-    patient_dir = patient_dir_dic[pat]
-    counter += 1
-    log_str = f"{patient_dir}\nindex: {counter}\
-            \n {datetime.now()}\n"
-    with open(f"{base_dir}/logs/patient_log.txt", mode="a+") as f:
-        f.write(log_str)
-    
-    start = time.time()
-    print(f"Patient: {patient_dir}", end='\n')
-    print(datetime.now())
-    # Copy doc files
-    if not os.path.exists(join(crb_dst, patient_dir, 'DOC')):
-        os.makedirs(join(crb_dst, patient_dir, 'DOC'))
-    for doc_path_src in glob.iglob(f"Y:/{patient_dir}/*/DOC/*/*.pdf"):
-        doc_path_src = os.path.normpath(doc_path_src)
-        study_id = doc_path_src.split(os.sep)[3]
-        doc_id = doc_path_src.split(os.sep)[5]
-        dst_doc_dir = join(crb_dst, patient_dir, 'DOC')
-        doc_path_dst = join(dst_doc_dir, f"{study_id}_{doc_id}.pdf")
-        try:
-            shutil.copy(doc_path_src, doc_path_dst)
-        except Exception as e:
-	        print("ERROR : "+str(e))
-        
-    # copy dcm files
-    volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID']
-    print(f"download {len(volumes)} volumes")
-    for volume in volumes:
-        try:
-            volume_dir = volume_dir_dic[volume]
-        except:
-            print("volume not in dict")
-            continue
-        try:
-            volume_src = os.path.normpath(f"Y:/{volume_dir}")
-        except Exception as e:
-            print("ERROR : "+str(e))
-            continue
-        if len(os.listdir(volume_src))==0:
-            print('-',  end='')
-            continue
-        else:        
-            series_uid = volume_src.split(os.sep)[-1]
-            volume_dst = join(crb_dst, patient_dir, series_uid)
-            try:
-                with open(f"{base_dir}/logs/volume_log.txt", mode="w") as f:
-                    f.write(volume_dst)
-                shutil.copytree(volume_src, volume_dst)
-                print("|",  end='')
-            except Exception as e:
-	            print("ERROR : "+str(e))
-            
-    stop = time.time()
-    print(f"\n {(stop-start)/60:.3} min")
-
-#%%
-# In[move GE (Akshay)]
-dwi_t2s_gre = np.loadtxt(join(download_pat_path, "ge_dwi_t2s_gre.txt"),
+# In[move GE ]
+"""dwi_t2s_gre = np.loadtxt(join(download_pat_path, "ge_dwi_t2s_gre.txt"),
                                    dtype='str')
 gdtg = df_all[df_all['PatientID'].isin(dwi_t2s_gre)]
 gdtg = gdtg.sort_values('PatientID')
@@ -165,7 +67,7 @@ for i in range(6):
         batches.append(patient_list_gdtg[5*50:])
 print(len(batches[-1]))
 
-    
+"""
 #%%
 # In[copy whole tree]
 """
