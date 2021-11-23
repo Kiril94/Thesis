@@ -55,8 +55,8 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
         print(datetime.now())
         log_str = f"{patient_dir}\nindex: {counter}\
                 \n {datetime.now()}\n"
-        #with open(patient_log_file, mode="a+") as f:
-        #    f.write(log_str)
+        with open(patient_log_file, mode="a+") as f:
+            f.write(log_str)
         # Copy doc files
         if download_docs:
             print("Download reports")
@@ -72,8 +72,7 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                 doc_id = doc_path_src.split(os.sep)[5]
                 doc_path_dst = join(doc_dst_dir, f"{study_id}_{doc_id}.pdf")
                 try:
-                    pass
-                    #shutil.copy(doc_path_src, doc_path_dst)
+                    shutil.copy(doc_path_src, doc_path_dst)
                 except Exception as e:
                     print("ERROR : "+str(e))
             if doc_counter==0:
@@ -99,9 +98,9 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                 volume_uid = volume_src.split(os.sep)[-1]
                 volume_dst = join(dst_dir, patient_dir, volume_uid)
                 try:
-                    #with open(volume_log_file, mode="w") as f:
-                    #    f.write(volume_dst)
-                    #shutil.copytree(volume_src, volume_dst)
+                    with open(volume_log_file, mode="w") as f:
+                        f.write(volume_dst)
+                    shutil.copytree(volume_src, volume_dst)
                     print("|",  end='')
                 except Exception as e:
                     print("ERROR : "+str(e))
