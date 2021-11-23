@@ -31,7 +31,7 @@ df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
 print("Load dataframes finished")
 #%%
 print('lets download t1 neg')
-group_list = np.loadtxt(join(base_dir, "data/patient_groups","t1_post.txt"),
+group_list = np.loadtxt(join(base_dir, "data/patient_groups","t1_neg_1.txt"),
                                    dtype='str')
 df_group = df_all[df_all['PatientID'].isin(group_list)]
 rel_seq = ['t1']
