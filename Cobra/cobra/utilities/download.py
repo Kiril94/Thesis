@@ -3,11 +3,13 @@ from os.path import join
 from datetime import datetime
 import shutil
 import pandas as pd
+import glob
+
 
 def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                         dst_dir, 
                         patient_log_file, volume_log_file,
-                        download_docs=True, src_dir="Y:/" ):
+                        download_docs=True, src_dir="Y:\\" ):
     """Moving patients in patient_list, starting from index stored in patient_log_file
     to dst_dir 
     df_group: volume ids for every patient, 
@@ -45,7 +47,9 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
         print("Start with first patient in the list.")
 
     patient_list = df_group.PatientID.unique()
+    counter = last_patient_idx
     for pat in patient_list[last_patient_idx:]:
+        counter += 1
         patient_dir = patient_dir_dic[pat]
         print(f"Patient: {patient_dir}", end='\n')
         print(datetime.now())

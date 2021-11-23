@@ -12,6 +12,7 @@ import glob
 import time
 import pandas as pd
 from utilities import download
+import numpy as np
 
 #%% 
 # In[tables directories]
@@ -23,10 +24,11 @@ download_pat_path = join(base_dir, "data/patient_groups")
 table_dir = join(base_dir, 'data', 'tables')
 #%% 
 # In[Load df]
+print("Load dataframes")
 df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 df_patient_dir = pd.read_csv(join(table_dir, 'patient_directories.csv'))
 df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
-
+print("Load dataframes finished")
 #%%
 # In[Get relevant patients and volumes]
 # This batch is not finished yet, however we will first take 
