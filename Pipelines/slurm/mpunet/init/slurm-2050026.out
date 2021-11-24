@@ -1,4 +1,0 @@
-Setting value '/home/fjn197/Thesis/Pipelines/data/mpunet/MPUnet_raw_data/MICCAI/train' (type <class 'str'>) in subdir 'train_data' with name 'base_dir'
-Setting value '/home/fjn197/Thesis/Pipelines/data/mpunet/MPUnet_raw_data/MICCAI/val' (type <class 'str'>) in subdir 'val_data' with name 'base_dir'
-Setting value '/home/fjn197/Thesis/Pipelines/data/mpunet/MPUnet_raw_data/MICCAI/test' (type <class 'str'>) in subdir 'test_data' with name 'base_dir'
-Setting value '/home/fjn197/Thesis/Pipelines/data/mpunet/MPUnet_raw_data/MICCAI/aug' (type <class 'str'>) in subdir 'aug_data' with name 'base_dir'
