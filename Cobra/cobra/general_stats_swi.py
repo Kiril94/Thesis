@@ -16,63 +16,12 @@ main_folder = "/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cob
 figs_folder = f'{main_folder}/figs/cmb_stats'
 csv_folder = f"{main_folder}/tables"
 csv_file_name = "swi_pos_scans"
-# csv_file_name = "neg_pos_clean"
-
-# table_all = load_scan_csv(f'{csv_folder}/{csv_file_name}.csv')
-# ###### Inspect quality for SWI positive scans.
-# mask_nan_values =  (table_all['InstanceCreationDate'].notna()&table_all['DateTime'].notna())
-# swi_pos_scans = table_all[(table_all['Positive']==1)&(table_all['Sequence']=='swi')&(table_all['days_since_test']>-3)&mask_nan_values]
-# #swi_pos_patients = swi_pos_scans.drop_duplicates(substet=['PatientID'])
-
-# swi_pos_scans = save_nscans(swi_pos_scans,f'{csv_folder}/{swi_pos_scans}')
 
 swi_pos_scans =  load_scan_csv(f'{csv_folder}/{csv_file_name}.csv')
 n_scans = swi_pos_scans.shape[0]
 n_patients = swi_pos_scans.drop_duplicates(subset='PatientID').shape[0]
 print(f'Number of scans:\t{n_scans}\nNumber of patients:\t{n_patients}')
 
-#Box plot
-swi_pos_scans.drop(index=2) #No slices in the folder????
-
-swi_pos_scans['PatientID'].to_csv(f'{csv_folder}/swi_pos_patientIds.csv')
-
-x_dim = swi_pos_scans['Rows']
-y_dim = swi_pos_scans['Columns']
-z_dim = swi_pos_scans['NumberOfSlices']
-data_to_plot = [x_dim,y_dim,z_dim]
-data_labels = ['dim x','dim y','dim z']
-
-fig,ax=plt.subplots()
-ax = create_boxplot(ax,data_to_plot,data_labels,title='Dimensions for SWI images')
-ax.set(ylabel='#Pixels')
-fig.savefig(f'{figs_folder}/swi_pos_dimensions.png')
-
-
-scans_groupedbyPatient = swi_pos_scans.groupby(['PatientID'])
-# Scans per patient distribution
-scans_perPatient = scans_groupedbyPatient.size()
-scans_min,scans_max = np.min(scans_perPatient),np.max(scans_perPatient)
-fig,ax = plt.subplots()
-ax.set(ylabel='Counts',xlabel='#Scans per patient')
-hist_data = create_1d_hist(ax,scans_perPatient,14,(-0.5,13.5),'Positive patients with SWI scans',display_counts=True)
-fig.savefig(f'{figs_folder}/swi_scans_per_patient.png')
-
-#Take patients that have only 1,2 or 3 scans
-patients_id = scans_perPatient[scans_perPatient<4].keys()
-swi_pos_scans = swi_pos_scans[swi_pos_scans['PatientID'].isin(patients_id)]
-swi_pos_scans = swi_pos_scans.sort_values('days_since_test',ascending=False)
-
-#Days since test for patients with multiple scans
-swi_pos_scans = swi_pos_scans.groupby('PatientID').first().reset_index() ###TAKING THE LATEST SCAN 
-days = swi_pos_scans['days_since_test']
-days_min,days_max = np.min(days),np.max(days)
-fig,ax = plt.subplots()
-ax.set(ylabel='Counts',xlabel='#Days since positive test')
-create_1d_hist(ax,days,100,(days_min,days_max),'Postive patients with multiple SWI')
-fig.savefig(f'{figs_folder}/swi_days_since_test.png')
-
-
-#print(swi_pos_scans.iloc[0])
 
 ### STATISTICS ON FILTERED DATA ##################################################################
 # Patients that: 
@@ -137,6 +86,40 @@ fig,ax = plt.subplots()
 ax.set(ylabel='Counts', xlabel=f'B$_0$ [T]')
 create_1d_hist(ax,b_values,4,(1.25,3.25),'Magnetic Field Strength for positive SWI',display_counts=True)
 fig.savefig(f'{figs_folder}/swi_pos_magneticFieldStrength.png')
+
+#Box plot for dimensions
+swi_pos_scans.drop(index=2) #No slices in the folder????
+ 
+x_dim = swi_pos_scans['Rows']
+y_dim = swi_pos_scans['Columns']
+z_dim = swi_pos_scans['NumberOfSlices']
+
+fig,ax=plt.subplots(1,2,figsize=(12,5))
+ax = ax.flatten()
+
+ax[0] = create_boxplot(ax[0],[x_dim,y_dim,z_dim],['Height','Width','Depth'],title='Dimensions for SWI images')
+ax[0].set(ylabel='#Pixels')
+
+ax[1] = create_boxplot(ax[1],[px_spacing_x,px_spacing_y,spacing_values],['Pix.Spacing x', 'Pix.spacing y', 'Spacing Between Slices'],title='Spacing for SWI images')
+ax[1].set(ylabel='Spacing [mm]')
+fig.savefig(f'{figs_folder}/swi_pos_dimensions.png')
+
+fig,ax=plt.subplots(2,2,figsize=(8,7),gridspec_kw={'width_ratios': [3, 1]})
+ax = ax.flatten()
+
+ax[0] = create_boxplot(ax[0],[x_dim,y_dim],['Height','Width'])
+ax[0].set(ylabel='#Pixels')
+
+ax[1] = create_boxplot(ax[1],[z_dim],['Depth'])
+ax[1].set(ylabel='#Pixels')
+
+ax[2] = create_boxplot(ax[2],[px_spacing_x,px_spacing_y],['Pix.Spacing x', 'Pix.spacing y'])
+ax[2].set(ylabel='Spacing [mm]')
+
+ax[3] = create_boxplot(ax[3],[spacing_values],['Spacing Between Slices'])
+ax[3].set(ylabel='Spacing [mm]')
+
+fig.savefig(f'{figs_folder}/swi_pos_dimensions_v2.png')
 
 #plt.show()
 

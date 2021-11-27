@@ -15,6 +15,7 @@ from datetime import datetime as dt
 from pathlib import Path
 import logging
 import tarfile
+import numpy as np
 import os.path
 
 
@@ -225,20 +226,29 @@ def df_unique_values(data_frame,columns):
     return unique_values
 
 def find_slices_path(patientID,studyID,seriesID,sif_path = '/home/neus/sif'):
-    """Find paths of the .dcm files for a certain scan."""
-    return iglob(f'{sif_path}/*/{patientID}/{studyID}/MR/{seriesID}/*.dcm') #to find the path
+    """Find paths of the .dcm files for a specific scan."""
+    return [n for n in iglob(f'{sif_path}/*/{patientID}/{studyID}/MR/{seriesID}/*.dcm')] #to find the path
+
+def find_reports_path(patientID,studyID,sif_path='/home/neus/sif'):
+    """Find reports path for a specific scan."""
+    return [n for n in iglob(f'{sif_path}/*/{patientID}/{studyID}/DOC/*.pdf')] #to find the path
 
 def find_n_slices(patientID,studyID,seriesID,sif_path='/home/neus/sif'):
-    """Find the number of slices for a certain scan."""
-    paths = [1 for n in find_slices_path(patientID,studyID,seriesID,sif_path=sif_path)]
-    return len(paths)
+    """Find the number of slices for a specific scan."""
+    return len(find_slices_path(patientID,studyID,seriesID,sif_path=sif_path))
 
-def save_nscans(data_frame,csv_file_path):
+def save_nscans(data_frame,csv_file_path,print_level=0):
     """Rewrite and save the table with an extra colum for the number of slices."""
     n_slices = []
+    start = time.time()
     for index,row in data_frame.iterrows(): 
+        if (print_level==1):
+            print(f'Scan number {index}/{data_frame.shape[0]} \t {(time.time()-start)/60} minutes')
         n_slices.append(find_n_slices(row['PatientID'],row['StudyInstanceUID'],row['SeriesInstanceUID']))
     data_frame['NumberOfSlices'] = n_slices
     data_frame.to_csv(csv_file_path)
 
     return data_frame
+
+def get_MDE(std,N,power=0.8,significance=0.05,p=1./3.):
+    return (power+significance)* np.sqrt(1/p/(1-p)) * np.sqrt(std**2/N)

@@ -526,8 +526,8 @@ def create_boxplot(ax,data,data_labels=None,title=''):
     
     if (data_labels is None):
         data_labels = [int(i+1) for i in range(len(data))]
-    ax = sns.boxplot(data=data,palette='Set2',medianprops=dict(color="red"))
-    ax = sns.stripplot(data=data, color=".25",alpha=0.3)
+    ax = sns.boxplot(ax=ax,data=data,palette='Set2',medianprops=dict(color="red"))
+    ax = sns.stripplot(ax=ax,data=data, color=".25",alpha=0.3)
     ax.set_xticklabels(data_labels)
     ax.get_xaxis().tick_bottom()
     ax.set_title(title)
