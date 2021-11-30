@@ -298,3 +298,5 @@ def match_compare(df1, df2, match_cols, compare_col,  merge_how='inner'):
     dfm = df1.merge(df2, on=match_cols, how=merge_how)
     same_mask = np.where(dfm[compare_col+'_x']==dfm[compare_col+'_y'], True, False)
     return dfm, same_mask
+
+def uqp(df): return df.PatientID.nunique()
