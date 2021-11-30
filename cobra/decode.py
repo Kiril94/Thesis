@@ -24,15 +24,16 @@ script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 key = "1b3KCzziTwLPiqneoY8XMEQ2DhWpxixIeiRhLIWwZe4="
 df_DST = pd.read_csv(join(base_dir,'data/share/sp/import/dst2.csv'),
-    converters={'DST':_parse_bytes}) 
+    converters={'DST':_parse_bytes})[['PID','SID','DST']] 
 fernet = Fernet(key)
 df_DST.DST = df_DST.DST.map(lambda x: bytes(x, encoding='utf8'))
 df_DST.DST = df_DST.DST.map(lambda x: fernet.decrypt(x).decode())
 df_DST.DST = df_DST.DST.map(lambda x: int(x))
 df_DST = df_DST.rename(columns={'PID':'PatientID', 'SID':'SeriesInstanceUID','DST':'days_since_test'})
+
 #%%
 # In[Save new decrypted df]
-df_DST.iloc[:,1:].to_csv(join(base_dir, 'data/tables/days_since_test.csv'), index=False)
+df_DST.to_csv(join(base_dir, 'data/tables/days_since_test2.csv'), index=False)
 #%%
 
 # In[Load df clean]

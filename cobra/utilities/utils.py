@@ -254,7 +254,7 @@ def save_nscans(data_frame,csv_file_path, sif_path):
     """Rewrite and save the table with an extra colum for the number of slices."""
     n_slices = []
     counter=0
-    for index,row in data_frame.iterrows():         
+    for index, row in data_frame.iterrows():         
         counter+=1
         if counter%100==0:
             print('|',end='')
@@ -273,7 +273,7 @@ def save_nscans_to_txt(data_frame, txt_file_path, sif_path, disk_path):
     dic_pat_dis = pd.Series(
     df_pat_dirs.Directory.values, index=df_pat_dirs.PatientID)\
         .to_dict()
-    for index,row in data_frame.iterrows():         
+    for index, row in data_frame.iterrows():         
         counter+=1
         if counter%1000==0:
             print(f'{counter} volumes written \n')
@@ -291,3 +291,10 @@ def save_nscans_to_txt(data_frame, txt_file_path, sif_path, disk_path):
             f.write(f"{series_id}, {n_slices}\n")
     print(f"Number of scans written to {txt_file_path}: {counter}")
     return 0
+
+def match_compare(df1, df2, match_cols, compare_col,  merge_how='inner'):
+    """Compares df1 and df2 merged on match_cols for entries in compare_col
+    Returns: merged dataframe, same_mask"""
+    dfm = df1.merge(df2, on=match_cols, how=merge_how)
+    same_mask = np.where(dfm[compare_col+'_x']==dfm[compare_col+'_y'], True, False)
+    return dfm, same_mask
