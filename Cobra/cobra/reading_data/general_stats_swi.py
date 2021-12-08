@@ -4,6 +4,8 @@ Created on Mon Nov  15 12:06:00 2021
 
 @author: neusRodeja
 """
+import sys
+sys.path.insert(0, '/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/')
 
 import numpy as np
 import pandas as pd 
@@ -33,6 +35,9 @@ print(f'Number of scans:\t{n_scans}\nNumber of patients:\t{n_patients}')
 n_scans = swi_pos_scans.shape[0]
 n_patients = swi_pos_scans.drop_duplicates(subset='PatientID').shape[0]
 print(f'AFTER FILTERING\nNumber of scans:\t{n_scans}\nNumber of patients:\t{n_patients}')
+
+#Series Description
+print(swi_pos_scans['SeriesDescription'].unique())
 
 # Slice thickness distribution (Nominal slice thickness, in mm.)
 thick_values = np.array(swi_pos_scans['SliceThickness'].dropna())
@@ -67,8 +72,9 @@ print(f"N.patients with Spacing between slices = 1 and Slice thickness = 2 : \t 
 #Pixel spacing distribution 
 #Physical distance in the patient between the center of each pixel
 px_spacing_values = swi_pos_scans['PixelSpacing'].dropna()
-px_spacing_x = np.array([px[0] for px in px_spacing_values])
-px_spacing_y = np.array([px[1] for px in px_spacing_values])
+px_spacing_values = list(filter(lambda x: len(x)>0,px_spacing_values))
+px_spacing_x = np.array([float(px[0].split(' ')[0][1:]) for px in px_spacing_values])
+px_spacing_y = np.array([float(px[0].split(' ')[1][:-1]) for px in px_spacing_values])
 
 x_min,x_max=np.min(px_spacing_x),np.max(px_spacing_x)
 y_min,y_max=np.min(px_spacing_y),np.max(px_spacing_y)

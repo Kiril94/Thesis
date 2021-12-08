@@ -291,5 +291,45 @@ class Patient():
         arr3d = self.reconstruct3d(scan_dir)
         vis.display3d(arr3d, **args)
             
-            
+def load_nifti_img(filepath, dtype=None):
+    '''
+    NIFTI Image Loader
+    :param filepath: path to the input NIFTI image
+    :param dtype: dataio type of the nifti numpy array
+    :return: return numpy array
+    '''
+    nim = nib.load(filepath)
+    out_nii_array = np.array(nim.get_data(),dtype=dtype)
+    out_nii_array = np.squeeze(out_nii_array) # drop singleton dim in case temporal dim exists
+    meta = {'affine': nim.get_affine(),
+            'dim': nim.header['dim'],
+            'pixdim': nim.header['pixdim'],
+            'name': os.path.basename(filepath)
+            }
+
+    return out_nii_array, meta 
+
+def load_nifti_metadata(filepath):
+    '''
+    NIFTI Image Loader
+    :param filepath: path to the input NIFTI image
+    :param dtype: dataio type of the nifti numpy array
+    :return: dict with metadata
+    '''
+    nim = nib.load(filepath)
+    meta = {'affine': nim.get_affine(),
+            'dim': nim.header['dim'],
+            'pixdim': nim.header['pixdim'],
+            'name': os.path.basename(filepath)
+            }
+
+    return meta        
+
+def load_nifti_array_dim(filepath,dtype=None):
+
+    nim = nib.load(filepath)
+    out_nii_array = np.array(nim.get_data(),dtype=dtype)
+    out_nii_array = np.squeeze(out_nii_array) # drop singleton dim in case temporal dim exists
+
+    return out_nii_array.shape
             

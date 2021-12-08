@@ -4,6 +4,8 @@ Created on Mon Nov  15 12:06:00 2021
 
 @author: neusRodeja
 """
+import sys
+sys.path.insert(0, '/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/')
 
 import numpy as np
 import pandas as pd 
@@ -51,10 +53,14 @@ ax.set(ylabel='Counts',xlabel='#Days since positive test')
 create_1d_hist(ax,days,100,(days_min,days_max),'Postive patients with multiple SWI')
 fig.savefig(f'{figs_folder}/swi_days_since_test.png')
 
-# #Save the number of slices per scan and save the table
-# swi_pos_scans = save_nscans(swi_pos_scans,f'{csv_folder}/{csv_swi_file_name}.csv')
+##Drop row with nan values 
+column_subset = ['SliceThickness','SpacingBetweenSlices','PixelSpacing','MagneticFieldStrength','Rows','Columns','DateTime']
+swi_pos_scans.dropna(subset=column_subset)
 
-# #Save extra files to send to computerome
-# swi_pos_scans['PatientID'].to_csv(f'{csv_folder}/swi_pos_patientIds.csv')
-# swi_pos_scans['DateTime'].to_csv(f'{csv_folder}/swi_pos_dateTime.csv')
+#Save the number of slices per scan and save the table
+swi_pos_scans = save_nscans(swi_pos_scans,f'{csv_folder}/{csv_swi_file_name}.csv')
+
+#Save extra files to send to computerome
+swi_pos_scans['PatientID'].to_csv(f'{csv_folder}/swi_pos_patientIds.csv')
+swi_pos_scans['DateTime'].to_csv(f'{csv_folder}/swi_pos_dateTime.csv')
 

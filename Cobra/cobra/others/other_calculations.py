@@ -4,6 +4,9 @@ Created on Nov 19th 2021
 
 @author: Neus Rodeja Ferrer
 """
+import sys
+sys.path.insert(0, '/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/')
+
 from utilities.stats import weighted_mean,weighted_std
 from utilities.utils import get_MDE
 import numpy as np

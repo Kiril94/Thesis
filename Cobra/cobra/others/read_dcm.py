@@ -20,12 +20,19 @@ sif_path = '/home/neus/sif'
 # file_path = glob.glob(f'{sif_path}/*/{patient_id}/{study_id}/MR/{series_id}/') #to find the path
 
 
-path_dcm='/home/neus/sif/positive/0272922a8e1331758757be7a7460571f/a213ff3897205841639b4717961d1d96/MR/ac11f79a7709a623309beba66656e537/'
+path_dcm=f'{sif_path}/*/{patient_id}/{study_id}/MR/{series_id}/'
 files_name = glob.glob(path_dcm+'*.dcm')
 
-dcm_slice0 = dcmread(files_name[0])
-print(type(dcm_slice0))
-print(dcm_slice0)
+for file in files_name:
+    dcm_slice = dcmread(file)
+    print(dcm_slice.SeriesDescription)
+
+
+# dcm_slice0 = dcmread(files_name[0])
+# print(type(dcm_slice0))
+# print(dcm_slice0)
+
+
 # #Read dcm files and sort them
 # dcm_slices = [dcmread(file) for file in files_name]
 # dcm_slices.sort(key=lambda x: int(x.InstanceNumber))
