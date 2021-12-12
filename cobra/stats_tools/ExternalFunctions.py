@@ -68,8 +68,6 @@ def add_text_to_ax(x_coord, y_coord, string, ax, fontsize=12, color='k'):
     return None
 
 
-
-
 # =============================================================================
 #  Probfit replacement
 # =============================================================================
@@ -124,10 +122,6 @@ class Chi2Regression:  # override the class with a better one
             chi2 = np.sum(self.weights*(self.y - f)**2/f**2)
         
         return chi2
-
-
-
-
 
 
 def simpson38(f, edges, bw, *arg):
