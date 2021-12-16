@@ -18,7 +18,6 @@ from stats_tools.colors import Color_palette
 
 
 
-
 # In[Helper]
 def ax_decorator(fig, ax,
                  lgd_loc=0, lgd_fs=25, 
@@ -573,7 +572,28 @@ def create_2d_hist(ax,x_values,y_values,bins,range_values=None,title=''):
 # In[Helper functions]
 
 ##################################
-
+def resolution_boxplot(df, title='', save=False, figname=''):
+    fig, ax = plt.subplots(1,4, figsize=(22,8),gridspec_kw={'width_ratios': [2, 1,2,2]})
+    fig, _ = create_boxplot(df[['Rows', 'Columns',]], 
+        data_labels=["Height", "Width", ], 
+        kwargs={'xlabel':'',},
+        fig=fig, ax=ax[0])
+    create_boxplot(df[['NumberOfSlices', ]], 
+        data_labels=["Depth", ], 
+        kwargs={'xlabel':'','yrange':(0,500)},
+        fig=fig, ax=ax[1])
+    create_boxplot(df[['RowSpacing', 'ColumnSpacing',]], 
+        data_labels=["Pixel \nSpacing x", "Pixel \nSpacing y",], 
+        kwargs={'xlabel':'','ylabel':'mm','yrange':(0,2)},
+        fig=fig, ax=ax[2])
+    create_boxplot(df[[ 'SpacingBetweenSlices','SliceThickness' ]], 
+        data_labels=["Slices\nSpacing","Slice\nThickness" ], 
+        kwargs={'xlabel':'','ylabel':'mm','yrange':(0,7)},
+        fig=fig, ax=ax[3])
+    fig.suptitle(title, fontsize=25)
+    fig.tight_layout()
+    if save:
+        fig.savefig(figname)
 
 
 
