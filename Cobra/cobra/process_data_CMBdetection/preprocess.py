@@ -24,14 +24,14 @@ from sklearn.model_selection import train_test_split
 from enum import Enum
 app = typer.Typer()
 
-IMAGE_WIDTH = 256
-IMAGE_HEIGHT = 176
+IMAGE_WIDTH = 256 #x direction, index 1 (cols)
+IMAGE_HEIGHT = 176 #y direction, index 0 (rows)
 # the image width  and height need to be multiple of 32
 ROWS_TO_EXCLUDE_PER_SIDE = 8 
 COLUMNS_TO_EXCLUDE_PER_SIDE = 0
 
-BOUNDING_BOX_WIDTH = 3/IMAGE_WIDTH
-BOUNDING_BOX_HEIGHT = 3/IMAGE_HEIGHT
+BOUNDING_BOX_WIDTH = 7/IMAGE_WIDTH
+BOUNDING_BOX_HEIGHT = 7/IMAGE_HEIGHT
 
 
 ## /home/neus/Documents/09.UCPH/MasterThesis/DATA/Synthetic_Cerebral_Microbleed_on_SWI_images/PublicDataShare_2020/rCMB_DefiniteSubject
@@ -108,8 +108,16 @@ def reformat_labels(input_labels_file:str,output_labels_folder:str,overwrite:boo
                     open(file_name_to_save,file_access_mode).close()
                 else: 
                     #if there are objects, write the labels on the file
-                    bounding_box_x = labels_info['x_position'].to_numpy()/IMAGE_WIDTH
-                    bounding_box_y = labels_info['y_position'].to_numpy()/IMAGE_HEIGHT
+
+                    #transform positions after resizing
+                    x = labels_info['x_position'].to_numpy() - COLUMNS_TO_EXCLUDE_PER_SIDE - 1 
+                    y = labels_info['y_position'].to_numpy() - ROWS_TO_EXCLUDE_PER_SIDE - 1 
+
+                    slice_width = IMAGE_WIDTH - 2*COLUMNS_TO_EXCLUDE_PER_SIDE
+                    slice_height = IMAGE_HEIGHT - 2*ROWS_TO_EXCLUDE_PER_SIDE
+                    #scale values 
+                    bounding_box_x = x/slice_width
+                    bounding_box_y = y/slice_height
 
                     new_labels = pd.DataFrame({ 'object_class': 0,
                                                 'x':bounding_box_x,
