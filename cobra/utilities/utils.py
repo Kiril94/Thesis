@@ -250,7 +250,7 @@ def find_n_slices(patientID,studyID,seriesID,sif_path):
     paths = [1 for n in find_slices_path(patientID,studyID,seriesID,sif_path=sif_path)]
     return len(paths)
 
-def save_nscans(data_frame,csv_file_path, sif_path):
+def save_number_of_slices(data_frame, csv_file_path, sif_path):
     """Rewrite and save the table with an extra colum for the number of slices."""
     n_slices = []
     counter=0
@@ -258,7 +258,9 @@ def save_nscans(data_frame,csv_file_path, sif_path):
         counter+=1
         if counter%100==0:
             print('|',end='')
-        n_slices.append(find_n_slices(row['PatientID'],row['StudyInstanceUID'],row['SeriesInstanceUID'], sif_path))
+        n_slices.append(find_n_slices(row['PatientID'],
+            row['StudyInstanceUID'],
+            row['SeriesInstanceUID'], sif_path))
     data_frame['NumberOfSlices'] = n_slices
     data_frame.to_csv(csv_file_path)
 
@@ -292,6 +294,7 @@ def save_number_of_slices_to_txt(data_frame, txt_file_path,
             f.write(f"{series_id}, {n_slices}\n")
     print(f"Number of scans written to {txt_file_path}: {counter}")
     return 0
+
 
 def match_compare(df1, df2, match_cols, compare_col,  merge_how='inner'):
     """Compares df1 and df2 merged on match_cols for entries in compare_col

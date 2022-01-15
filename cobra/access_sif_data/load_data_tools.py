@@ -87,7 +87,7 @@ def get_scan_key_list():
                 ('NumberOfEchoes', 'int'),
                 ('NumberofPhaseEncodingSteps', 'int'),
                 ('PatientPosition','str'),
-                ('PixelBandwith','float'),
+                ('PixelBandwidth','float'),
                 ('PixelPresentation', 'str'),
                 ('PixelSpacing', 'str'),
                 ('PhotometricInterpretation','str'),
