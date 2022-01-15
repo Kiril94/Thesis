@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 n_neg = 15
 n_pos = 5
 fig, ax = plt.subplots(figsize=(8, 6), dpi=120)
@@ -87,5 +88,9 @@ ax.text(
     pos['t'][0], pos['t'][1]-2, 'sink',
     fontsize=18, ha='center', va='bottom')
 fig.tight_layout()
+
+fig.savefig(
+    "D:\Thesis\CoBra\cobra\\figs\writeup\methods\matching\graph_max_flow_min_cost.png", 
+)
 #%%
 print(pos) 

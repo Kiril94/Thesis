@@ -264,7 +264,8 @@ def save_nscans(data_frame,csv_file_path, sif_path):
 
     return data_frame
 
-def save_nscans_to_txt(data_frame, txt_file_path, sif_path, disk_path):
+def save_number_of_slices_to_txt(data_frame, txt_file_path, 
+                                sif_path, disk_path):
     """Save number of scans to text row by row."""
     n_slices = []
     counter=0

@@ -9,9 +9,9 @@ import pandas as pd
 import os
 
 
-def list_subdir(dir_):
-    return [os.path.join(dir_, x) for x in os.listdir(dir_)]
-
+def list_subdir(dir_, ending=""):
+    return [os.path.join(dir_, x) for x in os.listdir(dir_) \
+            if x.endswith(ending)]
 def create_dict(keys, values):
     return dict(zip(keys, values))
 
