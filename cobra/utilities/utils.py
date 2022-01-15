@@ -18,6 +18,7 @@ import logging
 import tarfile
 import os.path
 import numpy as np
+from pydicom import dcmread
 
 
 
@@ -279,8 +280,8 @@ def save_number_of_slices_to_txt(data_frame, txt_file_path,
     for index, row in data_frame.iterrows():         
         counter+=1
         if counter%1000==0:
-            print(f'{counter} volumes written \n')
-            print(dt.now())
+            print(f'{counter} volumes written')
+            print(dt.now(),'\n')
         patient_id = row['PatientID']
         series_id = row['SeriesInstanceUID']
         try:
@@ -299,21 +300,25 @@ def save_missing_tags_to_txt(sids, txt_file_path,
     key_list=['PercentSampling', 
     'PercentPhaseFieldOfView', 
     'PixelBandwidth',
-    'ReconstructionDiameter']):
+    'ReconstructionDiameter'], dicoms_base_dir='Y:/'):
     """Save missing tags to text."""
     table_dir = "D:/Thesis/Cobra/cobra/data/tables"
-    df_sif_dir = utils.load_scan_csv(join(table_dir, 'series_directories.csv'))
+    df_sif_dir = load_scan_csv(join(table_dir, 'series_directories.csv'))
     sif_dir_dic = pd.Series(df_sif_dir.Directory.values, index=df_sif_dir.SeriesInstanceUID).to_dict()
-    column_names = ['SeriesInstanceUID'] + key_list
+    column_names = ['index','SeriesInstanceUID'] + key_list
     column_names_str = ",".join(column_names)
+    print(f"Write missing values to {txt_file_path}")
     if not os.path.exists(txt_file_path):
         with open(txt_file_path, mode="w") as f:
                 f.write(f"{column_names_str}\n")
-    for sid in sids:
-        series_dir = join(sif_dir, sif_dir_dic[sid])
+    for i, sid in enumerate(sids):
+        if i%200==0:
+            print(f'{i} volumes written')
+            print(dt.now(),'\n')
+        series_dir = join(dicoms_base_dir, sif_dir_dic[sid])
         dcm_name = os.listdir(series_dir)[0]
         dcm = dcmread(join(series_dir, dcm_name))
-        save_list = [sid]
+        save_list = [str(i), sid]
         for k in key_list:
             try:
                 val = str(dcm[k].value)
