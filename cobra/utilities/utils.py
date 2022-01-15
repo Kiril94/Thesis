@@ -295,6 +295,34 @@ def save_number_of_slices_to_txt(data_frame, txt_file_path,
     print(f"Number of scans written to {txt_file_path}: {counter}")
     return 0
 
+def save_missing_tags_to_txt(sids, txt_file_path, 
+    key_list=['PercentSampling', 
+    'PercentPhaseFieldOfView', 
+    'PixelBandwidth',
+    'ReconstructionDiameter']):
+    """Save missing tags to text."""
+    table_dir = "D:/Thesis/Cobra/cobra/data/tables"
+    df_sif_dir = utils.load_scan_csv(join(table_dir, 'series_directories.csv'))
+    sif_dir_dic = pd.Series(df_sif_dir.Directory.values, index=df_sif_dir.SeriesInstanceUID).to_dict()
+    column_names = ['SeriesInstanceUID'] + key_list
+    column_names_str = ",".join(column_names)
+    if not os.path.exists(txt_file_path):
+        with open(txt_file_path, mode="w") as f:
+                f.write(f"{column_names_str}\n")
+    for sid in sids:
+        series_dir = join(sif_dir, sif_dir_dic[sid])
+        dcm_name = os.listdir(series_dir)[0]
+        dcm = dcmread(join(series_dir, dcm_name))
+        save_list = [sid]
+        for k in key_list:
+            try:
+                val = str(dcm[k].value)
+            except:
+                val = str(None)
+            save_list.append(val)
+        save_string = ",".join(save_list)
+        with open(txt_file_path, mode="a+") as f:
+            f.write(f"{save_string}\n")
 
 def match_compare(df1, df2, match_cols, compare_col,  merge_how='inner'):
     """Compares df1 and df2 merged on match_cols for entries in compare_col
