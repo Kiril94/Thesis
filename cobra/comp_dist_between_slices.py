@@ -47,8 +47,7 @@ def get_distances_for_series(series_dir):
         try:
             print('Use image orientation')
             cosines = get_value_from_header(dcm_dirs[0], 'ImageOrientationPatient')
-            normal_indices = np.array([[1,2,0], [5,3,4], [2,0,1], [4,5,3]])
-            normal = cosines[normal_indices[0]]*cosines[normal_indices[1]] - cosines[normal_indices[2]]*cosines[normal_indices[3]]
+            normal = np.cross(cosines[:3], cosines[3:])
             distances = []
             for dcm_dir in dcm_dirs[:3]:
                 ipp = get_value_from_header(dcm_dir, 'ImagePositionPatient')
