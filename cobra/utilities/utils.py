@@ -300,7 +300,8 @@ def save_missing_tags_to_txt(sids, txt_file_path,
     key_list=['PercentSampling', 
     'PercentPhaseFieldOfView', 
     'PixelBandwidth',
-    'ReconstructionDiameter'], dicoms_base_dir='Y:/'):
+    'ReconstructionDiameter',
+    'NumberOfPhaseEncodingSteps'], dicoms_base_dir='Y:/'):
     """Save missing tags to text."""
     table_dir = "D:/Thesis/Cobra/cobra/data/tables"
     df_sif_dir = load_scan_csv(join(table_dir, 'series_directories.csv'))
