@@ -311,7 +311,11 @@ def save_missing_tags_to_txt(sids, txt_file_path,
     if not os.path.exists(txt_file_path):
         with open(txt_file_path, mode="w") as f:
                 f.write(f"{column_names_str}\n")
-    for i, sid in enumerate(sids):
+        start_idx = 0
+    else:
+        start_idx = len(pd.read_csv(txt_file_path))
+    for i, sid in enumerate(sids[start_idx:]):
+        i += start_idx
         if i%200==0:
             print(f'{i} volumes written')
             print(dt.now(),'\n')
