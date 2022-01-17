@@ -3,33 +3,39 @@
 Created on Fri Sep 17 10:58:38 2021
 @author: klein
 """
-
 #%% 
 # In[Import]
 import os
-from os.path import join
+from os.path import join, split, exists
 from pathlib import Path
-
-import numpy as np
+import glob
+import time
 import pandas as pd
-
 from utilities import download
+import numpy as np
+import pickle
 
 #%% 
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
-disk_dir = "G:"
+disk_dir = "F:"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 download_pat_path = join(base_dir, "data/patient_groups")
-table_dir = join(base_dir, 'data', 'tables')
+data_dir = join(base_dir, 'data')
+table_dir = join(data_dir, 'tables')
+sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'sim_3dt1_sids.pkl')
+
+
 #%% 
 # In[Load df]
 print("Load dataframes")
-df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
+df_volume_dir = pd.read_csv(join(table_dir, 'series_directories_sif.csv'))
 df_patient_dir = pd.read_csv(join(table_dir, 'patient_directories.csv'))
-df_all = pd.read_csv(join(table_dir, "neg_pos.csv"))
+df_all = pd.read_csv(join(table_dir, "neg_pos_clean.csv"))
 print("Load dataframes finished")
+with open(sids_3d_t1_path, 'rb') as f:
+    sids_3d_t1 = pickle.load(f)
 #%%
 # In[Get relevant patients and volumes]
 # This batch is not finished yet, however we will first take 
@@ -38,20 +44,21 @@ print("Load dataframes finished")
 #    flair, t2*, t1, mostly negative patients,")
 #group_list = np.loadtxt(join(download_pat_path, "dwi_flair_t2s_t1.txt"),
 #                                   dtype='str')
-print("Download the group t1")
-group_list = np.loadtxt(join(download_pat_path, "t1_neg_0.txt"),
-                                   dtype='str')
-df_group = df_all[df_all['PatientID'].isin(group_list)]
-# In case you want to download only specific sequences uncomment next lines
-rel_seq = ['t1']
-if len(rel_seq)>0:
-    df_group = df_group[df_group['Sequence'].isin(rel_seq)]
+print('Download 3dt1 scans that occur in pairs')
+df_group = df_all[df_all.SeriesInstanceUID.isin(sids_3d_t1)]
 df_group = df_group.sort_values('PatientID')
+
+#print("Download the group t1")
+#group_list = np.loadtxt(join(download_pat_path, "t1_neg_1.txt"),
+#                                   dtype='str')
+#df_group = df_all[df_all['PatientID'].isin(group_list)]
+
+# In case you want to download only specific sequences uncomment next lines
 
 #%%
 # In[Move]
-patient_log_file = join(base_dir, 'logs', "t1_0_patient_log.txt" )
-volume_log_file = join(base_dir, 'logs', "t1_0_volume_log.txt" )
+patient_log_file = join(base_dir, 'logs', "pairs_3dt1_pat_log.txt" )
+volume_log_file = join(base_dir, 'logs', "pairs_3dt1_volume_log.txt" )
 download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
                         dst_data_dir, patient_log_file, volume_log_file)
 
