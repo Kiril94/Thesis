@@ -19,7 +19,7 @@ import pickle
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
-disk_dir = "F:"
+disk_dir = "D:/F"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 download_pat_path = join(base_dir, "data/patient_groups")
 data_dir = join(base_dir, 'data')
@@ -30,7 +30,7 @@ sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'sim_3dt1_sids.pkl')
 #%% 
 # In[Load df]
 print("Load dataframes")
-df_volume_dir = pd.read_csv(join(table_dir, 'series_directories_sif.csv'))
+df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 df_patient_dir = pd.read_csv(join(table_dir, 'patient_directories.csv'))
 df_all = pd.read_csv(join(table_dir, "neg_pos_clean.csv"))
 print("Load dataframes finished")
@@ -48,6 +48,8 @@ print('Download 3dt1 scans that occur in pairs')
 df_group = df_all[df_all.SeriesInstanceUID.isin(sids_3d_t1)]
 df_group = df_group.sort_values('PatientID')
 
+#pick only last 280 files
+df_group = df_group.iloc[-260:]
 #print("Download the group t1")
 #group_list = np.loadtxt(join(download_pat_path, "t1_neg_1.txt"),
 #                                   dtype='str')
@@ -96,7 +98,7 @@ for i, batch in enumerate(batches[current_batch:]):
         _, patient_id = split(patient_dir)
         dst_dir = join(batch_dir, patient_id)
         if exists(dst_dir):
-            print(f"{dst_dir} exists" )
+            print(f"{dst_dir} exists" ) 
             continue
         print(f"{patient_dir}\n->{dst_dir}")
         shutil.copytree(patient_dir, dst_dir)
@@ -111,3 +113,5 @@ for i, batch in enumerate(batches):
 ge_meta.to_csv("G:\CoBra\Data\GE\metadata.csv",
                index=False,encoding='utf-8-sig')
 """    
+
+
