@@ -1,3 +1,5 @@
+
+
 # Editors
 .vscode/
 .idea/
@@ -127,3 +129,4 @@ dmypy.json
 
 #csv data from SIF
 /Cobra/cobra/tables/*.csv
+/Cobra/cobra/tables/*/*.csv
