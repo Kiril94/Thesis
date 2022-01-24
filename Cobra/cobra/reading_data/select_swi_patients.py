@@ -13,11 +13,11 @@ from utilities.utils import load_scan_csv,df_unique_values,find_n_slices,save_ns
 from stats_tools.vis import create_1d_hist,create_2d_hist,create_boxplot
 import matplotlib.pyplot as plt 
 
-
+label = 'swi_pos'
 main_folder = "/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra"
 figs_folder = f'{main_folder}/figs/cmb_stats'
 csv_folder = f"{main_folder}/tables"
-csv_swi_file_name = "swi_pos_scans"
+csv_swi_file_name = f"{label}_scans"
 csv_file_name = "neg_pos_clean"
 
 table_all = load_scan_csv(f'{csv_folder}/{csv_file_name}.csv')
@@ -61,6 +61,6 @@ swi_pos_scans.dropna(subset=column_subset)
 swi_pos_scans = save_nscans(swi_pos_scans,f'{csv_folder}/{csv_swi_file_name}.csv')
 
 #Save extra files to send to computerome
-swi_pos_scans['PatientID'].to_csv(f'{csv_folder}/swi_pos_patientIds.csv')
-swi_pos_scans['DateTime'].to_csv(f'{csv_folder}/swi_pos_dateTime.csv')
+swi_pos_scans['PatientID'].to_csv(f'{csv_folder}/{label}_patientIds.csv')
+swi_pos_scans['DateTime'].to_csv(f'{csv_folder}/{label}_dateTime.csv')
 

@@ -19,11 +19,13 @@ import pandas as pd
 import nibabel as nib
 import imageio
 import os
-from shutil import copy
+from shutil import copy,move
 from rich.progress import track
 from sklearn.model_selection import train_test_split
 from enum import Enum
 import xml.etree.ElementTree as ET
+from pathlib import Path
+from typing import List
 
 app = typer.Typer()
 
@@ -40,6 +42,8 @@ BOUNDING_BOX_HALF_WIDTH = 3
 BOUNDING_BOX_HALF_HEIGHT = 3
 
 # python preprocess.py preprocess-yolo '/media/neus/USB DISK/Synthetic_Cerebral_Microbleed_on_SWI_images/PublicDataShare_2020/rCMB_DefiniteSubject' /home/neus/Documents/09.UCPH/MasterThesis/DATA/prova_training_YOLO /home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/tables/SynthCMB/rCMBInformationInfo.csv 0.25 --overwrite
+# python preprocess.py preprocess-yolo '/media/neus/USB DISK/Synthetic_Cerebral_Microbleed_on_SWI_images/PublicDataShare_2020/all' /home/neus/Documents/09.UCPH/MasterThesis/DATA/prova_training_YOLO_all /home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/tables/SynthCMB/all_info.csv 0.25 --overwrite
+
 class SliceContext(str,Enum):
     average = 'average'
 
@@ -50,16 +54,18 @@ class fileExtension(str,Enum):
     png = 'png'
 
 @app.command()
-def extract_1channel_slices(input_folder: str,
-                            output_folder: str,
+def extract_1channel_slices(input_folder: List[Path],
+                            output_folder: Path,
                             slice_context: Optional[SliceContext]=typer.Option('average','--slice-context','-sc', help='Mode to take the context of a slice.'),
                             input_file_extension: Optional[fileExtension]=typer.Option('nii.gz','--input-extension','-ie', help='Extension of the input files. No other formats implemented yet.'),
                             output_file_extension: Optional[fileExtension]=typer.Option('nii.gz','--output-extension','-oe', help='Extension of the output files. No other formats implemented yet.'),
 ):
     """Extract the averaged slices from 3d niftii files."""
 
+    nifti_files = []
+    for folder in input_folder:
+        nifti_files.extend([file for file in iglob(f"{folder}/*.{input_file_extension}")])
 
-    nifti_files = [file for file in iglob(f"{input_folder}/*.{input_file_extension}")]
     for file in track(nifti_files,description='Slicing files...'):
         img_name = file.split('/')[-1][:-len(input_file_extension)-1]
         img_array,_ = load_nifti_img(file)
@@ -80,11 +86,11 @@ def extract_1channel_slices(input_folder: str,
                 imageio.imwrite(f"{output_folder}/{img_name}_slice{idx_slice}.{output_file_extension}",slice.astype(np.uint8))
             
 
-    typer.echo(f"{len(nifti_files)} 3D nifti scans converted in total.")
+    typer.echo(f"{len(nifti_files)} 3D nifti scans converted.")
 
 @app.command()
-def reformat_labels(input_labels_file:str,
-                    output_labels_folder:str,
+def reformat_labels(input_labels_file:Path,
+                    output_labels_folder:Path,
                     overwrite:bool = typer.Option(...,help='Whether to overwrite output files'),
                     input_file_extension: Optional[fileExtension]=typer.Option('nii.gz','--input-extension','-ie', help='Extension of the input files. No other formats implemented yet.'),
                     output_file_extension: Optional[fileExtension]=typer.Option('nii.gz','--output-extension','-oe', help='Extension of the output files. No other formats implemented yet.'),
@@ -115,7 +121,8 @@ def reformat_labels(input_labels_file:str,
             file_name_to_save =f'{output_labels_folder}/{file_name}_slice{z}' 
             if (labels_info.shape[0]==0):
                 #if there are no objects, write an empty file
-                open(f'{file_name_to_save}.xml',file_access_mode).close()
+                #open(f'{file_name_to_save}.xml',file_access_mode).close()
+                printing = 'no object'
             else: 
                 #if there are objects, write the labels on the file
 
@@ -131,7 +138,7 @@ def reformat_labels(input_labels_file:str,
                 annot = ET.Element('annotation')
 
                 filename = ET.SubElement(annot,'filename')
-                filename.text = file_name
+                filename.text = f'{file_name}_slice{z}.{output_file_extension}'
 
                 size = ET.SubElement(annot,'size')
                 width = ET.SubElement(size,'width')
@@ -194,9 +201,10 @@ def create_annotated_slices_YOLO(input_folder:str,
     reformat_labels(labels_file,output_folder,overwrite=overwrite,input_file_extension=input_file_extension,output_file_extension=output_file_extension)
 
 @app.command()
-def split_train_test(test_size:str,
-                    input_folder:str,
-                    output_folder:str,
+def split_train_test_val(input_folder:Path = typer.Option(...,'--input-folder','-if',exists=True,help='Folder path with the nifti images.') ,
+                    output_folder: Path = typer.Option(...,'--output-folder','-of',exists=True,help='Folder path where to save the sliced images.'),
+                    test_size: float = typer.Option(0.2,'--test-size','-ts',help='Size of the test set.'),
+                    val_size: float = typer.Option(0.1,'--val-size','-vs',help='Size of the validation set.'),
                     shuffle:Optional[bool] = typer.Option(True,help='Whether to shuffle data before splitting.'),
                     file_extension: Optional[str]=typer.Option('nii.gz',
                     '--extension',
@@ -207,10 +215,14 @@ def split_train_test(test_size:str,
     Only works for linux os."""
     
     #find paths
-    paths = np.array([[x,f'{x[:-(len(file_extension)+1)]}.xml'] for x in iglob(f'{input_folder}/*.{file_extension}')])
-    #split train and test
-    X_train,X_test,y_train,y_test = train_test_split(paths[:,0],paths[:,1],test_size=float(test_size),random_state=42,shuffle=shuffle)
+    #paths = np.array([[x,f'{x[:-(len(file_extension)+1)]}.xml'] for x in iglob(f'{input_folder}/*.{file_extension}')])
+    paths = np.array([[f'{x[:-4]}.{file_extension}',x] for x in iglob(f'{input_folder}/*.xml')])
+    #split train test and val
+    trainandtest_size = 1 - val_size
+    X_traintest,X_val,y_traintest,y_val = train_test_split(paths[:,0],paths[:,1],test_size=float(val_size),random_state=42,shuffle=shuffle)
 
+    test_size = test_size / trainandtest_size
+    X_train,X_test,y_train,y_test = train_test_split(X_traintest,y_traintest,test_size=test_size,random_state=42,shuffle=shuffle)
     #make train and test folders 
     os.system(f'mkdir {output_folder}/train')
     os.system(f'mkdir {output_folder}/train/images')
@@ -218,30 +230,40 @@ def split_train_test(test_size:str,
     os.system(f'mkdir {output_folder}/test')
     os.system(f'mkdir {output_folder}/test/images')
     os.system(f'mkdir {output_folder}/test/annotations')
+    os.system(f'mkdir {output_folder}/val')
+    os.system(f'mkdir {output_folder}/val/images')
+    os.system(f'mkdir {output_folder}/val/annotations')
 
     #copying splits to the new folder
     for i in track(range(len(X_train)),description='Spliting train and test sets...'):
-        copy(X_train[i],f'{output_folder}/train/images')
-        copy(y_train[i],f'{output_folder}/train/annotations')
+        #copying line by line
+        move(X_train[i],f'{output_folder}/train/images')
+        move(y_train[i],f'{output_folder}/train/annotations')
 
         if (i<len(X_test)): 
-            copy(X_test[i],f'{output_folder}/test/images')
-            copy(y_test[i],f'{output_folder}/test/annotations')
+            move(X_test[i],f'{output_folder}/test/images')
+            move(y_test[i],f'{output_folder}/test/annotations')
 
+        if (i<len(X_val)):
+            move(X_val[i],f'{output_folder}/val/images')
+            move(y_val[i],f'{output_folder}/val/annotations')            
     
     #saving txt files with the paths
     train_paths = [x for x in iglob(f'{output_folder}/train/images/*.{file_extension}')]
     test_paths = [x for x in iglob(f'{output_folder}/test/images/*.{file_extension}')]
+    val_paths = [x for x in iglob(f'{output_folder}/val/images/*.{file_extension}')]
     np.savetxt(f'{output_folder}/train.txt',train_paths,fmt='%s')  
     np.savetxt(f'{output_folder}/test.txt',test_paths,fmt='%s')
+    np.savetxt(f'{output_folder}/val.txt',val_paths,fmt='%s')
 
-    typer.echo(f'Information written in \n{output_folder}/train.txt\n{output_folder}/test.txt')
+    typer.echo(f'Information written in \n{output_folder}/train.txt\n{output_folder}/test.txt\n{output_folder}/val.txt')
 
 @app.command()
-def preprocess_YOLO(input_folder:str ,
-                    output_folder: str,
-                    labels_file: str, 
-                    test_size:str,
+def preprocess_YOLO(input_folder:List[Path], # = typer.Option(...,'--input-folder','-if',help='List of folders with the nifti images.') ,
+                    output_folder: Path = typer.Option(...,'--output-folder','-of',exists=True,help='Folder path where to save the sliced images.'),
+                    labels_file: Path = typer.Option(...,'--labels-file','-lf',exists=True,help='File path for the labels file.'), 
+                    test_size: float = typer.Option(0.2,'--test-size','-ts',help='Size of the test set.'),
+                    val_size: float = typer.Option(0.1,'--val-size','-vs',help='Size of the validation set.'),
                     overwrite: bool = typer.Option(...,help='Whether to overwrite output files'),
                     slice_context: Optional[SliceContext]=typer.Option('average','--slice-context','-sc', help='Mode to take the context of a slice.'),
                     input_file_extension: Optional[fileExtension]=typer.Option('nii.gz','--input-extension','-ie', help='Extension of the input files. No other formats implemented yet.'),
@@ -251,11 +273,11 @@ def preprocess_YOLO(input_folder:str ,
         Extract averaged slices from 3D nifti files and write label files for YOLO object detection."""
     
     #create a folder 
-    temp_folder = os.popen('mkdir temp_folder; cd temp_folder; pwd').read()[:-1]
+    temp_folder = os.popen("cd '/media/neus/USB DISK/'; mkdir temp_folder; cd temp_folder; pwd").read()[:-1]
 
     extract_1channel_slices(input_folder,temp_folder,slice_context=slice_context,input_file_extension=input_file_extension,output_file_extension=output_file_extension)
     reformat_labels(labels_file,temp_folder,overwrite=overwrite,input_file_extension=input_file_extension,output_file_extension=output_file_extension)
-    split_train_test(test_size=test_size,input_folder=temp_folder,output_folder=output_folder,shuffle=shuffle,file_extension=output_file_extension)
+    split_train_test_val(test_size=test_size,val_size=val_size,input_folder=temp_folder,output_folder=output_folder,shuffle=shuffle,file_extension=output_file_extension)
 
     ouput_delete_folder = os.popen('rm -r temp_folder').read()
     typer.echo(ouput_delete_folder)
