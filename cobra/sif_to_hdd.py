@@ -6,11 +6,10 @@ Created on Fri Sep 17 10:58:38 2021
 #%% 
 # In[Import]
 import os
-from os.path import join, split, exists
+from os.path import join
 from pathlib import Path
 import pandas as pd
 from utilities import download
-import numpy as np
 import pickle
 
 #%% 
@@ -22,7 +21,7 @@ dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 download_pat_path = join(base_dir, "data/patient_groups")
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
-sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'sim_3dt1_sids.pkl')
+sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'paired_3dt1_sids_rest_hp.pkl')
 
 
 #%% 
@@ -33,7 +32,7 @@ df_patient_dir = pd.read_csv(join(table_dir, 'patient_directories.csv'))
 df_all = pd.read_csv(join(table_dir, "neg_pos_clean.csv"))
 print("Load dataframes finished")
 with open(sids_3d_t1_path, 'rb') as f:
-    sids_3d_t1 = pickle.load(f)
+    sids_3d_t1_ls = pickle.load(f)
 #%%
 # In[Get relevant patients and volumes]
 # This batch is not finished yet, however we will first take 
@@ -46,20 +45,20 @@ with open(sids_3d_t1_path, 'rb') as f:
 
 #pick only last 280 files
 #df_group = df_group.iloc[-260:]
-#print("Download the group t1")
-group_list = np.loadtxt(join(download_pat_path, "t1_neg_0.txt"),
-                                   dtype='str')
-print('Download 3dt1 scans that occur in pairs')
+#print("Download the group t1")sids
+#group_list = np.loadtxt(join(download_pat_path, "t1_neg_0.txt"),
+#                                   dtype='str')
+group_list = sids_3d_t1_ls
+#print('Download 3dt1 scans that occur in pairs')
 df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]
 df_group = df_group.sort_values('PatientID')                            
 #df_group = df_all[df_all['PatientID'].isin(group_list)]
 
 # In case you want to download only specific sequences uncomment next lines
-
 #%%
 # In[Move]
-patient_log_file = join(base_dir, 'logs', "t1_0_patient_log.txt" )
-volume_log_file = join(base_dir, 'logs', "t1_0_volume_log.txt" )
+patient_log_file = join(base_dir, 'logs', "pairs_3dt1_hp_patient_log.txt" )
+volume_log_file = join(base_dir, 'logs', "pairs_3dt1_hp_volume_log.txt" )
 download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
                         dst_data_dir, patient_log_file, volume_log_file)
 
