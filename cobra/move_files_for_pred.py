@@ -37,7 +37,7 @@ def get_source_target_dirs(df, base_src_dir,
             base_tgt_dir):
     return [
         (join(base_src_dir, row.PatientID, row.SeriesInstanceUID+'.nii'),
-    join(base_tgt_dir, row.PatientID+row.SeriesInstanceUID+'.nii.gz'))\
+    join(base_tgt_dir, row.PatientID, row.SeriesInstanceUID+'.nii.gz'))\
     for _, row in df.iterrows()]  
 
 
@@ -56,6 +56,11 @@ print("Move ", len(src_tgt_ls), "files.")
 def move_and_gz_files(src_tgt):
     sys.stdout.flush()
     src_path = src_tgt[0]
+    tgt_path = src_tgt[1]
+    # create patient dir
+    tgt_pat_dir = split(tgt_path)[0]
+    if not os.path.isdir(tgt_pat_dir):
+        os.mkdir(tgt_pat_dir)
     if os.path.isfile(src_path): 
         with open(src_path, 'rb') as f_in:
             with gzip.open(src_tgt[1], 'wb') as f_out:
@@ -70,7 +75,7 @@ def move_and_gz_files(src_tgt):
         print('nii path', nii_out_path)
         dcm2nii.convert_dcm2nii(
             dcm_path, nii_out_path, verbose=0, op_sys=0,
-            output_filename='%j', gz_compress='n')
+            output_filename='%j')
         if os.path.isfile(src_path): 
             print('+',end='')
             move_and_gz_files(src_tgt)
@@ -88,9 +93,10 @@ def main(source_target_list, procs=8):
     print(dt.now())
 
 if __name__ == '__main__':
-    test=False
+    test=True
     if test:
         print('Test')
-        main(src_tgt_ls[1:5], procs=2)
+        #print(src_tgt_ls[0])
+        main(src_tgt_ls[1:5], procs=4)
     else:
         main(src_tgt_ls, procs=8)
