@@ -1,5 +1,6 @@
 #%%
 import shutil
+import sys
 import os
 from os.path import join, split
 from pathlib import Path
@@ -8,8 +9,8 @@ import numpy as np
 import gzip
 import multiprocessing as mp
 from dcm2nii import dcm2nii
-import importlib
-importlib.reload(dcm2nii)
+from datetime import datetime as dt
+
 #%%
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
 dcm_base_dir = join(disk_data_dir, 'dcm')
@@ -50,28 +51,33 @@ pat_sids_pos_no_cases_src_tgt_dirs = get_source_target_dirs(
 src_tgt_ls = pat_sids_cases_src_tgt_dirs + \
     pat_sids_pos_no_cases_src_tgt_dirs
 
-
+print("Move ", len(src_tgt_ls), "files.")
 #%%
-def move_and_gz_files_or_create_gz_file(src_tgt):
+def move_and_gz_files(src_tgt):
+    sys.stdout.flush()
     src_path = src_tgt[0]
-    if os.path.isdir(src_path): 
-        return 0
+    if os.path.isfile(src_path): 
         with open(src_path, 'rb') as f_in:
             with gzip.open(src_tgt[1], 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
-    
+        print(".", end='')
     else: # if nii does not exist, create it
-        print(src_tgt_ls)
         month_dir, pid, sid = os.path.normpath(src_path).split(os.sep)[-3:]
         sid = sid[:-4] #remove .nii extension 
-        dcm_path = join(disk_data_dir, 'dcm', month_dir, pid, sid)
-        nii_out_path = src_path
+        dcm_path = join(disk_data_dir, 'dcm', month_dir, pid)
+        nii_out_path = split(src_path)[0]
+        print('dicom path', dcm_path)
+        print('nii path', nii_out_path)
         dcm2nii.convert_dcm2nii(
             dcm_path, nii_out_path, verbose=0, op_sys=0,
             output_filename='%j', gz_compress='n')
-        move_and_gz_files_or_create_gz_file(src_tgt)
+        if os.path.isfile(src_path): 
+            print('+',end='')
+            move_and_gz_files(src_tgt)
+        else: #if some issue with nii conversion skip this file
+            print("-",end='')
 
-move_and_gz_files_or_create_gz_file(src_tgt_ls[0])
+
 
 
 #%%
@@ -79,6 +85,12 @@ def main(source_target_list, procs=8):
     with mp.Pool(procs) as pool:
                 pool.map(move_and_gz_files, 
                         source_target_list)
+    print(dt.now())
 
 if __name__ == '__main__':
-    main(src_tgt_ls[1:5], procs=2)
+    test=False
+    if test:
+        print('Test')
+        main(src_tgt_ls[1:5], procs=2)
+    else:
+        main(src_tgt_ls, procs=8)
