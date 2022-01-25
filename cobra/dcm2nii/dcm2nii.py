@@ -48,7 +48,7 @@ def convert_dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0,
     if (op_sys == 0):  # WINDOWS
         os.system(f"cmd /k {dcm2nii_exe_path} -{compression} -a y\
               -f {output_filename} -l y -v {verbose} -o {out_path} {dcm_path}\
-                  -DmyInstanceNumberOrderIsNotSpatial")
+                  ")
     elif (op_sys == 1):  # LINUX
         os.system(
             f'dcm2niix -w 0 -{compression} -a y -l y -v {verbose} -z y -f -f %f_%p_%z -o {out_path} {dcm_path}')

@@ -57,6 +57,8 @@ def move_and_gz_files(src_tgt):
     sys.stdout.flush()
     src_path = src_tgt[0]
     tgt_path = src_tgt[1]
+    if os.path.isfile(tgt_path):
+        return 0
     # create patient dir
     tgt_pat_dir = split(tgt_path)[0]
     if not os.path.isdir(tgt_pat_dir):
@@ -80,7 +82,10 @@ def move_and_gz_files(src_tgt):
             print('+',end='')
             move_and_gz_files(src_tgt)
         else: #if some issue with nii conversion skip this file
-            print("-",end='')
+            current_proc = mp.current_process()    
+            current_proc_id = str(int(current_proc._identity[0]))
+            with open(join(pred_input_dir, current_proc_id+'nii_conversion_error_sids.txt'),'a+') as f:
+                f.write(sid)
 
 
 
@@ -93,10 +98,10 @@ def main(source_target_list, procs=8):
     print(dt.now())
 
 if __name__ == '__main__':
-    test=True
+    test=False
     if test:
         print('Test')
         #print(src_tgt_ls[0])
-        main(src_tgt_ls[1:5], procs=4)
+        main(src_tgt_ls[:80], procs=8)
     else:
-        main(src_tgt_ls, procs=8)
+        main(src_tgt_ls, procs=10)
