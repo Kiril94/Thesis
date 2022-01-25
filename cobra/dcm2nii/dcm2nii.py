@@ -14,10 +14,8 @@ base_dir = Path(script_dir).parent.parent
 dcm2nii_exe_path = os.path.join(
     base_dir, "dcm2nii\\dcm2niix_win\\dcm2niix.exe")
 
-def convert_dcm2nii_help():
-     os.system(f"cmd /k {dcm2nii_exe_path} -h")
-
-def convert_dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0,):
+def convert_dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0,
+            output_filename='%j', gz_compress='y'):
     """Given dicom path and output path, converts dicom files in 1 folder
     to a nii file + json file containing the header. 
     op_sys: 0 for Windows, 1 for Linux'
@@ -46,9 +44,10 @@ def convert_dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0,):
         -z : gz compress images (y/i/n/3, default n)
         --progress : report progress (y/n, default n)
         """
+    
     if (op_sys == 0):  # WINDOWS
         os.system(f"cmd /k {dcm2nii_exe_path} -{compression} -a y\
-              -f %f_%p_%z -l y -v {verbose} -z y -o {out_path} {dcm_path}")
+              -f {output_filename} -l y -v {verbose} -z {gz_compress} -o {out_path} {dcm_path}")
     elif (op_sys == 1):  # LINUX
         os.system(
             f'dcm2niix -w 0 -{compression} -a y -l y -v {verbose} -z y -f -f %f_%p_%z -o {out_path} {dcm_path}')

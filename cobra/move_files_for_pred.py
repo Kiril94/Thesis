@@ -1,16 +1,18 @@
 #%%
 import shutil
 import os
-from os.path import join
+from os.path import join, split
 from pathlib import Path
 import pandas as pd
 import numpy as np
 import gzip
 import multiprocessing as mp
 from dcm2nii import dcm2nii
-
+import importlib
+importlib.reload(dcm2nii)
 #%%
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
+dcm_base_dir = join(disk_data_dir, 'dcm')
 pos_nii_dir = join(disk_data_dir, 'nii', 'positive')
 pred_input_dir = join(disk_data_dir, 'volume_longitudinal', 'input')
 
@@ -48,14 +50,31 @@ pat_sids_pos_no_cases_src_tgt_dirs = get_source_target_dirs(
 src_tgt_ls = pat_sids_cases_src_tgt_dirs + \
     pat_sids_pos_no_cases_src_tgt_dirs
 
+
 #%%
-dcm2nii.convert_dcm2nii_help()
-#%%
-def move_and_gz_files(src_tgt):
-        with open(src_tgt[0], 'rb') as f_in:
+def move_and_gz_files_or_create_gz_file(src_tgt):
+    src_path = src_tgt[0]
+    if os.path.isdir(src_path): 
+        return 0
+        with open(src_path, 'rb') as f_in:
             with gzip.open(src_tgt[1], 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
+    
+    else: # if nii does not exist, create it
+        print(src_tgt_ls)
+        month_dir, pid, sid = os.path.normpath(src_path).split(os.sep)[-3:]
+        sid = sid[:-4] #remove .nii extension 
+        dcm_path = join(disk_data_dir, 'dcm', month_dir, pid, sid)
+        nii_out_path = src_path
+        dcm2nii.convert_dcm2nii(
+            dcm_path, nii_out_path, verbose=0, op_sys=0,
+            output_filename='%j', gz_compress='n')
+        move_and_gz_files_or_create_gz_file(src_tgt)
 
+move_and_gz_files_or_create_gz_file(src_tgt_ls[0])
+
+
+#%%
 def main(source_target_list, procs=8):
     with mp.Pool(procs) as pool:
                 pool.map(move_and_gz_files, 
