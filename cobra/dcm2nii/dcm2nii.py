@@ -14,7 +14,6 @@ script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent.parent
 dcm2nii_exe_path = os.path.join(
     base_dir, "dcm2nii\\dcm2niix_win\\dcm2niix.exe")
-print(dcm2nii_exe_path)
 def convert_dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0,
             output_filename='%j', gz_compress='y'):
     """Given dicom path and output path, converts dicom files in 1 folder
@@ -48,11 +47,9 @@ def convert_dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0,
     
     if (op_sys == 0):  # WINDOWS
         command = f"cmd /k {dcm2nii_exe_path} -{compression} -a y\
-              -f {output_filename} -l y -v {verbose} -o {out_path} {dcm_path}\
-                  "
+              -f {output_filename} -l y -v {verbose} -o {out_path} {dcm_path}"
         sp.call([dcm2nii_exe_path, '-a','y',
-              '-f', output_filename, '-l','y', '-v', str(verbose), '-o', out_path, dcm_path], timeout=10)
-        print("conversion finished")
+              '-f', output_filename, '-l','y', '-v', str(verbose), '-o', out_path, dcm_path], timeout=600)
     elif (op_sys == 1):  # LINUX
         os.system(
             f'dcm2niix -w 0 -{compression} -a y -l y -v {verbose} -z y -f -f %f_%p_%z -o {out_path} {dcm_path}')

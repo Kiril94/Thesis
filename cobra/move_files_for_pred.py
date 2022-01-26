@@ -80,6 +80,7 @@ def move_and_gz_files(src_tgt, test=False):
         with open(src_path, 'rb') as f_in:
             with gzip.open(src_tgt[1], 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
+        sys.stdout.flush()
         print(".", end='')
     else: # if nii does not exist, create it
         if test:
@@ -100,11 +101,13 @@ def move_and_gz_files(src_tgt, test=False):
             if test:
                 log_('Now the file was converted to nii and can now be found at '+
                         join(nii_out_path, sid))
+            sys.stdout.flush()
             print('+', end='')
             if test:
                 log_("The file can be now be moved to "+ tgt_path)
             move_and_gz_files(src_tgt)
         else: #if some issue with nii conversion skip this file
+            sys.stdout.flush()
             print('x')
             if test:
                 log_('dcm2nii failed')
@@ -115,7 +118,7 @@ def move_and_gz_files(src_tgt, test=False):
             if test:
                 log_("Write problematic file to "+ write_file)
             with open(write_file,'a+') as f:
-                f.write(sid)
+                f.write(dcm_path)
 
 
 
@@ -133,7 +136,7 @@ def main(source_target_list, procs=8):
     print(dt.now())
 
 if __name__ == '__main__':
-    test=True
+    test=False
     if test:
         print('Test')
         start = time.time()
