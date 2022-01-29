@@ -166,6 +166,8 @@ def move_and_gz_files(src_tgt, test=False):
             print('x')
             if test:
                 log_('dcm2nii failed')
+            else:
+                write_problematic_files(dcm_path)
        
 
                 
@@ -189,7 +191,7 @@ if __name__ == '__main__':
     if test:
         print('Test')
         start = time.time()
-        for i in range(1301,1303):
+        for i in range(300,310):
             sid_num = i
             move_and_gz_files(src_tgt_ls[sid_num], test=True)
         print("Total time: ",round(time.time()-start, 3))
