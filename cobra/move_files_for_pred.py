@@ -12,11 +12,11 @@ from dcm2nii import dcm2nii
 from datetime import datetime as dt
 import time
 from utilities import basic
-from utilities.basic import get_dir, make_dir
+from utilities.basic import get_dir, make_dir, remove_file
 #%%
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
 dcm_base_dir = join(disk_data_dir, 'dcm')
-pos_nii_dir = join(disk_data_dir, 'nii', 'positive')
+disk_nii_dir = join(disk_data_dir, 'nii')
 pred_input_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input')
 sif_dir = 'Y:\\'
 script_dir = os.path.realpath(__file__)
@@ -41,18 +41,39 @@ df_cases = df3dt1[df3dt1.PatientID.isin(cases_ls)]
 df_pos_no_cases = df3dt1[~df3dt1.PatientID.isin(cases_ls)]
 
 # %%
+def get_root(path, n=2):
+    return join(*os.path.normpath(path).split(os.sep)[:n])
+
 def get_source_target_dirs(df, base_src_dir, 
             base_tgt_dir):
     return [
-        (join(base_src_dir, row.PatientID, row.SeriesInstanceUID+'.nii'),
-    join(base_tgt_dir, row.PatientID, row.SeriesInstanceUID+'.nii.gz'))\
-    for _, row in df.iterrows()]  
+        (join(base_src_dir, get_root(volume_dir_dic[sid]), split(volume_dir_dic[sid])[1] +'.nii'),
+    join(base_tgt_dir, split(get_root(volume_dir_dic[sid]))[1], split(volume_dir_dic[sid])[1] +'.nii.gz'))\
+    for sid in df.SeriesInstanceUID]  
+def write_problematic_files(file):
+    current_proc = mp.current_process()    
+    current_proc_id = str(int(current_proc._identity[0]))
+    write_file = join(
+            pred_input_dir, current_proc_id+'nii_conversion_error_sids.txt')
+    with open(write_file,'a+') as f:
+        f.write(file+'\n')
+def dcm2nii_safe(dcm_path, nii_out_path, sid, test):
+    "Only keep dicoms if dcm2nii converter returns 0"
+    dcm2nii_out = dcm2nii.convert_dcm2nii(
+        dcm_path, nii_out_path, verbose=0, op_sys=0,
+                output_filename='%j', create_info_json='y')
+    if dcm2nii_out==1: #if dcm2nii produces error, remove all the output files
+        rm_files = [f for f in os.listdir(nii_out_path) if f.startswith(sid)]
+        for rm_file in rm_files:
+            remove_file(rm_file)
+        if not test:
+            write_problematic_files(dcm_path)
 
 pat_sids_cases_src_tgt_dirs = get_source_target_dirs(
-    df_cases, base_src_dir=pos_nii_dir, 
+    df_cases, base_src_dir=disk_nii_dir, 
     base_tgt_dir=join(pred_input_dir, 'cases') )
 pat_sids_pos_no_cases_src_tgt_dirs = get_source_target_dirs(
-    df_pos_no_cases, base_src_dir=pos_nii_dir, 
+    df_pos_no_cases, base_src_dir=disk_nii_dir, 
     base_tgt_dir=join(pred_input_dir, 'positives_cases_excluded') )
 
 src_tgt_ls = pat_sids_cases_src_tgt_dirs + \
@@ -61,7 +82,7 @@ src_tgt_ls = pat_sids_cases_src_tgt_dirs + \
 
 #%%
 def log_(str_):
-    with open(join(base_dir,"move_files_for_pred_log.txt"), 'a+') as f:
+    with open(join(base_dir, "move_files_for_pred_log.txt"), 'a+') as f:
         f.write(str_+'\n')
 def move_and_gz_files(src_tgt, test=False):
     sys.stdout.flush()
@@ -100,9 +121,7 @@ def move_and_gz_files(src_tgt, test=False):
             if test:
                 log_(dcm_path + " exists, start nii conversion")
                 start=time.time()
-            dcm2nii.convert_dcm2nii(
-                dcm_path, nii_out_path, verbose=0, op_sys=0,
-                output_filename='%j')
+            dcm2nii_safe(dcm_path, nii_out_path, sid, test)
             if test:
                 log_("The conversion took "+str(round(time.time()-start,3))+'s')
         else: #if dcm path doesn't exist make conversion directly from sif
@@ -113,9 +132,7 @@ def move_and_gz_files(src_tgt, test=False):
                     log_(get_dir(dcm_path) + ' Does not exist on disk')
                     log_('Convert directly from sif') 
                     start=time.time()            
-                dcm2nii.convert_dcm2nii(
-                    dcm_path, nii_out_path, verbose=0, op_sys=0,
-                    output_filename='%j')
+                dcm2nii_safe(dcm_path, nii_out_path, sid, test)
                 if test:
                     log_("The conversion took "+str(round(time.time()-start,3))+'s')
                 print('o', end='')
@@ -174,12 +191,7 @@ def move_and_gz_files(src_tgt, test=False):
             if test:
                 log_('dcm2nii failed')
             else:
-                current_proc = mp.current_process()    
-                current_proc_id = str(int(current_proc._identity[0]))
-                write_file = join(
-                    pred_input_dir, current_proc_id+'nii_conversion_error_sids.txt')
-                with open(write_file,'a+') as f:
-                    f.write(dcm_path+'\n')
+                write_problematic_files(dcm_path)
 
 
 
@@ -203,7 +215,7 @@ if __name__ == '__main__':
     if test:
         print('Test')
         start = time.time()
-        for i in range(1010,1011):
+        for i in range(1010,1012):
             sid_num = i
             move_and_gz_files(src_tgt_ls[sid_num], test=True)
             print(src_tgt_ls[sid_num][0])

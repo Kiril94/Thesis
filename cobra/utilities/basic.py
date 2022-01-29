@@ -14,6 +14,9 @@ def get_dir(file):
 def make_dir(dir_):
     if not os.path.isdir(dir_):
         os.makedirs(dir_)
+def remove_file(file):
+    if os.path.exists(file):
+        os.remove(file) # one file at a time
 
 def list_subdir(dir_, ending=""):
     return [os.path.join(dir_, x) for x in os.listdir(dir_) \
