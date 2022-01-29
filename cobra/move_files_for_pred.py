@@ -12,18 +12,23 @@ from dcm2nii import dcm2nii
 from datetime import datetime as dt
 import time
 from utilities import basic
+from utilities.basic import get_dir, make_dir
 #%%
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
 dcm_base_dir = join(disk_data_dir, 'dcm')
 pos_nii_dir = join(disk_data_dir, 'nii', 'positive')
 pred_input_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input')
- 
+sif_dir = 'Y:\\'
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
 pat_groups_dir = join(data_dir, 'patient_groups')
 
+df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
+volume_dir_dic = pd.Series(
+    df_volume_dir.Directory.values, index=df_volume_dir.SeriesInstanceUID)\
+        .to_dict()
 dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
     usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
     'Sequence', 'NumberOfSlices'])
@@ -42,7 +47,6 @@ def get_source_target_dirs(df, base_src_dir,
         (join(base_src_dir, row.PatientID, row.SeriesInstanceUID+'.nii'),
     join(base_tgt_dir, row.PatientID, row.SeriesInstanceUID+'.nii.gz'))\
     for _, row in df.iterrows()]  
-
 
 pat_sids_cases_src_tgt_dirs = get_source_target_dirs(
     df_cases, base_src_dir=pos_nii_dir, 
@@ -69,12 +73,9 @@ def move_and_gz_files(src_tgt, test=False):
             log_('Stop')
         return 0
     # create patient dir
-    tgt_pat_dir = split(tgt_path)[0]
-    if not os.path.isdir(tgt_pat_dir):
-        if test:
-            log_("Create patient dir at: "+tgt_pat_dir)
-        os.mkdir(tgt_pat_dir)
-        
+    tgt_pat_dir = get_dir(tgt_path)
+    make_dir(tgt_pat_dir)
+    # if nii file exists move and gz compress it    
     if os.path.isfile(src_path): 
         if test:
             log_("Nii file exists at " + src_path)
@@ -84,6 +85,7 @@ def move_and_gz_files(src_tgt, test=False):
                 shutil.copyfileobj(f_in, f_out)
         sys.stdout.flush()
         print(".", end='')
+
     else: # if nii does not exist, create it
         if test:
             log_("Nii file does NOT exist at "+ src_path)
@@ -91,21 +93,38 @@ def move_and_gz_files(src_tgt, test=False):
         month_dir, pid, sid = os.path.normpath(src_path).split(os.sep)[-3:]
         sid = sid[:-4] #remove .nii extension 
         dcm_path = join(disk_data_dir, 'dcm', month_dir, pid, sid)
-        nii_out_path = split(src_path)[0]
+        nii_out_path = get_dir(src_path)
         # check if dcm path exists
-        if os.path.isfile(dcm_path):
+        if os.path.isdir(dcm_path):
+            make_dir(get_dir(nii_out_path))
             if test:
+                log_(dcm_path + " exists, start nii conversion")
                 start=time.time()
             dcm2nii.convert_dcm2nii(
                 dcm_path, nii_out_path, verbose=0, op_sys=0,
                 output_filename='%j')
             if test:
                 log_("The conversion took "+str(round(time.time()-start,3))+'s')
-        else:
-            if test:
-                log_(dcm_path, 'Does not exist') 
-            print('o')
-            return 0
+        else: #if dcm path doesn't exist make conversion directly from sif
+            dcm_path = join(sif_dir, volume_dir_dic[sid])
+            make_dir(get_dir(nii_out_path))
+            if os.path.isdir(dcm_path):
+                if test:
+                    log_(get_dir(dcm_path) + ' Does not exist on disk')
+                    log_('Convert directly from sif') 
+                    start=time.time()            
+                dcm2nii.convert_dcm2nii(
+                    dcm_path, nii_out_path, verbose=0, op_sys=0,
+                    output_filename='%j')
+                if test:
+                    log_("The conversion took "+str(round(time.time()-start,3))+'s')
+                print('o', end='')
+            else:
+                if test:
+                    log_(dcm_path+ ' Does not exist on sif')
+                print('-', end='')
+                return 0
+        make_dir(get_dir(src_path))
         if os.path.isfile(src_path): 
             if test:
                 log_('The file was converted to nii and can now be found at '+
@@ -115,12 +134,12 @@ def move_and_gz_files(src_tgt, test=False):
             if test:
                 log_("The file can be now be moved to "+ tgt_path)
             move_and_gz_files(src_tgt)
-        elif len([f for f in os.listdir(split(src_path)[0]) if \
+        elif len([f for f in os.listdir(get_dir(src_path)) if \
                 f.startswith(split(src_path)[1]) and f.endswith('.nii')])>0:
             # Attention! Sometimes the dcm2nii converter produces several files with 
             # different endings like sid_i*.nii
             # We should now call move_and_gz_files on those files
-            src_files = [f for f in os.listdir(split(src_path)[0]) if \
+            src_files = [f for f in os.listdir(get_dir(src_path)) if \
                 f.startswith(split(src_path)[1]) and f.endswith('.nii')]
             # if there are two nii the endings are usually i00001.nii and i00002.nii
             # the first is localizer and second is actual 3d image
@@ -134,17 +153,17 @@ def move_and_gz_files(src_tgt, test=False):
                     move_and_gz_files((src_file_temp[0], tgt_path))
                 else:
                     if test:
-                        log_('Move all nii files that start with ', split(src_path)[1])
+                        log_('Move all nii files that start with '+ split(src_path)[1])
                     # move all files if there is no with ending _i00002.nii
-                    tgt_files = [join(split(src_tgt)[0], f) for f in src_files]
+                    tgt_files = [join(get_dir(src_tgt), f) for f in src_files]
                     src_tgt_ls_temp = [(s,t) for s,t in zip(src_files, tgt_files)]
                     for src_tgt_temp in src_tgt_ls_temp:
                         move_and_gz_files(src_tgt_temp)
                     print('*', end='')
             else:
                 if test:
-                        log_('Move all nii files that start with ', split(src_path)[1])
-                tgt_files = [join(split(src_tgt)[0], f) for f in src_files]
+                        log_('Move all nii files that start with '+ split(src_path)[1])
+                tgt_files = [join(get_dir(src_tgt), f) for f in src_files]
                 src_tgt_ls_temp = [(s,t) for s,t in zip(src_files, tgt_files)]
                 for src_tgt_temp in src_tgt_ls_temp:
                     move_and_gz_files(src_tgt_temp)
@@ -169,7 +188,8 @@ def main(source_target_list, procs=8):
     print('file moved: .')
     print('multiple files moved: *')
     print('file converted to nii: +')
-    print('No nii, dcm to create nii was not downloaded (yet): o')
+    print('No nii, dcm to create nii was not downloaded (yet), convert directly from SIF: o')
+    print('dcm does not exist at all: -')
     print('fail: x')
     print("Move ", len(src_tgt_ls), "files.")
     print(f"Using {procs} processes")
@@ -183,7 +203,7 @@ if __name__ == '__main__':
     if test:
         print('Test')
         start = time.time()
-        for i in range(1000,1010):
+        for i in range(1010,1011):
             sid_num = i
             move_and_gz_files(src_tgt_ls[sid_num], test=True)
             print(src_tgt_ls[sid_num][0])
