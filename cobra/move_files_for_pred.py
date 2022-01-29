@@ -92,17 +92,23 @@ def move_and_gz_files(src_tgt, test=False):
         sid = sid[:-4] #remove .nii extension 
         dcm_path = join(disk_data_dir, 'dcm', month_dir, pid, sid)
         nii_out_path = split(src_path)[0]
-        if test:
-            start=time.time()
-        dcm2nii.convert_dcm2nii(
-            dcm_path, nii_out_path, verbose=0, op_sys=0,
-            output_filename='%j')
-        if test:
-            log_("The conversion took "+str(round(time.time()-start,3))+'s')
-        
+        # check if dcm path exists
+        if os.path.isfile(dcm_path):
+            if test:
+                start=time.time()
+            dcm2nii.convert_dcm2nii(
+                dcm_path, nii_out_path, verbose=0, op_sys=0,
+                output_filename='%j')
+            if test:
+                log_("The conversion took "+str(round(time.time()-start,3))+'s')
+        else:
+            if test:
+                log_(dcm_path, 'Does not exist') 
+            print('o')
+            return 0
         if os.path.isfile(src_path): 
             if test:
-                log_('Now the file was converted to nii and can now be found at '+
+                log_('The file was converted to nii and can now be found at '+
                         join(nii_out_path, sid))
             sys.stdout.flush()
             print('+', end='')
@@ -119,14 +125,30 @@ def move_and_gz_files(src_tgt, test=False):
             # if there are two nii the endings are usually i00001.nii and i00002.nii
             # the first is localizer and second is actual 3d image
             if len(src_files)==2:
-                src_path_temp = src_path[:-4] + 'i00002.nii'
-                move_and_gz_files((src_path_temp, tgt_path))
-            tgt_files = [join(split(src_tgt)[0], f) for f in src_files]
-            
-            src_tgt_ls_temp = [(s,t) for s,t in zip(src_files, tgt_files)]
-            for src_tgt_temp in src_tgt_ls_temp:
-                move_and_gz_files(src_tgt_temp)
-            print('+', end='')
+                if test:
+                    log_('There are two nii files for this sid')
+                src_file_temp = [f for f in src_files if f.endswith('_i00002.nii')]
+                if len(src_file_temp)==1:
+                    if test:
+                        log_('Copy the one with ending _i00002.nii')
+                    move_and_gz_files((src_file_temp[0], tgt_path))
+                else:
+                    if test:
+                        log_('Move all nii files that start with ', split(src_path)[1])
+                    # move all files if there is no with ending _i00002.nii
+                    tgt_files = [join(split(src_tgt)[0], f) for f in src_files]
+                    src_tgt_ls_temp = [(s,t) for s,t in zip(src_files, tgt_files)]
+                    for src_tgt_temp in src_tgt_ls_temp:
+                        move_and_gz_files(src_tgt_temp)
+                    print('*', end='')
+            else:
+                if test:
+                        log_('Move all nii files that start with ', split(src_path)[1])
+                tgt_files = [join(split(src_tgt)[0], f) for f in src_files]
+                src_tgt_ls_temp = [(s,t) for s,t in zip(src_files, tgt_files)]
+                for src_tgt_temp in src_tgt_ls_temp:
+                    move_and_gz_files(src_tgt_temp)
+                print('*', end='')
         else: #if some issue with nii conversion skip this file
             sys.stdout.flush()
             print('x')
@@ -145,7 +167,9 @@ def move_and_gz_files(src_tgt, test=False):
 #%%
 def main(source_target_list, procs=8):
     print('file moved: .')
+    print('multiple files moved: *')
     print('file converted to nii: +')
+    print('No nii, dcm to create nii was not downloaded (yet): o')
     print('fail: x')
     print("Move ", len(src_tgt_ls), "files.")
     print(f"Using {procs} processes")
@@ -159,7 +183,7 @@ if __name__ == '__main__':
     if test:
         print('Test')
         start = time.time()
-        for i in range(20):
+        for i in range(1000,1010):
             sid_num = i
             move_and_gz_files(src_tgt_ls[sid_num], test=True)
             print(src_tgt_ls[sid_num][0])
