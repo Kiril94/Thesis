@@ -57,6 +57,10 @@ def write_problematic_files(file):
             pred_input_dir, current_proc_id+'nii_conversion_error_sids.txt')
     with open(write_file,'a+') as f:
         f.write(file+'\n')
+def move_compress(src, tgt):
+    with open(src, 'rb') as f_in:
+                with gzip.open(tgt, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
 def dcm2nii_safe(dcm_path, nii_out_path, sid, test):
     "Only keep dicoms if dcm2nii converter returns 0"
     dcm2nii_out = dcm2nii.convert_dcm2nii(
@@ -87,112 +91,84 @@ def log_(str_):
 def move_and_gz_files(src_tgt, test=False):
     sys.stdout.flush()
     src_path = src_tgt[0]
+    month_dir, pid, sid = os.path.normpath(src_path).split(os.sep)[-3:] #we will need it later
+    sid = sid[:-4] #remove .nii extension
     tgt_path = src_tgt[1]
     if os.path.isfile(tgt_path):
         if test:
-            log_("The file already exists at "+tgt_path)
+            log_("The file already exists at " + tgt_path)
             log_('Stop')
         return 0
     # create patient dir
     tgt_pat_dir = get_dir(tgt_path)
     make_dir(tgt_pat_dir)
-    # if nii file exists move and gz compress it    
-    if os.path.isfile(src_path): 
+    make_dir(get_dir(src_path))
+    src_dir = get_dir(src_path)
+    existing_src_files = [f for f in os.listdir(src_dir) \
+        if f.startswith(sid) and f.endswith('.nii')]
+    # Handle the case if at least one nii file already exists on the disk
+    if len(existing_src_files)>0: 
         if test:
-            log_("Nii file exists at " + src_path)
-            log_("Move and gz compress that file")
-        with open(src_path, 'rb') as f_in:
-            with gzip.open(tgt_path, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
+            log_("Following nii file(s) were found " + str(existing_src_files))
+            log_("Move and gz compress these files")
+        if len(existing_src_files)==1: # if only 1 file it is probably the 3d vol.
+            move_compress(join(src_dir, existing_src_files[0]), tgt_path)
+        elif len(existing_src_files)==2: # if 2 files, the one with _i00002.nii is probably the 3d vol.
+            files3d = [f for f in existing_src_files if f.endswith("_i00002.nii")]
+            if len(files3d)==1:
+                move_compress(join(src_dir, files3d[0]), tgt_path)
+            else: # otherwise remove all the files and call the function again
+                for ex_src_file in existing_src_files:
+                    remove_file(join(src_dir, ex_src_file))
+                move_and_gz_files(src_tgt)
+        else: # if more than 2 files, also remove them
+            for ex_src_file in existing_src_files:
+                    remove_file(join(src_dir, ex_src_file))
+            move_and_gz_files(src_tgt)
         sys.stdout.flush()
         print(".", end='')
 
-    else: # if nii does not exist, create it
+    else: # if nii does not exist, try to create it
         if test:
             log_("Nii file does NOT exist at "+ src_path)
-            log_("Try to convert dcm to nii")
-        month_dir, pid, sid = os.path.normpath(src_path).split(os.sep)[-3:]
-        sid = sid[:-4] #remove .nii extension 
         dcm_path = join(disk_data_dir, 'dcm', month_dir, pid, sid)
         nii_out_path = get_dir(src_path)
-        # check if dcm path exists
+        # check if dcm dir exists
+        make_dir(nii_out_path)
         if os.path.isdir(dcm_path):
-            make_dir(get_dir(nii_out_path))
             if test:
                 log_(dcm_path + " exists, start nii conversion")
                 start=time.time()
             dcm2nii_safe(dcm_path, nii_out_path, sid, test)
             if test:
                 log_("The conversion took "+str(round(time.time()-start,3))+'s')
-        else: #if dcm path doesn't exist make conversion directly from sif
+        else: # if dcm path doesn't exist make conversion directly from sif
             dcm_path = join(sif_dir, volume_dir_dic[sid])
-            make_dir(get_dir(nii_out_path))
-            if os.path.isdir(dcm_path):
-                if test:
-                    log_(get_dir(dcm_path) + ' Does not exist on disk')
-                    log_('Convert directly from sif') 
-                    start=time.time()            
-                dcm2nii_safe(dcm_path, nii_out_path, sid, test)
-                if test:
-                    log_("The conversion took "+str(round(time.time()-start,3))+'s')
-                print('o', end='')
-            else:
-                if test:
-                    log_(dcm_path+ ' Does not exist on sif')
-                print('-', end='')
-                return 0
-        make_dir(get_dir(src_path))
-        if os.path.isfile(src_path): 
+            print("Dcm path ")
+            assert os.path.isdir(dcm_path), dcm_path + ' Should exist' 
             if test:
-                log_('The file was converted to nii and can now be found at '+
-                        join(nii_out_path, sid))
-            sys.stdout.flush()
-            print('+', end='')
+                log_('dicoms for ' + sid + ' do not exist on disk')
+                log_('Convert directly from sif') 
+                start=time.time()            
+            dcm2nii_safe(dcm_path, nii_out_path, sid, test)
             if test:
-                log_("The file can be now be moved to "+ tgt_path)
+                log_("The conversion took "+str(round(time.time()-start,3))+'s')
+            print('o', end='')
+        # after the nii is created we can move and compress it:)
+        existing_src_files = [f for f in os.listdir(get_dir(src_path)) \
+            if f.startswith(sid) and f.endswith('.nii')]
+        if len(existing_src_files)>0:
+            if test:
+                log_("Move and compress")
             move_and_gz_files(src_tgt)
-        elif len([f for f in os.listdir(get_dir(src_path)) if \
-                f.startswith(split(src_path)[1]) and f.endswith('.nii')])>0:
-            # Attention! Sometimes the dcm2nii converter produces several files with 
-            # different endings like sid_i*.nii
-            # We should now call move_and_gz_files on those files
-            src_files = [f for f in os.listdir(get_dir(src_path)) if \
-                f.startswith(split(src_path)[1]) and f.endswith('.nii')]
-            # if there are two nii the endings are usually i00001.nii and i00002.nii
-            # the first is localizer and second is actual 3d image
-            if len(src_files)==2:
-                if test:
-                    log_('There are two nii files for this sid')
-                src_file_temp = [f for f in src_files if f.endswith('_i00002.nii')]
-                if len(src_file_temp)==1:
-                    if test:
-                        log_('Copy the one with ending _i00002.nii')
-                    move_and_gz_files((src_file_temp[0], tgt_path))
-                else:
-                    if test:
-                        log_('Move all nii files that start with '+ split(src_path)[1])
-                    # move all files if there is no with ending _i00002.nii
-                    tgt_files = [join(get_dir(src_tgt), f) for f in src_files]
-                    src_tgt_ls_temp = [(s,t) for s,t in zip(src_files, tgt_files)]
-                    for src_tgt_temp in src_tgt_ls_temp:
-                        move_and_gz_files(src_tgt_temp)
-                    print('*', end='')
-            else:
-                if test:
-                        log_('Move all nii files that start with '+ split(src_path)[1])
-                tgt_files = [join(get_dir(src_tgt), f) for f in src_files]
-                src_tgt_ls_temp = [(s,t) for s,t in zip(src_files, tgt_files)]
-                for src_tgt_temp in src_tgt_ls_temp:
-                    move_and_gz_files(src_tgt_temp)
-                print('*', end='')
-        else: #if some issue with nii conversion skip this file
+        else:
             sys.stdout.flush()
             print('x')
             if test:
                 log_('dcm2nii failed')
-            else:
-                write_problematic_files(dcm_path)
+       
 
+                
 
 
 #%%
@@ -200,8 +176,6 @@ def main(source_target_list, procs=8):
     print('file moved: .')
     print('multiple files moved: *')
     print('file converted to nii: +')
-    print('No nii, dcm to create nii was not downloaded (yet), convert directly from SIF: o')
-    print('dcm does not exist at all: -')
     print('fail: x')
     print("Move ", len(src_tgt_ls), "files.")
     print(f"Using {procs} processes")
@@ -215,11 +189,9 @@ if __name__ == '__main__':
     if test:
         print('Test')
         start = time.time()
-        for i in range(1010,1012):
+        for i in range(1301,1303):
             sid_num = i
             move_and_gz_files(src_tgt_ls[sid_num], test=True)
-            print(src_tgt_ls[sid_num][0])
-            print(src_tgt_ls[sid_num][1])
-        print(round(time.time()-start, 3))
+        print("Total time: ",round(time.time()-start, 3))
     else:
         main(src_tgt_ls, procs=10)
