@@ -17,7 +17,7 @@ dcm2nii_exe_path = os.path.join(
 def convert_dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0,
             output_filename='%j', gz_compress='y'):
     """Given dicom path and output path, converts dicom files in 1 folder
-    to a nii file + json file containing the header. 
+    to a nii file + json file containing the header. sp.call waits until conversion is finished.
     op_sys: 0 for Windows, 1 for Linux'
     Compression level 3 gives the best time-size tradeoff
     The file name is constructed as follows:
@@ -37,18 +37,19 @@ def convert_dcm2nii(dcm_path, out_path, compression=3, verbose=0, op_sys=0,
         default '%f_%p_%t_%s')
     
     Other arguments:
-        -a : adjacent DICOMs (images from same series always in same folder) 
+        -a: adjacent DICOMs (images from same series always in same folder) 
             for faster conversion (n/y, default n)
-        -l : losslessly scale 16-bit integers to use dynamic range (y/n/o 
+        -l: losslessly scale 16-bit integers to use dynamic range (y/n/o 
             [yes=scale, no=no, but uint16->int16, o=original], default n)
-        -z : gz compress images (y/i/n/3, default n)
-        --progress : report progress (y/n, default n)
+        -z: gz compress images (y/i/n/3, default n)
+        -i: ignore derived, localizer and 2D images (y/n, default n)
+        --progress: report progress (y/n, default n)
         """
     
     if (op_sys == 0):  # WINDOWS
         command = f"cmd /k {dcm2nii_exe_path} -{compression} -a y\
               -f {output_filename} -l y -v {verbose} -o {out_path} {dcm_path}"
-        sp.call([dcm2nii_exe_path, '-a','y',
+        sp.call([dcm2nii_exe_path, '-a','y', '-i', 'y',
               '-f', output_filename, '-l','y', '-v', str(verbose), '-o', out_path, dcm_path], timeout=600)
     elif (op_sys == 1):  # LINUX
         os.system(

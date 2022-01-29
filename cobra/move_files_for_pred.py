@@ -11,12 +11,13 @@ import multiprocessing as mp
 from dcm2nii import dcm2nii
 from datetime import datetime as dt
 import time
+from utilities import basic
 #%%
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
 dcm_base_dir = join(disk_data_dir, 'dcm')
 pos_nii_dir = join(disk_data_dir, 'nii', 'positive')
-pred_input_dir = join(disk_data_dir, 'volume_longitudinal', 'input')
-
+pred_input_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input')
+ 
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 data_dir = join(base_dir, 'data')
@@ -48,7 +49,7 @@ pat_sids_cases_src_tgt_dirs = get_source_target_dirs(
     base_tgt_dir=join(pred_input_dir, 'cases') )
 pat_sids_pos_no_cases_src_tgt_dirs = get_source_target_dirs(
     df_pos_no_cases, base_src_dir=pos_nii_dir, 
-    base_tgt_dir=join(pred_input_dir, 'positive_cases_excluded') )
+    base_tgt_dir=join(pred_input_dir, 'positives_cases_excluded') )
 
 src_tgt_ls = pat_sids_cases_src_tgt_dirs + \
     pat_sids_pos_no_cases_src_tgt_dirs
@@ -73,12 +74,13 @@ def move_and_gz_files(src_tgt, test=False):
         if test:
             log_("Create patient dir at: "+tgt_pat_dir)
         os.mkdir(tgt_pat_dir)
+        
     if os.path.isfile(src_path): 
         if test:
             log_("Nii file exists at " + src_path)
             log_("Move and gz compress that file")
         with open(src_path, 'rb') as f_in:
-            with gzip.open(src_tgt[1], 'wb') as f_out:
+            with gzip.open(tgt_path, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
         sys.stdout.flush()
         print(".", end='')
@@ -97,6 +99,7 @@ def move_and_gz_files(src_tgt, test=False):
             output_filename='%j')
         if test:
             log_("The conversion took "+str(round(time.time()-start,3))+'s')
+        
         if os.path.isfile(src_path): 
             if test:
                 log_('Now the file was converted to nii and can now be found at '+
@@ -106,20 +109,36 @@ def move_and_gz_files(src_tgt, test=False):
             if test:
                 log_("The file can be now be moved to "+ tgt_path)
             move_and_gz_files(src_tgt)
+        elif len([f for f in os.listdir(split(src_path)[0]) if \
+                f.startswith(split(src_path)[1]) and f.endswith('.nii')])>0:
+            # Attention! Sometimes the dcm2nii converter produces several files with 
+            # different endings like sid_i*.nii
+            # We should now call move_and_gz_files on those files
+            src_files = [f for f in os.listdir(split(src_path)[0]) if \
+                f.startswith(split(src_path)[1]) and f.endswith('.nii')]
+            # if there are two nii the endings are usually i00001.nii and i00002.nii
+            # the first is localizer and second is actual 3d image
+            if len(src_files)==2:
+                src_path_temp = src_path[:-4] + 'i00002.nii'
+                move_and_gz_files((src_path_temp, tgt_path))
+            tgt_files = [join(split(src_tgt)[0], f) for f in src_files]
+            
+            src_tgt_ls_temp = [(s,t) for s,t in zip(src_files, tgt_files)]
+            for src_tgt_temp in src_tgt_ls_temp:
+                move_and_gz_files(src_tgt_temp)
+            print('+', end='')
         else: #if some issue with nii conversion skip this file
             sys.stdout.flush()
             print('x')
             if test:
                 log_('dcm2nii failed')
-            current_proc = mp.current_process()    
-            current_proc_id = str(int(current_proc._identity[0]))
-            write_file = join(
-                pred_input_dir, current_proc_id+'nii_conversion_error_sids.txt')
-            if test:
-                log_("Write problematic file to "+ write_file)
-            with open(write_file,'a+') as f:
-                f.write(dcm_path)
-
+            else:
+                current_proc = mp.current_process()    
+                current_proc_id = str(int(current_proc._identity[0]))
+                write_file = join(
+                    pred_input_dir, current_proc_id+'nii_conversion_error_sids.txt')
+                with open(write_file,'a+') as f:
+                    f.write(dcm_path+'\n')
 
 
 
@@ -136,7 +155,7 @@ def main(source_target_list, procs=8):
     print(dt.now())
 
 if __name__ == '__main__':
-    test=False
+    test=True
     if test:
         print('Test')
         start = time.time()
