@@ -108,3 +108,4 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                     print("|",  end='')
                 except Exception as e:
                     print("ERROR : "+str(e))
+
