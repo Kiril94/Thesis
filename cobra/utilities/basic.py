@@ -7,7 +7,16 @@ Created on Wed Sep 15 10:41:26 2021
 import numpy as np
 import pandas as pd
 import os
+from os.path import split
 
+def get_dir(file):
+    return split(file)[0]
+def make_dir(dir_):
+    if not os.path.isdir(dir_):
+        os.makedirs(dir_)
+def remove_file(file):
+    if os.path.exists(file):
+        os.remove(file) # one file at a time
 
 def list_subdir(dir_, ending=""):
     return [os.path.join(dir_, x) for x in os.listdir(dir_) \

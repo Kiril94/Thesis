@@ -55,7 +55,8 @@ group_list = sids_3d_t1_ls
 df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]
 df_group = df_group.sort_values('PatientID')                            
 #df_group = df_all[df_all['PatientID'].isin(group_list)]
-
+print("Move ", len(df_group), "Volumes")
+print("Move ", df_group.PatientID.nunique(), "Patients")
 # In case you want to download only specific sequences uncomment next lines
 #%%
 # In[Move]
