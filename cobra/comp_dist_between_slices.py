@@ -1,4 +1,4 @@
-from email.mime import base
+from datetime import datetime as dt
 from os.path import join, split, normpath
 import os
 from utilities.basic import list_subdir
@@ -6,10 +6,12 @@ import numpy as np
 from pydicom import dcmread
 import multiprocessing
 import json
+import pickle
 import time
 import sys
 from pathlib import Path
 from functools import partial
+import pandas as pd
 
 def get_value_from_header(dcm_dir, key):
     dcm = dcmread(dcm_dir)
@@ -119,26 +121,54 @@ def save_distance_between_slices(sids,
                 pool.map(get_distances_for_series_partial, 
                         series_dirs)
 
-def main(num_of_procs, write_file_dir, aggregation_func=np.min):
-    with open(join(base_dir, 'data/t1_longitudinal/sim_3dt1_sids.json'), 'rb') as f:
-        sids_3dt1 = json.load(f)
-    save_distance_between_slices(sids_3dt1[-30:], 
+def merge_output(write_file_dir):
+    dist_files = [f for f in os.listdir(write_file_dir) \
+        if f.startswith("slice_dist")]
+    dist_paths = [join(write_file_dir, f) for f in dist_files]
+    string = '\n'
+    for dist_path in dist_paths:
+        with open(dist_path, 'r') as f:
+            text = f.read() + '\n'
+        string+=text
+    with open(join(write_file_dir, 'all_distances.txt'), 'a+') as f:
+        f.write(string)
+
+def get_existing_sids(all_dist_path):
+    df = pd.read_csv(all_dist_path, sep=" ", header=None)
+    sids = df.iloc[:,0]
+    return sids
+def remove_existing_sids(sids, all_dist_path):
+    ex_sids = get_existing_sids(all_dist_path)
+    rest_sids = list(set(sids).difference(set(ex_sids)))
+    return rest_sids
+def get_rest_sids(sids_path, all_dist_path):
+    with open(sids_path, 'rb') as f:
+        sids = pickle.load(f)
+    sids_rest = remove_existing_sids(sids, all_dist_path)
+    return sids_rest
+def main(num_of_procs, write_file_dir, sids, aggregation_func=np.min):
+    save_distance_between_slices(sids, 
             dicoms_base_dir=dicom_base_dir, num_of_procs=num_of_procs, 
             aggregation_func=aggregation_func, write_file_dir=write_file_dir)
+    merge_output(write_file_dir)
     return 0
 
 script_dir = os.path.realpath(__file__)
-base_dir = join(Path(script_dir).parent, 'cobra')
+base_dir = Path(script_dir).parent
 dicom_base_dir = "F:/CoBra/Data/dcm"
 write_file_dir = join(base_dir, 
         'data/t1_longitudinal/distance_between_slices')
 
+sids_rest = get_rest_sids(join(base_dir, 'data/t1_longitudinal/pairs_3dt1_longitudinal_study.pkl'),
+                 join(write_file_dir, 'all_distances.txt'))
+
 if __name__=="__main__":
     start=time.time()
-    return_status = main(4, write_file_dir)
+    return_status = main(2, write_file_dir, sids_rest[2:4])
     print('finished')
     print(f'status: {return_status}')
     print(f'Time (min): {(time.time()-start)/60:.3f}')
+    print(dt.now())
 
 # For n images, how many images m can be missing
 # in order to compute the slice distance: 
