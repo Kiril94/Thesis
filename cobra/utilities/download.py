@@ -43,6 +43,7 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
         with open(patient_log_file) as f:
             lines = f.readlines()
         last_patient_idx = int(lines[-2][6:11]) 
+        print("Continue with patient ", last_patient_idx)
     except Exception as e:
         last_patient_idx = 0
         print("ERROR : "+str(e))

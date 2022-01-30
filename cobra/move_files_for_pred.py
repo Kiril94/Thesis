@@ -187,11 +187,11 @@ def main(source_target_list, procs=8):
     print(dt.now())
 
 if __name__ == '__main__':
-    test=True
+    test=False
     if test:
         print('Test')
         start = time.time()
-        for i in range(300,310):
+        for i in range(310,312):
             sid_num = i
             move_and_gz_files(src_tgt_ls[sid_num], test=True)
         print("Total time: ",round(time.time()-start, 3))
