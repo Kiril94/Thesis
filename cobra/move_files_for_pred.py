@@ -197,6 +197,15 @@ def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
 def log_(str_):
     with open(join(base_dir, "move_files_for_pred_log.txt"), 'a+') as f:
         f.write(str_+'\n')
+
+def check_tgt_files(tgt_path, sid):
+    tgt_dir = get_dir(tgt_path)
+    if len([f for f in os.listdir(tgt_dir) if f.startswith(sid)])>0:
+        return True
+    else:
+        return False
+
+
 def move_and_gz_files(src_tgt, test=False, trial=0):
     if test:
         log_("trial number "+ str(trial))
@@ -207,15 +216,15 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
     month_dir, pid, sid = os.path.normpath(src_path).split(os.sep)[-3:] #we will need it later
     sid = sid[:-4] #remove .nii extension
     tgt_path = src_tgt[1]
-    if os.path.isfile(tgt_path):
+    tgt_pat_dir = get_dir(tgt_path)
+    make_dir(tgt_pat_dir)
+    if check_tgt_files(tgt_path, sid):
         if test:
-            log_("The file already exists at " + tgt_path)
+            log_("The file(s) already exists at " + tgt_path)
             log_('Stop')
         return 0
     print(get_proc_id(test), " Trial: ", trial, " sid: ", sid)
     # create patient dir
-    tgt_pat_dir = get_dir(tgt_path)
-    make_dir(tgt_pat_dir)
     make_dir(get_dir(src_path))
     src_dir = get_dir(src_path)
     sif_dcm_path = join(sif_dir, volume_dir_dic[sid])
@@ -276,12 +285,12 @@ def main(source_target_list, procs=8):
     
 
 if __name__ == '__main__':
-    test=True
+    test=False
     if test:
         print('Test')
         summarize_problematic_files()
         start = time.time()
-        for i in range(1000,1002):
+        for i in range(1000,1004):
             sid_num = i
             move_and_gz_files(src_tgt_ls[sid_num], test=True)
         print("Finished at: ", dt.now())
