@@ -55,9 +55,10 @@ def get_source_target_dirs(df, base_src_dir,
 def get_proc_id(test=False):
     if test:
         return 0
-    current_proc = mp.current_process()    
-    current_proc_id = str(int(current_proc._identity[0]))
-    return current_proc_id
+    else:
+        current_proc = mp.current_process()    
+        current_proc_id = str(int(current_proc._identity[0]))
+        return current_proc_id
 def write_problematic_files(file, test):
     if test:
         return 0
@@ -79,7 +80,7 @@ def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, ti
         if test:
                 log_(disk_dcm_path + " exists, start nii conversion")
                 start=time.time()
-        print(get_proc_id(), " Convert from disk")
+        print(get_proc_id(test), " Convert from disk")
         dcm2nii_out = dcm2nii.convert_dcm2nii(
             disk_dcm_path, nii_out_path, verbose=0, op_sys=0,
                     output_filename='%j', create_info_json='y', timeout=timeout)
@@ -91,22 +92,22 @@ def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, ti
                     log_("conversion from disk success")
         
         if dcm2nii_out==0:
-            print(get_proc_id(), " worked")
+            print(get_proc_id(test), " worked")
             return 0
         elif dcm2nii_out==1: #if dcm2nii produces error, remove all the output files
             if not test:
                     write_problematic_files(disk_dcm_path, test)
             if len(os.listdir(disk_dcm_path))==len(os.listdir(sif_dcm_path)):
-                print(get_proc_id(), "Error from conversion on disk, but same data on sif")
+                print(get_proc_id(test), "Error from conversion on disk, but same data on sif")
                 return 0
             else:
-                print(get_proc_id(), "There is more data on sif, use this!")
+                print(get_proc_id(test), "There is more data on sif, use this!")
                 rm_files = [f for f in os.listdir(nii_out_path) if f.startswith(sid)]
                 for rm_file in rm_files:
                     remove_file(rm_file)
                     return 1 
     else:
-        print(get_proc_id(), " convert from sif")
+        print(get_proc_id(test), " convert from sif")
         if not os.path.isdir(sif_dcm_path):
             write_problematic_files(sif_dcm_path, test)
             print("DCM missing on sif")
@@ -125,13 +126,13 @@ def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, ti
                 else:
                     log_("Conversion from sif success") 
         if dcm2nii_out==0:
-            print(get_proc_id(), " worked")
+            print(get_proc_id(test), " worked")
             return 0
         elif dcm2nii_out==1: #if dcm2nii from sif produces error, still keep the output file
-            print('O')
+            print('/')
             if not test:
                 write_problematic_files(disk_dcm_path, test)
-            print(get_proc_id(), " didn't work to convert from sif ", sid)
+            print(get_proc_id(test), " SIF conversion gave error for  ", sif_dcm_path)
             return 2
     
         
@@ -183,11 +184,14 @@ def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
                     remove_file(join(src_dir, ex_src_file))
             return 1
     else:
-        for i, ex_src_file in enumerate(existing_src_files):
-            tgt_path_tmp = tgt_path[:-7] + '_' + str(i) + '.nii.gz'
-            sys.stdout.flush()
-            print(".", end='')
-            move_compress(join(src_dir, ex_src_file), tgt_path_tmp)
+        if len(existing_src_files)==1:
+            move_compress(join(src_dir, existing_src_files[0]), tgt_path)
+        else:
+            for i, ex_src_file in enumerate(existing_src_files):
+                tgt_path_tmp = tgt_path[:-7] + '_' + str(i) + '.nii.gz'
+                move_compress(join(src_dir, ex_src_file), tgt_path_tmp)
+        sys.stdout.flush()
+        print(".", end='')
         return 0
 
 def log_(str_):
@@ -208,7 +212,7 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
             log_("The file already exists at " + tgt_path)
             log_('Stop')
         return 0
-    print(get_proc_id(), " Trial: ", trial, " sid: ", sid)
+    print(get_proc_id(test), " Trial: ", trial, " sid: ", sid)
     # create patient dir
     tgt_pat_dir = get_dir(tgt_path)
     make_dir(tgt_pat_dir)
@@ -222,13 +226,13 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
     existing_src_files = [f for f in os.listdir(src_dir) \
         if f.startswith(sid) and f.endswith('.nii')]
     if len(existing_src_files)>0 and trial==0: 
-        print(get_proc_id(), " Check existing niis")
+        print(get_proc_id(test), " Check existing niis")
         check_niis_out = check_niis(existing_src_files, src_dir, tgt_path, test, trial)
         trial+=1
         if check_niis_out==1:
             move_and_gz_files(src_tgt, trial=trial)
     else: # if nii does not exist, try to create it
-        print(get_proc_id(), " No niis")
+        print(get_proc_id(test), " No niis")
         if test:
             log_("Nii file does NOT exist at "+ src_path)
         # check if dcm dir exists
@@ -243,7 +247,7 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
             if len(existing_src_files)>0:
                 check_niis_out = check_niis(existing_src_files, src_dir, tgt_path, test, trial)            
             else:
-                print(get_proc_id(), " Conversion did not work for", disk_dcm_path, nii_out_path)
+                print(get_proc_id(test), " Conversion did not work for", disk_dcm_path, nii_out_path)
                 sys.stdout.flush()
                 print('x')
                 if test:
@@ -272,12 +276,12 @@ def main(source_target_list, procs=8):
     
 
 if __name__ == '__main__':
-    test=False
+    test=True
     if test:
         print('Test')
         summarize_problematic_files()
         start = time.time()
-        for i in range(1,2):
+        for i in range(1000,1002):
             sid_num = i
             move_and_gz_files(src_tgt_ls[sid_num], test=True)
         print("Finished at: ", dt.now())
