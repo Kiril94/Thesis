@@ -103,7 +103,7 @@ src_tgt_ls = pat_sids_cases_src_tgt_dirs + \
 
 
 #%%
-def check_niis(existing_src_files, src_dir, tgt_path, src_tgt):
+def check_niis(existing_src_files, src_dir, tgt_path, src_tgt, test):
     if test:
         log_("Following nii file(s) were found " + str(existing_src_files))
         log_("Move and gz compress these files")
@@ -151,7 +151,7 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
         if f.startswith(sid) and f.endswith('.nii')]
     # Handle the case if at least one nii file already exists on the disk
     if len(existing_src_files)>0: 
-        check_niis(existing_src_files, src_dir, tgt_path, src_tgt)
+        check_niis(existing_src_files, src_dir, tgt_path, src_tgt, test)
     else: # if nii does not exist, try to create it
         if test:
             log_("Nii file does NOT exist at "+ src_path)
@@ -235,4 +235,4 @@ if __name__ == '__main__':
         print("Finished at: ", dt.now())
         print("Total time: ",round(time.time()-start, 3))
     else:
-        main(src_tgt_ls, procs=12)
+        main(src_tgt_ls, procs=14)
