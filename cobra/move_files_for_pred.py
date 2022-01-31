@@ -189,13 +189,13 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
     src_path = src_tgt[0]
     month_dir, pid, sid = os.path.normpath(src_path).split(os.sep)[-3:] #we will need it later
     sid = sid[:-4] #remove .nii extension
-    print(get_proc_id(), " Trial: ", trial, " sid: ", sid)
     tgt_path = src_tgt[1]
     if os.path.isfile(tgt_path):
         if test:
             log_("The file already exists at " + tgt_path)
             log_('Stop')
         return 0
+    print(get_proc_id(), " Trial: ", trial, " sid: ", sid)
     # create patient dir
     tgt_pat_dir = get_dir(tgt_path)
     make_dir(tgt_pat_dir)
@@ -218,7 +218,7 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
         if test:
             log_("Nii file does NOT exist at "+ src_path)
         # check if dcm dir exists
-        dcm2nii_out = dcm2nii_safe(src_tgt, disk_dcm_path, sif_dcm_path, nii_out_path, 
+        dcm2nii_out = dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, 
                                 sid, test, trial=trial)
         trial+=1                 
         if dcm2nii_out==1:
@@ -261,7 +261,7 @@ def main(source_target_list, procs=8):
     
 
 if __name__ == '__main__':
-    test=True
+    test=False
     if test:
         print('Test')
         summarize_problematic_files()
