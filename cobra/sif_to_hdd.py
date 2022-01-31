@@ -22,7 +22,7 @@ download_pat_path = join(base_dir, "data/patient_groups")
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
 
-sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'paired_3dt1_long_omen.pkl')
+sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_longitudinal_study.pkl')
 
 
 
@@ -60,8 +60,8 @@ print("Move ", df_group.PatientID.nunique(), "Patients")
 # In case you want to download only specific sequences uncomment next lines
 #%%
 # In[Move]
-patient_log_file = join(base_dir, 'logs', "pairs_3dt1_long_omen_patient_log.txt" )
-volume_log_file = join(base_dir, 'logs', "pairs_3dt1_long_omen_volume_log.txt" )
+patient_log_file = join(base_dir, 'logs', "pairs_3dt1_longitudinal_study_rest_patient_log.txt" )
+volume_log_file = join(base_dir, 'logs', "pairs_3dt1_longitudinal_study_rest_volume_log.txt" )
 download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
                         dst_data_dir, patient_log_file, volume_log_file)
 

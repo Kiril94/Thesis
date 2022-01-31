@@ -164,6 +164,7 @@ sids_rest = get_rest_sids(join(base_dir, 'data/t1_longitudinal/pairs_3dt1_longit
 
 if __name__=="__main__":
     start=time.time()
+    print("Compute distance between slices for ", len(sids_rest), 'volumes')
     return_status = main(2, write_file_dir, sids_rest[2:4])
     print('finished')
     print(f'status: {return_status}')
