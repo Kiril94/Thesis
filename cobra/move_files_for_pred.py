@@ -11,6 +11,7 @@ import multiprocessing as mp
 from dcm2nii import dcm2nii
 from datetime import datetime as dt
 import time
+import pickle
 from utilities import basic
 from utilities.basic import get_dir, make_dir, remove_file
 #%%
@@ -32,14 +33,15 @@ volume_dir_dic = pd.Series(
 dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
     usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
     'Sequence', 'NumberOfSlices'])
-cases_ls = np.loadtxt(join(pat_groups_dir, 
-                't1_pre_post.txt'), dtype=str)
-#%%
-df3dt1 = dfc[(dfc.MRAcquisitionType=='3D') & \
-    (dfc.Sequence=='t1') & (dfc.NumberOfSlices>=64)]
-df_cases = df3dt1[df3dt1.PatientID.isin(cases_ls)]
-df_pos_no_cases = df3dt1[~df3dt1.PatientID.isin(cases_ls)]
 
+sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_longitudinal_study.pkl')
+with open(sids_3d_t1_path, 'rb') as f:
+    sids_3dt1_long = pickle.load(f)
+sids_cases = np.loadtxt(join(pat_groups_dir, 
+                't1_pre_post_suid.txt'), dtype=str).tolist()
+df_cases_controls = dfc[dfc.SeriesInstanceUID.isin(sids_3dt1_long)]
+df_cases = df_cases_controls[df_cases_controls.SeriesInstanceUID.isin(sids_cases)]
+df_controls = df_cases_controls[~(df_cases_controls.SeriesInstanceUID.isin(sids_cases))]
 # %%
 def get_root_dir(path, n=2):
     return join(*os.path.normpath(path).split(os.sep)[:n])
@@ -50,12 +52,16 @@ def get_source_target_dirs(df, base_src_dir,
         (join(base_src_dir, get_root_dir(volume_dir_dic[sid]), split(volume_dir_dic[sid])[1] +'.nii'),
     join(base_tgt_dir, split(get_root_dir(volume_dir_dic[sid]))[1], split(volume_dir_dic[sid])[1] +'.nii.gz'))\
     for sid in df.SeriesInstanceUID]  
-def get_proc_id():
+def get_proc_id(test=False):
+    if test:
+        return 0
     current_proc = mp.current_process()    
     current_proc_id = str(int(current_proc._identity[0]))
     return current_proc_id
-def write_problematic_files(file):
-    current_proc_id = get_proc_id()
+def write_problematic_files(file, test):
+    if test:
+        return 0
+    current_proc_id = get_proc_id(test)
     write_file = join(
             pred_input_dir, 'logs', 
             current_proc_id+'nii_conversion_error_sids.txt')
@@ -69,7 +75,7 @@ def move_compress(src, tgt):
 
 def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, timeout=1200):
     "Only keep dicoms if dcm2nii converter returns 0"
-    if trial==0 and os.path.isdir(disk_dcm_path):
+    if trial<=1 and os.path.isdir(disk_dcm_path):
         if test:
                 log_(disk_dcm_path + " exists, start nii conversion")
                 start=time.time()
@@ -89,7 +95,7 @@ def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, ti
             return 0
         elif dcm2nii_out==1: #if dcm2nii produces error, remove all the output files
             if not test:
-                    write_problematic_files(disk_dcm_path)
+                    write_problematic_files(disk_dcm_path, test)
             if len(os.listdir(disk_dcm_path))==len(os.listdir(sif_dcm_path)):
                 print(get_proc_id(), "Error from conversion on disk, but same data on sif")
                 return 0
@@ -102,7 +108,7 @@ def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, ti
     else:
         print(get_proc_id(), " convert from sif")
         if not os.path.isdir(sif_dcm_path):
-            write_problematic_files(sif_dcm_path)
+            write_problematic_files(sif_dcm_path, test)
             print("DCM missing on sif")
             return 1
         if test:
@@ -124,7 +130,7 @@ def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, ti
         elif dcm2nii_out==1: #if dcm2nii from sif produces error, still keep the output file
             print('O')
             if not test:
-                write_problematic_files(disk_dcm_path)
+                write_problematic_files(disk_dcm_path, test)
             print(get_proc_id(), " didn't work to convert from sif ", sid)
             return 2
     
@@ -142,41 +148,48 @@ def summarize_problematic_files():
     with open(join(dir_, 'nii_conversion_error_sids_all.txt'), 'a+') as f:
         f.write(string)
 
-pat_sids_cases_src_tgt_dirs = get_source_target_dirs(
+pat_sids_cases_src_tgt = get_source_target_dirs(
     df_cases, base_src_dir=disk_nii_dir, 
     base_tgt_dir=join(pred_input_dir, 'cases') )
-pat_sids_pos_no_cases_src_tgt_dirs = get_source_target_dirs(
-    df_pos_no_cases, base_src_dir=disk_nii_dir, 
-    base_tgt_dir=join(pred_input_dir, 'positives_cases_excluded') )
+pat_sids_potential_controls_src_tgt = get_source_target_dirs(
+    df_controls, base_src_dir=disk_nii_dir, 
+    base_tgt_dir=join(pred_input_dir, 'potential_controls') )
 
-src_tgt_ls = pat_sids_cases_src_tgt_dirs + \
-    pat_sids_pos_no_cases_src_tgt_dirs
-
+src_tgt_ls = pat_sids_cases_src_tgt + pat_sids_potential_controls_src_tgt
 
 #%%
-def check_niis(existing_src_files, src_dir, tgt_path, src_tgt, test, trial):
-    if test:
-        log_("Following nii file(s) were found " + str(existing_src_files))
-        log_("Move and gz compress these files")
-    if len(existing_src_files)==1: # if only 1 file it is probably the 3d vol.
-        move_compress(join(src_dir, existing_src_files[0]), tgt_path)
-        return 0
-    elif len(existing_src_files)==2: # if 2 files, the one with _i00002.nii is probably the 3d vol.
-        files3d = [f for f in existing_src_files if f.endswith("_i00002.nii")]
-        if len(files3d)==1:
-            move_compress(join(src_dir, files3d[0]), tgt_path)
-        else: # otherwise remove all the files and call the function again
+def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
+    if trial==0:
+        if test:
+            log_("Following nii file(s) were found " + str(existing_src_files))
+            log_("Move and gz compress these files")
+        if len(existing_src_files)==1: # if only 1 file it is probably the 3d vol.
+            sys.stdout.flush()
+            print(".", end='')
+            move_compress(join(src_dir, existing_src_files[0]), tgt_path)
+            return 0
+        elif len(existing_src_files)==2: # if 2 files, the one with _i00002.nii is probably the 3d vol.
+            files3d = [f for f in existing_src_files if f.endswith("_i00002.nii")]
+            if len(files3d)==1:
+                sys.stdout.flush()
+                print(".", end='')
+                move_compress(join(src_dir, files3d[0]), tgt_path)
+            else: # otherwise remove all the files and call the function again
+                for ex_src_file in existing_src_files:
+                    remove_file(join(src_dir, ex_src_file))
+                return 1
+        else: # if more than 2 files, also remove them
             for ex_src_file in existing_src_files:
-                remove_file(join(src_dir, ex_src_file))
+                    remove_file(join(src_dir, ex_src_file))
             return 1
-    else: # if more than 2 files, also remove them
-        for ex_src_file in existing_src_files:
-                remove_file(join(src_dir, ex_src_file))
-        return 1
-        
-    sys.stdout.flush()
-    print(".", end='')
-    
+    else:
+        for i, ex_src_file in enumerate(existing_src_files):
+            tgt_path_tmp = tgt_path[:-7] + '_' + str(i) + '.nii.gz'
+            sys.stdout.flush()
+            print(".", end='')
+            move_compress(join(src_dir, ex_src_file), tgt_path_tmp)
+        return 0
+
 def log_(str_):
     with open(join(base_dir, "move_files_for_pred_log.txt"), 'a+') as f:
         f.write(str_+'\n')
@@ -210,7 +223,8 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
         if f.startswith(sid) and f.endswith('.nii')]
     if len(existing_src_files)>0 and trial==0: 
         print(get_proc_id(), " Check existing niis")
-        check_niis_out = check_niis(existing_src_files, src_dir, tgt_path, src_tgt, test, trial)
+        check_niis_out = check_niis(existing_src_files, src_dir, tgt_path, test, trial)
+        trial+=1
         if check_niis_out==1:
             move_and_gz_files(src_tgt, trial=trial)
     else: # if nii does not exist, try to create it
@@ -220,26 +234,23 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
         # check if dcm dir exists
         dcm2nii_out = dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, 
                                 sid, test, trial=trial)
-        trial+=1                 
+        trial+=1     
         if dcm2nii_out==1:
             move_and_gz_files(src_tgt, trial=trial)
-        # after the nii is created we can move and compress it:)
-        existing_src_files = [f for f in os.listdir(get_dir(src_path)) \
-            if f.startswith(sid) and f.endswith('.nii')]
-        if len(existing_src_files)>0:
-            print(get_proc_id(), " Move and compress")
-            if test:
-                log_("Move and compress")
-            move_and_gz_files(src_tgt, trial=trial)
         else:
-            print(get_proc_id(), " Somethign went wrong with ", sid)
-            sys.stdout.flush()
-            print('x')
-            if test:
-                log_('dcm2nii failed')
+            existing_src_files = [f for f in os.listdir(src_dir) \
+                if f.startswith(sid) and f.endswith('.nii')]
+            if len(existing_src_files)>0:
+                check_niis_out = check_niis(existing_src_files, src_dir, tgt_path, test, trial)            
             else:
-                write_problematic_files(disk_dcm_path)
-            return 1
+                print(get_proc_id(), " Conversion did not work for", disk_dcm_path, nii_out_path)
+                sys.stdout.flush()
+                print('x')
+                if test:
+                    log_('dcm2nii failed')
+                else:
+                    write_problematic_files(disk_dcm_path, test)
+                return 1
 
 
                 
