@@ -22,7 +22,7 @@ download_pat_path = join(base_dir, "data/patient_groups")
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
 
-sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'paired_3dt1_long_hp.pkl')
+sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_longitudinal_study.pkl')
 
 
 
@@ -51,17 +51,28 @@ with open(sids_3d_t1_path, 'rb') as f:
 #group_list = np.loadtxt(join(download_pat_path, "t1_neg_0.txt"),
 #                                   dtype='str')
 group_list = sids_3d_t1_ls
+downloaded_ls = download.get_downloaded_volumes_ls()
+group_list = list(set(group_list).difference(set(downloaded_ls)))
 #print('Download 3dt1 scans that occur in pairs')
+print(len(group_list))
+
+#part = 0
+#start = 5000
+#step = 200
+#df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+part*step:start+step*(part+1)])]
 df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]
 df_group = df_group.sort_values('PatientID')                            
-#df_group = df_all[df_all['PatientID'].isin(group_list)]
+
+#df_group = df_all.iloc[start+part*500:start+50*(part+1),:]
+
 print("Move ", len(df_group), "Volumes")
 print("Move ", df_group.PatientID.nunique(), "Patients")
+assert False
 # In case you want to download only specific sequences uncomment next lines
 #%%
 # In[Move]
-patient_log_file = join(base_dir, 'logs', "pairs_3dt1_long_hp_patient_log.txt" )
-volume_log_file = join(base_dir, 'logs', "pairs_3dt1_long_hp_volume_log.txt" )
+patient_log_file = join(base_dir, 'logs', f"pairs_3dt1_longitudinal_study_rest_patient_log_rest.txt" )
+volume_log_file = join(base_dir, 'logs', f"pairs_3dt1_longitudinal_study_rest_volume_log_rest.txt" )
 download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
                         dst_data_dir, patient_log_file, volume_log_file)
 
