@@ -1,10 +1,10 @@
 import glob
 import os
+from os.path import split
 import shutil
-import sys
 from datetime import datetime
 from os.path import join
-
+import csv
 import pandas as pd
 
 
@@ -62,7 +62,6 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
             f.write(log_str)
         # Copy doc files
         if download_docs:
-            print("Download reports")
             doc_dst_dir = join(dst_dir, patient_dir, 'DOC')
             if not os.path.exists(doc_dst_dir):
                 os.makedirs(doc_dst_dir)
@@ -74,13 +73,15 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                 study_id = doc_path_src.split(os.sep)[3]
                 doc_id = doc_path_src.split(os.sep)[5]
                 doc_path_dst = join(doc_dst_dir, f"{study_id}_{doc_id}.pdf")
-                try:
-                    shutil.copy(doc_path_src, doc_path_dst)
-                except Exception as e:
-                    print("ERROR : "+str(e))
+                if not os.path.isfile(doc_path_dst):
+                    print("Download reports")
+                    try:
+                        shutil.copy(doc_path_src, doc_path_dst)
+                    except Exception as e:
+                        print("ERROR : "+str(e))
             print('\n')
             if doc_counter==0:
-                print("No reports files found.")   
+                print("No reports found.")   
         # copy dcm files
         volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID']
         print(f"download {len(volumes)} volumes")
@@ -101,11 +102,42 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
             else:        
                 volume_uid = volume_src.split(os.sep)[-1]
                 volume_dst = join(dst_dir, patient_dir, volume_uid)
-                try:
-                    with open(volume_log_file, mode="w") as f:
-                        f.write(volume_dst)
-                    shutil.copytree(volume_src, volume_dst)
-                    print("|",  end='')
-                except Exception as e:
-                    print("ERROR : "+str(e))
+                if not os.path.isdir(volume_dst):
+                        with open(volume_log_file, mode="w") as f:
+                            f.write(volume_dst)
+                        shutil.copytree(volume_src, volume_dst)
+                        print("|",  end='')
+                else:
+                    print(volume_dst, 'already exists.')
+
+def save_list_downloaded_volumes_and_patients(disk_dcm_dir='F:\\CoBra\\Data\\dcm'):
+    months_dirs = [join(disk_dcm_dir, f) for f in os.listdir(disk_dcm_dir) if f.startswith('2019')
+                        or f.startswith('pos')]
+    pat_ls, vol_ls = [], []
+    for month_dir in months_dirs:
+        pat_dirs = [join(month_dir, f) for f in os.listdir(month_dir)]
+        for pat_dir in pat_dirs:
+            vol_dirs = [f for f in os.listdir(pat_dir) if f!='DOC']
+            if len(vol_dirs)>0:
+                pat_ls.append(split(pat_dir)[1])
+            vol_ls = vol_ls + vol_dirs
+    print("Write patients to ", join(disk_dcm_dir,'patient_log.txt'))
+    with open(join(disk_dcm_dir,'patient_log.txt'), 'w') as f:
+        for pat in pat_ls:
+            f.write("%s\n" % pat)
+    print("Write volumes to ", join(disk_dcm_dir,'volume_log.txt'))
+    with open(join(disk_dcm_dir,'volume_log.txt'), 'w') as f:
+        for vol in vol_ls:
+            f.write("%s\n" % vol)
+    return len(pat_ls), len(vol_ls)
+
+def get_downloaded_volumes_ls(disk_dcm_dir='F:\\CoBra\\Data\\dcm'):
+    volume_list = []
+    with open(join(disk_dcm_dir,'volume_log.txt'), 'r') as fd:
+        reader = csv.reader(fd)
+        for row in reader:
+            volume_list= volume_list + row
+    return volume_list
+
+        
 

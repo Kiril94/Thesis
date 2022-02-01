@@ -74,7 +74,7 @@ def move_compress(src, tgt):
                 with gzip.open(tgt, 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
 
-def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, timeout=1200):
+def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, timeout=2000):
     "Only keep dicoms if dcm2nii converter returns 0"
     if trial<=1 and os.path.isdir(disk_dcm_path):
         if test:
@@ -155,8 +155,8 @@ pat_sids_cases_src_tgt = get_source_target_dirs(
 pat_sids_potential_controls_src_tgt = get_source_target_dirs(
     df_controls, base_src_dir=disk_nii_dir, 
     base_tgt_dir=join(pred_input_dir, 'potential_controls') )
-
-src_tgt_ls = pat_sids_cases_src_tgt + pat_sids_potential_controls_src_tgt
+print("Convert only potential controls now")
+src_tgt_ls =  pat_sids_potential_controls_src_tgt #+ pat_sids_cases_src_tgt
 
 #%%
 def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
@@ -219,6 +219,7 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
     tgt_pat_dir = get_dir(tgt_path)
     make_dir(tgt_pat_dir)
     if check_tgt_files(tgt_path, sid):
+        print('|', end='')
         if test:
             log_("The file(s) already exists at " + tgt_path)
             log_('Stop')
@@ -272,7 +273,7 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
 #%%
 def main(source_target_list, procs=8):
     print('file moved: .')
-    print('multiple files moved: *')
+    print('file exists: |')
     print('file converted to nii: +')
     print('fail: x')
     print("Move ", len(src_tgt_ls), "files.")
@@ -296,4 +297,4 @@ if __name__ == '__main__':
         print("Finished at: ", dt.now())
         print("Total time: ",round(time.time()-start, 3))
     else:
-        main(src_tgt_ls, procs=12)
+        main(src_tgt_ls, procs=6)
