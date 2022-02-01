@@ -54,7 +54,9 @@ group_list = sids_3d_t1_ls
 downloaded_ls = download.get_downloaded_volumes_ls()
 group_list = list(set(group_list).difference(set(downloaded_ls)))
 #print('Download 3dt1 scans that occur in pairs')
-#part = 4
+print(len(group_list))
+
+#part = 0
 #start = 5000
 #step = 200
 #df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+part*step:start+step*(part+1)])]
@@ -65,11 +67,12 @@ df_group = df_group.sort_values('PatientID')
 
 print("Move ", len(df_group), "Volumes")
 print("Move ", df_group.PatientID.nunique(), "Patients")
+assert False
 # In case you want to download only specific sequences uncomment next lines
 #%%
 # In[Move]
-patient_log_file = join(base_dir, 'logs', f"pairs_3dt1_longitudinal_study_rest_patient_log_{part}.txt" )
-volume_log_file = join(base_dir, 'logs', f"pairs_3dt1_longitudinal_study_rest_volume_log_{part}.txt" )
+patient_log_file = join(base_dir, 'logs', f"pairs_3dt1_longitudinal_study_rest_patient_log_rest.txt" )
+volume_log_file = join(base_dir, 'logs', f"pairs_3dt1_longitudinal_study_rest_volume_log_rest.txt" )
 download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
                         dst_data_dir, patient_log_file, volume_log_file)
 

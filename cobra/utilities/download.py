@@ -1,9 +1,8 @@
 import glob
 import os
-from os.path import split
+from os.path import split, join
 import shutil
 from datetime import datetime
-from os.path import join
 import csv
 import pandas as pd
 
@@ -100,7 +99,7 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                 print('-',  end='')
                 continue
             else:        
-                volume_uid = volume_src.split(os.sep)[-1]
+                volume_uid = split(volume_src)[1]
                 volume_dst = join(dst_dir, patient_dir, volume_uid)
                 if not os.path.isdir(volume_dst):
                         with open(volume_log_file, mode="w") as f:
