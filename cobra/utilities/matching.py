@@ -1,25 +1,34 @@
 import numpy as np
-from scipy.stats import fisher_exact, beta
+from scipy.stats import fisher_exact, norm
 from sklearn.neighbors import NearestNeighbors
 from sklearn.linear_model import LogisticRegression
-
-def compute_PS(b, x):
-    return 1/(1+np.exp(-(b[1]*(x-b[0]))))
+import pandas as pd
 
 
-def simulate_ps_1var(b, num_population):
-    x = beta.rvs(a=2, b=4, size=num_population)
-    p = compute_PS(b, x)
-    return x, p
+def compute_PS(beta, X):
+    return 1/(1+np.exp(beta[0]+beta[1:]@X.T))
 
-def simulate_exposure(p):
-    exposures = np.zeros(len(p))
-    rand_arr = np.random.rand(len(p))
-    exposures[p>rand_arr] = 1
-    return exposures
+def simulate_var_and_ps(beta, num_variables, population_size, random_state=0):
+    X = norm.rvs(size=(population_size, num_variables), random_state=random_state)
+    true_PS = compute_PS(beta, X)
+    return X, true_PS 
 
-def compute_OR_p_value(de, he, dne, hne):
-    ct = np.array([[de,he],[dne,hne]])
+def simulate_exposure(beta, num_variables, population_size, random_state=0):
+    X, true_PS = simulate_var_and_ps(beta, num_variables, population_size)
+    exposures = np.zeros(len(X))
+    if type(random_state)==int:
+        rng = np.random.RandomState(random_state)
+        exposures[true_PS>rng.rand(len(X))] = 1
+    else:
+        exposures[true_PS>np.random.rand(len(X))] = 1
+    df_data = np.concatenate([X, exposures.reshape(-1,1)], axis=1)
+    df_columns = ['x'+str(i) for i in range(num_variables)]
+    df_columns.append('exposed')
+    df = pd.DataFrame(data=df_data, columns=df_columns)
+    return df
+
+def compute_OR_p_value(ed, end, ned, nend):
+    ct = np.array([[ed,end],[ned,nend]])
     OR, p_val = fisher_exact(ct) 
     return OR, p_val
 
