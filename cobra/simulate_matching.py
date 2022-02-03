@@ -1,4 +1,5 @@
 #%%
+# Import
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -12,15 +13,18 @@ importlib.reload(matching)
 pd.options.mode.chained_assignment = None
 #%% 
 # Test
-
-
+rng1 = np.random.RandomState(random_state)
+rng2 = np.random.RandomState(random_state+3)
+print(rng1.rand(3))
+print(rng2.rand(3))
 #%%
 # Specify params
 num_variables = 3
 population_size = 1000
 num_hidden_variables = 1
+odds_exposed = .1
+true_OR = 10
 random_state = 0
-
 #%%
 # Simulate exposure
 rng = np.random.RandomState(0)
@@ -30,11 +34,23 @@ beta = norm.rvs(loc=loc, scale=1,size=num_variables+1,
             random_state=random_state)
 df = matching.simulate_exposure(beta, num_variables, population_size,
             random_state=random_state)
-print('Number exposed', df.exposed.sum()
-
+print('Number exposed', df.exposed.sum())
+df.head()
 #%%
 # Simulate disease
-
+df = matching.simulate_disease(df, odds_exposed, true_OR)
+print(df.index)
+ct = matching.get_contingency_table(df)
+matching.plot_heatmap(ct)
+OR,CI, pval = matching.compute_OR_CI_pval(df)
+print("Odds Ratio, no matching", OR)
+print("95 CI ", print(CI))
+print("p val, no matching", pval)
+df = df.astype({'disease': 'int32'})
+df = df.astype({'exposed': 'int32'})
+df.head()
+#%%
+sns.kdeplot(data=df, x='x2', hue='exposed')
 #%%
 beta = np.array([.5, 10])
 x, p = mat.simulate_ps_1var(Theta, 1000)
@@ -106,28 +122,13 @@ ax[1].set_xlabel('x')
 #nn_OR = matching.compute_OR_p_value() 
 
 #%%
-def simulate_disease(df, p_exp, OR):
-    df_exp = df[df.exposed==1]
-    df_nexp = df[df.exposed==0]
-    df_exp['disease'] = np.random.rand(len(df_exp))<p_exp
-    df_nexp['disease'] = np.random.rand(len(df_nexp))<p_exp/OR
-    df = pd.concat([df_exp, df_nexp])
-    df['disease'] = df['disease']*1
-    return df
 # disease|no disease
 #--------------------
 #
-def get_contingency_table(df):
-    ed = (df.exposed==1) & (df.disease==1)
-    end = (df.exposed==1) & (df.disease==0)
-    ned = (df.exposed==0) & (df.disease==1)
-    nend = (df.exposed==0) & (df.disease==0)
-    #df = {[[ed, ned],[]]}
-    return ed, end, ned, nend
+
     
-df = simulate_disease(df, p_exp, true_OR)
-def get_contingency_table(df):
-    return pd.crosstab(index=df['exposed'], columns=df['disease'], margins=True)
+
+
 ct = get_contingency_table(df)
 print(ct)
 #matching.compute_OR_p_value(ct)
