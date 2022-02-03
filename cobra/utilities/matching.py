@@ -14,7 +14,8 @@ def simulate_variables_and_PS(beta, num_variables, population_size, random_state
     true_PS = compute_PS(beta, X)
     return X, true_PS 
 
-def simulate_exposure(beta, num_variables, population_size, random_state=0):
+def simulate_exposure(beta, num_variables, num_hidden_variables,
+        population_size, random_state=0):
     """Returns dataframe with simulated, gaussian variables (mu=0, sig=1) and 
     exposure (0 or 1) for population_size patients. 
     Exposure is simulated using probabilities from a logistic model 
@@ -28,7 +29,8 @@ def simulate_exposure(beta, num_variables, population_size, random_state=0):
     else:
         exposures[true_PS>np.random.rand(len(X))] = 1
     df_data = np.concatenate([X, exposures.reshape(-1,1)], axis=1)
-    df_columns = ['x'+str(i) for i in range(num_variables)]
+    df_columns = ['x'+str(i) for i in range(num_variables-num_hidden_variables)]
+    df_columns = df_columns + ['hx'+str(i) for i in range(num_hidden_variables)]
     df_columns.append('exposed')
     df = pd.DataFrame(data=df_data, columns=df_columns)
     return df
@@ -72,35 +74,62 @@ def plot_heatmap(ct):
     ax[1].set_xlabel('disease')
     fig.tight_layout()
 
+def get_num_variables(df):
+    return len([k for k in df.keys() if k.startswith('x')])
+def get_num_hidden_variables(df):
+    return len([k for k in df.keys() if k.startswith('hx')])
+
+def plot_variables_kde(df):
+    num_variables = get_num_variables(df)
+    fig, ax = plt.subplots(1,num_variables)
+    ax = ax.flatten()
+    for i, a in enumerate(ax):
+        if i<num_variables:
+            sns.kdeplot(data=df, x='x'+str(i), hue='exposed', ax=a,)
+    fig.tight_layout()
+
+
+def compute_OR_pval(df):
+    ct = get_contingency_table(df)
+    OR, pval = fisher_exact(ct) 
+    return OR, pval
 
 def compute_OR_95CI(df):
-    OR = compute_OR_p_value(df)[0]
+    OR = compute_OR_pval(df)[0]
     ct = get_contingency_table(df)
     range_ = 1.96*np.sqrt(np.sum(1/ct))
     a = np.log(OR)-range_
     b = np.log(OR)+range_
     return (np.exp(a), np.exp(b))
 
-def compute_OR_CI_pval(df):
+def compute_OR_CI_pval(df, print_=False, start_string=''):
     ct = get_contingency_table(df)
     CI = compute_OR_95CI(df)
     OR, p_val = fisher_exact(ct) 
+    if print_:
+        print(start_string, "\n     OR (95% CI) =", OR, 
+            f'({CI[0]:.2f},{CI[1]:.2f})', '\n    p =', p_val)
     return OR, CI, p_val
 
 
-def estimate_PS(df, num_variables, num_hidden_variables, random_state=0):
+def estimate_PS(df, random_state=0):
+    num_variables = get_num_variables(df)
     variables_columns = ['x'+str(i) for i \
-        in range(num_variables-num_hidden_variables)]
+        in range(num_variables)]
     X = df[variables_columns]
     y = df['exposed']
     if type(random_state)==int:
         LR = LogisticRegression(random_state=random_state).fit(X, y)
     else:
         LR = LogisticRegression().fit(X, y)
-    return LR
+    df['PS'] = LR.predict_proba(X)[:,1]
+    return df
 
-def NN_matching(PS_cases, PS_controls):
+def NN_matching(df):
+    PS_cases = df[df.disease==1].PS.toarray()
+    PS_controls = df[df.disease==0].PS.toarray()
     neigh = NearestNeighbors(n_neighbors=10)
-    neigh.fit(PS_controls.reshape(-1,1))
-    distances, indices = neigh.kneighbors(PS_cases.reshape(-1,1))
+    neigh.fit(PS_controls)
+    distances, indices = neigh.kneighbors(PS_cases)
     return distances, indices
+
