@@ -11,6 +11,7 @@ import multiprocessing as mp
 from dcm2nii import dcm2nii
 from datetime import datetime as dt
 import time
+import json
 import pickle
 from utilities import basic
 from utilities.basic import get_dir, make_dir, remove_file
@@ -30,6 +31,8 @@ df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 volume_dir_dic = pd.Series(
     df_volume_dir.Directory.values, index=df_volume_dir.SeriesInstanceUID)\
         .to_dict()
+with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
+    disk_volume_dir_dic = json.load(json_file)
 dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
     usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
     'Sequence', 'NumberOfSlices'])
@@ -228,8 +231,9 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
     # create patient dir
     make_dir(get_dir(src_path))
     src_dir = get_dir(src_path)
+    
     sif_dcm_path = join(sif_dir, volume_dir_dic[sid])
-    disk_dcm_path = join(disk_data_dir, 'dcm', month_dir, pid, sid)
+    disk_dcm_path = disk_volume_dir_dic[sid]
     nii_out_path = get_dir(src_path)
     make_dir(nii_out_path)
     # Handle the case if at least one nii file already exists on the disk
