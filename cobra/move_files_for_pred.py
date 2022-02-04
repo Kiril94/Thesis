@@ -297,4 +297,4 @@ if __name__ == '__main__':
         print("Finished at: ", dt.now())
         print("Total time: ",round(time.time()-start, 3))
     else:
-        main(src_tgt_ls, procs=6)
+        main(src_tgt_ls, procs=10)

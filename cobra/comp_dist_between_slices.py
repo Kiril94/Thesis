@@ -85,10 +85,11 @@ def write_dist_to_file(write_file, series_dir, dist):
         file.write(f"{series_dir} {dist}\n")
 
 def get_distances_for_series(series_dir, 
-            aggregation_func, write_file_dir):
-    current_proc = multiprocessing.current_process()    
-    current_proc_id = int(current_proc._identity[0])
-    write_file = join(write_file_dir, f'slice_dist_{current_proc_id}.txt')
+            aggregation_func, write_file_dir, test=False):
+    if not test:
+        current_proc = multiprocessing.current_process()    
+        current_proc_id = int(current_proc._identity[0])
+        write_file = join(write_file_dir, f'slice_dist_{current_proc_id}.txt')
     sid = split(series_dir)[1]
     try:
         dcm_dirs = list_subdir(series_dir)
@@ -97,26 +98,42 @@ def get_distances_for_series(series_dir,
     sys.stdout.flush()
     try:
         dist = compute_dist_from_slice_location(dcm_dirs, aggregation_func)
-        write_dist_to_file(write_file, sid, dist)
+        if not test:
+            write_dist_to_file(write_file, sid, dist)
+        else: print(sid, dist)
     except:
         try:
             dist = compute_dist_from_img_pos_and_orientation(
                 dcm_dirs, aggregation_func)
-            write_dist_to_file(write_file_dir, sid, dist)
+            if not test:
+                write_dist_to_file(write_file_dir, sid, dist)
+            else:
+                print(sid, dist)
         except: pass
     
-def save_distance_between_slices(sids, 
+    
+def save_distance_between_slices(sids, table_dir,
     dicoms_base_dir='F:/', num_of_procs=8, 
-    write_file_dir="", aggregation_func=np.min):
+    write_file_dir="", aggregation_func=np.min, test=False):
     """Save missing tags to text."""
-    with open(join(base_dir, 'data/t1_longitudinal/sif_dir.json'), 'r') as fp:
-        sif_dir_dic = json.load(fp)
-    patient_dirs = [join(*normpath(sif_dir_dic[sid]).split(os.sep)[:2]) for sid in sids]
-    series_dirs = [join(dicoms_base_dir, patient_dirs[i], sid ) \
-                for i, sid in enumerate(sids)]
+    #with open(join(base_dir, 'data/t1_longitudinal/sif_dir.json'), 'r') as fp:
+    #    sif_dir_dic = json.load(fp)
+
+    df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
+    volume_dir_dic = pd.Series(
+    df_volume_dir.Directory.values, index=df_volume_dir.SeriesInstanceUID)\
+        .to_dict()
+
+    print([volume_dir_dic[sid] for sid in sids])
+    
+    series_dirs = [join(dicoms_base_dir, 
+                        join(
+                            *[os.path.normpath(volume_dir_dic[sid]).split(os.sep)[i] \
+                                for i in [0,1,4]])) \
+                    for sid in sids]
     get_distances_for_series_partial = partial(
         get_distances_for_series,
-        aggregation_func=aggregation_func, write_file_dir=write_file_dir) 
+        aggregation_func=aggregation_func, write_file_dir=write_file_dir, test=test)     
     with multiprocessing.Pool(num_of_procs) as pool:
                 pool.map(get_distances_for_series_partial, 
                         series_dirs)
@@ -135,41 +152,56 @@ def merge_output(write_file_dir):
 
 def get_existing_sids(all_dist_path):
     df = pd.read_csv(all_dist_path, sep=" ", header=None)
-    sids = df.iloc[:,0]
-    return sids
+    ex_sids = df.iloc[:,0]
+    return ex_sids
 def remove_existing_sids(sids, all_dist_path):
     ex_sids = get_existing_sids(all_dist_path)
+    print(len(ex_sids), 'exisiting sids')
     rest_sids = list(set(sids).difference(set(ex_sids)))
     return rest_sids
 def get_rest_sids(sids_path, all_dist_path):
     with open(sids_path, 'rb') as f:
         sids = pickle.load(f)
+    print("all", len(sids))
     sids_rest = remove_existing_sids(sids, all_dist_path)
+    print(len(sids_rest), 'remaining sids')
     return sids_rest
-def main(num_of_procs, write_file_dir, sids, aggregation_func=np.min):
-    save_distance_between_slices(sids, 
+def main(num_of_procs, write_file_dir, table_dir, sids, aggregation_func=np.min, test=False):
+    save_distance_between_slices(sids, table_dir=table_dir,
             dicoms_base_dir=dicom_base_dir, num_of_procs=num_of_procs, 
-            aggregation_func=aggregation_func, write_file_dir=write_file_dir)
-    merge_output(write_file_dir)
+            aggregation_func=aggregation_func, write_file_dir=write_file_dir,
+            test=test)
+    if not test:
+        merge_output(write_file_dir)
     return 0
 
-script_dir = os.path.realpath(__file__)
-base_dir = Path(script_dir).parent
-dicom_base_dir = "F:/CoBra/Data/dcm"
-write_file_dir = join(base_dir, 
-        'data/t1_longitudinal/distance_between_slices')
 
-sids_rest = get_rest_sids(join(base_dir, 'data/t1_longitudinal/pairs_3dt1_longitudinal_study.pkl'),
-                 join(write_file_dir, 'all_distances.txt'))
+
+
+
 
 if __name__=="__main__":
-    start=time.time()
-    print("Compute distance between slices for ", len(sids_rest), 'volumes')
-    return_status = main(2, write_file_dir, sids_rest[2:4])
-    print('finished')
-    print(f'status: {return_status}')
-    print(f'Time (min): {(time.time()-start)/60:.3f}')
-    print(dt.now())
+    script_dir = os.path.realpath(__file__)
+    base_dir = Path(script_dir).parent
+    table_dir = join(base_dir, 'data', 'tables')
+    dicom_base_dir = "F:/CoBra/Data/dcm"
+    write_file_dir = join(base_dir, 'data/t1_longitudinal/distance_between_slices')
+    sids_rest = sorted(get_rest_sids(
+        join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'),
+        join(write_file_dir, 'all_distances.txt')))
+    with open(join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'), 'rb') as f:
+        sids_rest = pickle.load(f)
+    test=True
+    if test:
+        main(1, write_file_dir='', table_dir=table_dir, sids=sids_rest[4:6], test=True)
+    else:
+        start=time.time()
+        print("Compute distance between slices for ", len(sids_rest), 'volumes')
+        return_status = main(2, write_file_dir, sids_rest)
+        print('finished')
+        print(f'status: {return_status}')
+        print(f'Time (min): {(time.time()-start)/60:.3f}')
+        print(dt.now())
 
 # For n images, how many images m can be missing
 # in order to compute the slice distance: 

@@ -16,15 +16,15 @@ import pickle
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
-disk_dir = "D:\\F"
+disk_dir = "F:"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
-download_pat_path = join(base_dir, "data/patient_groups")
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
 
-sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_longitudinal_study.pkl')
-
-
+sids_file_name = "3dt1_sids"
+sids_3d_t1_path = join(data_dir, 't1_longitudinal', f'{sids_file_name}.pkl')
+update_downloaded_files = False
+print("Using sids from the file: ", sids_3d_t1_path )
 
 #%% 
 # In[Load df]
@@ -51,10 +51,16 @@ with open(sids_3d_t1_path, 'rb') as f:
 #group_list = np.loadtxt(join(download_pat_path, "t1_neg_0.txt"),
 #                                   dtype='str')
 group_list = sids_3d_t1_ls
+if update_downloaded_files:
+    print("Save list of already downloaded volumes")
+    num_pat, num_vol = download.save_list_downloaded_volumes_and_patients()
+    print(num_pat, "Patients and", num_vol, "volumes already downloaded")
 downloaded_ls = download.get_downloaded_volumes_ls()
+print('interesection', len(set(group_list).intersection(set(downloaded_ls))))
 group_list = list(set(group_list).difference(set(downloaded_ls)))
+
 #print('Download 3dt1 scans that occur in pairs')
-print(len(group_list))
+print("Volumes still to download: ", len(group_list))
 
 #part = 0
 #start = 5000
@@ -67,12 +73,12 @@ df_group = df_group.sort_values('PatientID')
 
 print("Move ", len(df_group), "Volumes")
 print("Move ", df_group.PatientID.nunique(), "Patients")
-assert False
+
 # In case you want to download only specific sequences uncomment next lines
 #%%
 # In[Move]
-patient_log_file = join(base_dir, 'logs', f"pairs_3dt1_longitudinal_study_rest_patient_log_rest.txt" )
-volume_log_file = join(base_dir, 'logs', f"pairs_3dt1_longitudinal_study_rest_volume_log_rest.txt" )
+patient_log_file = join(base_dir, 'logs', f"{sids_file_name}_patient_log_rest.txt" )
+volume_log_file = join(base_dir, 'logs', f"{sids_file_name}_volume_log_rest.txt" )
 download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
                         dst_data_dir, patient_log_file, volume_log_file)
 
