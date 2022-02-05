@@ -7,10 +7,19 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 def compute_PS(beta, X):
-    return 1/(1+np.exp(beta[0]+beta[1:]@X.T))
+    return 1/(1+np.exp(-(beta[0]+beta[1:]@X.T)))
+
+def compute_disease_proba(df, gamma):
+    variables_cols = [col for col in df.keys() \
+        if col.startswith('x') or col.startswith('hx')]
+    disease_proba =  1/(1+np.exp(gamma[0]+gamma[1]*df.exposed\
+        +gamma[2:]@df[variables_cols].T))
+    df['disease_proba'] = disease_proba
+    return df
 
 def simulate_variables_and_PS(beta, num_variables, population_size, random_state=0):
-    X = norm.rvs(size=(population_size, num_variables), random_state=random_state)
+    X = norm.rvs(size=(population_size, num_variables), 
+                random_state=random_state)
     true_PS = compute_PS(beta, X)
     return X, true_PS 
 
@@ -44,9 +53,13 @@ def simulate_disease(df, odds_exp, OR, random_state=0):
     returns: Dataframe with disease column (0 or 1)"""
     df_exp = df[df.exposed==1]
     df_nexp = df[df.exposed==0]
+    
     if type(random_state)==int:
         rng1 = np.random.RandomState(random_state+2)
         rng2 = np.random.RandomState(random_state+3)
+    else:
+        rng1 = np.random
+        rng2 = np.random
     df_exp['disease'] = rng1.rand(len(df_exp))<odds_exp
     df_nexp['disease'] = rng2.rand(len(df_nexp))<odds_exp/OR
     df = pd.concat([df_exp, df_nexp], ignore_index=True)
