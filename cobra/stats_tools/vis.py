@@ -17,6 +17,26 @@ import seaborn as sns
 from stats_tools.colors import Color_palette
 
 
+def quickplot(x, kind='scatter', y=None, 
+        xlabel='', ylabel='', title=''):
+    plt.style.use('ggplot')
+    fig, ax = plt.subplots()
+    if y is not None:
+        if kind=='scatter':
+            ax.scatter(x, y)
+        elif kind=='plot':
+            ax.plot(x,y)
+        else:
+            print('kind ', kind,'not implemented')
+            return 1
+    else:
+        ax.hist(x)
+    ax.set_xlabel(xlabel, fontsize=18)
+    ax.set_ylabel(ylabel, fontsize=18)
+    ax.set_title(title, fontsize=22)
+    fig. tight_layout()
+
+
 
 # In[Helper]
 def ax_decorator(fig, ax,
