@@ -5,7 +5,7 @@ from sklearn.linear_model import LogisticRegression
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+from numpy.random import default_rng
 
 def get_rand_uniform(num_variables, random_state=0):
     if type(random_state)==int:
@@ -101,13 +101,16 @@ def get_num_variables(df):
 def get_num_hidden_variables(df):
     return len([k for k in df.keys() if k.startswith('hx')])
 
-def plot_variables_kde(df):
+def plot_variables_kde(df, hue='exposed'):
     num_variables = get_num_variables(df)
     fig, ax = plt.subplots(1,num_variables)
-    ax = ax.flatten()
-    for i, a in enumerate(ax):
-        if i<num_variables:
-            sns.kdeplot(data=df, x='x'+str(i), hue='exposed', ax=a,)
+    if num_variables!=1:
+        ax = ax.flatten()
+        for i, a in enumerate(ax):
+            if i<num_variables:
+                sns.kdeplot(data=df, x='x'+str(i), hue=hue, ax=a,)
+    else:
+        sns.kdeplot(data=df, x='x0', hue=hue, ax=ax,)
     fig.tight_layout()
 
 
@@ -115,6 +118,12 @@ def compute_OR_pval(df):
     ct = get_contingency_table(df)
     OR, pval = fisher_exact(ct) 
     return OR, pval
+    
+def compute_logOR_SE(df):
+    logOR = np.log(compute_OR_pval(df)[0])
+    ct = get_contingency_table(df)
+    SE = np.sqrt(np.sum(1/ct))
+    return logOR, SE 
 
 def compute_OR_95CI(df):
     OR = compute_OR_pval(df)[0]
@@ -146,6 +155,24 @@ def estimate_PS(df, random_state=0):
         LR = LogisticRegression().fit(X, y)
     df['PS'] = LR.predict_proba(X)[:,1]
     return df
+
+
+def get_positives_and_random_subset(df, n_subset, random_state=0):
+    """Selects all the sick and a random subset of size n_subset of the rest of the population"""
+    dfd = df[df.disease==1]
+    dfnd = df[df.disease==0]
+    deck = np.arange(n_subset)
+    if type(random_state)==int:
+        rng = default_rng(random_state)
+        rng.shuffle(deck)
+    else:
+        deck = np.random.shuffle(deck)
+    df_rand = dfnd.iloc[deck, :].reset_index()
+    df_subs = pd.concat([dfd, df_rand], ignore_index=True)
+    return df_subs
+
+
+# actual matching
 
 def NN_matching(df):
     PS_cases = df[df.disease==1].PS.toarray()

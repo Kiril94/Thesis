@@ -5,33 +5,28 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from utilities import matching as mat
 from utilities import matching
 import importlib
 from numpy.random import default_rng
+
 from scipy.stats import norm
 importlib.reload(matching)
 import multiprocessing as mp
 pd.options.mode.chained_assignment = None
-#%% 
-# Test
 
 #%%
 # Specify params
 num_variables = 1
-population_size = 5000
+population_size = 15000
 num_hidden_variables = 0
-true_OR = 3
+true_OR = 5
 random_state = 0
 #%%
 # Simulate exposure
-
-
 #beta_loc = list(get_rand_uniform(num_variables)-.5)
 #beta_loc.insert(0, -1)
 #beta = norm.rvs(loc=beta_loc, scale=1, size=num_variables+1, 
 #            random_state=2)
-
 fig, ax = plt.subplots()
 #ax[0].hist(beta[1:])
 #ax[0].set_xlabel('beta')
@@ -48,11 +43,22 @@ print('Number exposed', df.exposed.sum())
 
 #%%
 # test
-def get_gamma1(OR):
+#def get_gamma1(OR):
+#    """Calculate gamma in gamma*t from the OR (rare disease assumption)"""
+#    return np.log(OR)
+def get_gamma1(true_OR, gamma0):
     """Calculate gamma in gamma*t from the OR (rare disease assumption)"""
-    return np.log(OR)
-gamma0 = -4
-gamma1 = get_gamma1(true_OR)
+    np.log(true_OR)-np.log(1-(true_OR-1)*np.exp(gamma0))
+    return np.log(true_OR)
+def crude_estimation_OR(df):
+    return df[df.exposed==1].disease_proba.mean()/df[df.exposed==0].disease_proba.mean()
+def crude_estimation_dis1(df):
+    return df[df.exposed==1].disease_proba.mean()*(df.exposed==1).sum()
+def crude_estimation_dis0(df):
+    return df[df.exposed==0].disease_proba.mean()*(df.exposed==0).sum()
+print("gamma0<=", np.log(1/(true_OR-1)))
+gamma0 = -6
+gamma1 = get_gamma1(true_OR, gamma0)
 gamma = np.array([gamma0, gamma1, .1])
 #gamma_loc = list(get_rand_uniform(num_variables,2)*0.0001-2)
 #gamma_loc.insert(0, gamma1)
@@ -70,9 +76,9 @@ def compute_disease_proba(df, gamma):
     return df
 df = compute_disease_proba(df, gamma)
 #sns.kdeplot(data=df, x='disease_proba')
-print(df[df.exposed==0].disease_proba.mean()*(df.exposed==0).sum())
-print(df[df.exposed==1].disease_proba.mean()*(df.exposed==1).sum())
-print(df[df.exposed==1].disease_proba.mean()/df[df.exposed==0].disease_proba.mean())
+print("exposed and sick: ", crude_estimation_dis1(df))
+print("exposed and not sick: ", crude_estimation_dis0(df))
+print("estimation of OR:" ,crude_estimation_OR(df))
 #%%
 def simulate_disease(df, random_state=0):
     df = compute_disease_proba(df, gamma)
@@ -85,62 +91,52 @@ def simulate_disease(df, random_state=0):
 dfd = simulate_disease(df)
 ctd = matching.get_contingency_table(dfd)
 matching.plot_heatmap(ctd)
-OR, CI, pval = matching.compute_OR_CI_pval(
+OR_all, CI_all, pval_all = matching.compute_OR_CI_pval(
     dfd, print_=True, start_string='Estimated from whole population')
+logOR_all, logORSE_all = matching.compute_logOR_SE(dfd)
+print(logOR_all, logORSE_all)
 #%%
-# first simulation
-def get_true_OR(population_size):
-    df = matching.simulate_exposure(beta, 3,0,
-    population_size, random_state=False)
-    df = simulate_disease(df)
-    return matching.compute_OR_CI_pval(df) 
-OR_ls, CI_ls, pval_ls =[],[],[]
-population_size=2000
-
-start = time.time()
-#with mp.Pool(10) as pool:
-#or_ci_pval_ls = pool.map(get_true_OR, 
-#            [population_size for i in range(10)])
-print(time.time()-start)
-#%%    
-
-fig, ax = plt.subplots(1,2)
-_ = ax[0].hist(OR_ls, 30)
-ax[0].set_xlabel('OR')
-_ = ax[1].hist(pval_ls, 30)
-ax[1].set_xlabel('p')
-#%%
-
-ctd = matching.get_contingency_table(dfd)
-matching.plot_heatmap(ctd)
-OR, CI, pval = matching.compute_OR_CI_pval(
-    dfd, print_=True, start_string='Estimated from whole population')
-
-
-#%%
-# Simulate disease
-
-df = matching.simulate_disease(df, odds_exposed, true_OR)
-df = df.astype({'disease': 'int32'})
-df = df.astype({'exposed': 'int32'})
-ct = matching.get_contingency_table(df)
-matching.plot_heatmap(ct)
-OR, CI, pval = matching.compute_OR_CI_pval(df, print_=True, start_string='Estimated from whole population')
-#%%
-matching.plot_variables_kde(df)
+matching.plot_variables_kde(dfd)
+matching.plot_variables_kde(dfd, hue='disease')
 #%%
 # Select random subset
-dfd = df[df.disease==1]
-dfnd = df[df.disease==0]
-n_subset = 500
-deck = np.arange(n_subset)
-rng = default_rng(random_state)
-rng.shuffle(deck)
-df_rand = dfnd.iloc[deck, :].reset_index()
-df_subs = pd.concat([dfd, df_rand], ignore_index=True)
-OR_nm, CI_nm, pval_nm = matching.compute_OR_CI_pval(df_subs, print_=True, 
-    start_string='No matching')
+def get_positives_and_random_subset(df, n_subset, random_state=0):
+    """Selects all the sick and a random subset of size n_subset of the rest of the population"""
+    dfd = df[df.disease==1]
+    dfnd = df[df.disease==0]
+    deck = np.arange(len(dfnd))
+    if type(random_state)==int:
+        rng = default_rng(random_state)
+        rng.shuffle(deck)
+    else:
+        np.random.shuffle(deck)
+    df_rand = dfnd.iloc[deck[:n_subset], :].reset_index()
+    df_subs = pd.concat([dfd, df_rand], ignore_index=True)
+    return df_subs
+def check_OR(OR_all, CI_nm):
+    if CI_nm[0]<OR_all and CI_nm[1]>OR_all:
+        return 1
+    else:
+        return 0
+def z_test(mu1, mu2, sig1, sig2):
+    return np.abs(mu1-mu2)/np.sqrt(sig1**2+sig2**2)
 
+OR_ls = []
+OR_within_ls = []
+z_val_ls = []
+num_disease = len(dfd[dfd.disease==1])
+for i in range(40):
+    dfs = get_positives_and_random_subset(dfd, 500-num_disease, random_state=None)
+    OR_nm, CI_nm, pval_nm = matching.compute_OR_CI_pval(dfs, print_=False, 
+        start_string='No matching')
+    logOR_subs, logORSE_subs = matching.compute_logOR_SE(dfs)
+    z_val_ls.append(z_test(logOR_all, logORSE_subs, logORSE_all, logORSE_subs))
+    OR_within_ls.append(check_OR(OR_all, CI_nm))
+    OR_ls.append(OR_nm)
+print(sum(OR_within_ls))
+fig, ax = plt.subplots(1,2)
+_ = ax[0].hist(OR_ls, 30)
+_ = ax[1].hist(z_val_ls, 30)
 #%%
 # Estimate PS
 df_subs = matching.estimate_PS(df_subs)
