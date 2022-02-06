@@ -6,6 +6,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
+def get_rand_uniform(num_variables, random_state=0):
+    if type(random_state)==int:
+        rng = np.random.RandomState(random_state)
+        return rng.rand(num_variables)
+    else:
+        return np.random.rand(num_variables)
+
 def compute_PS(beta, X):
     return 1/(1+np.exp(-(beta[0]+beta[1:]@X.T)))
 
@@ -23,12 +31,13 @@ def simulate_variables_and_PS(beta, num_variables, population_size, random_state
     true_PS = compute_PS(beta, X)
     return X, true_PS 
 
-def simulate_exposure(beta, num_variables, num_hidden_variables,
+def simulate_exposure(beta, num_hidden_variables,
         population_size, random_state=0):
     """Returns dataframe with simulated, gaussian variables (mu=0, sig=1) and 
     exposure (0 or 1) for population_size patients. 
     Exposure is simulated using probabilities from a logistic model 
     (true propensity score)"""
+    num_variables = len(beta)-1
     X, true_PS = simulate_variables_and_PS(
         beta, num_variables, population_size, random_state=random_state)
     exposures = np.zeros(len(X))
