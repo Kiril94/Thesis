@@ -228,10 +228,12 @@ if __name__=="__main__":
                 names=['SeriesInstanceUID','DistanceBetweenSlices'])        
         df_dist = df_dist.drop_duplicates()
         dfc = pd.read_csv(join(table_dir, 'neg_pos_clean.csv'))
-        print(dfc.SeriesInstanceUID.nunique())
+        print("length before merging", dfc.SeriesInstanceUID.nunique())
         dfc_new = pd.merge(dfc, df_dist, on='SeriesInstanceUID', how='left')
-        print(dfc_new.SeriesInstanceUID.nunique())
+        print("length after merging", dfc_new.SeriesInstanceUID.nunique())
         print(dfc_new.head())
+        print(dfc_new[~dfc_new.DistanceBetweenSlices.isna()])
+        dfc_new.to_csv(join(table_dir,"neg_pos_clean.csv"), index=False, header=True)
 # For n images, how many images m can be missing
 # in order to compute the slice distance: 
 # m<floor(n)/2
