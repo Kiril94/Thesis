@@ -37,7 +37,7 @@ dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"),
     usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
     'Sequence', 'NumberOfSlices'])
 
-sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_longitudinal_study.pkl')
+sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_long_sids.pkl')
 with open(sids_3d_t1_path, 'rb') as f:
     sids_3dt1_long = pickle.load(f)
 sids_cases = np.loadtxt(join(pat_groups_dir, 
@@ -216,7 +216,7 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
         return 1
     sys.stdout.flush()
     src_path = src_tgt[0]
-    month_dir, pid, sid = os.path.normpath(src_path).split(os.sep)[-3:] #we will need it later
+    sid = os.path.normpath(src_path).split(os.sep)[-1] #we will need it later
     sid = sid[:-4] #remove .nii extension
     tgt_path = src_tgt[1]
     tgt_pat_dir = get_dir(tgt_path)
@@ -301,4 +301,4 @@ if __name__ == '__main__':
         print("Finished at: ", dt.now())
         print("Total time: ",round(time.time()-start, 3))
     else:
-        main(src_tgt_ls, procs=10)
+        main(src_tgt_ls, procs=12)
