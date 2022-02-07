@@ -6,7 +6,7 @@
 # July 2020 - Generalizations and modifications to the comparison logic added by B. Sutton
 # Cropping the series after identifying the minimum number of full acquisitions by reading the dicom header and limiting on AcquisitionNumber prevents sorting issues, which may lead to dropping slices mid-series... messing up the conversion to nifti
 
-import os, sys, shutil, glob
+import os, shutil, glob
 import pydicom
 
 def fix_incomplete_vols(dcm_dir):
@@ -24,7 +24,7 @@ def fix_incomplete_vols(dcm_dir):
         # get the temporal position tag for all dcm files
         # Logic for the next block is to find repeating field that prescribes acquisition. The repeating field will be counted below to define the number of slices.
         print('Scanning ' + dcmpath + ' for dcm files...')
-        volnum =[];
+        volnum =[]
         for f in dcm_list:
             try:
                 dcm_info = pydicom.filereader.dcmread(f,stop_before_pixels=True)

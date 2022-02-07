@@ -37,14 +37,7 @@ dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"),
     usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
     'Sequence', 'NumberOfSlices'])
 
-sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_long_sids.pkl')
-with open(sids_3d_t1_path, 'rb') as f:
-    sids_3dt1_long = pickle.load(f)
-sids_cases = np.loadtxt(join(pat_groups_dir, 
-                't1_pre_post_suid.txt'), dtype=str).tolist()
-df_cases_controls = dfc[dfc.SeriesInstanceUID.isin(sids_3dt1_long)]
-df_cases = df_cases_controls[df_cases_controls.SeriesInstanceUID.isin(sids_cases)]
-df_controls = df_cases_controls[~(df_cases_controls.SeriesInstanceUID.isin(sids_cases))]
+
 # %%
 def get_root_dir(path, n=2):
     return join(*os.path.normpath(path).split(os.sep)[:n])
@@ -52,9 +45,10 @@ def get_root_dir(path, n=2):
 def get_source_target_dirs(df, base_src_dir, 
             base_tgt_dir):
     return [
-        (join(base_src_dir, get_root_dir(volume_dir_dic[sid]), split(volume_dir_dic[sid])[1] +'.nii'),
+        (join(base_src_dir, get_root_dir(disk_volume_dir_dic[sid]), split(disk_volume_dir_dic[sid])[1] +'.nii'),
     join(base_tgt_dir, split(get_root_dir(volume_dir_dic[sid]))[1], split(volume_dir_dic[sid])[1] +'.nii.gz'))\
     for sid in df.SeriesInstanceUID]  
+
 def get_proc_id(test=False):
     if test:
         return 0
@@ -152,14 +146,6 @@ def summarize_problematic_files():
     with open(join(dir_, 'nii_conversion_error_sids_all.txt'), 'a+') as f:
         f.write(string)
 
-pat_sids_cases_src_tgt = get_source_target_dirs(
-    df_cases, base_src_dir=disk_nii_dir, 
-    base_tgt_dir=join(pred_input_dir, 'cases') )
-pat_sids_potential_controls_src_tgt = get_source_target_dirs(
-    df_controls, base_src_dir=disk_nii_dir, 
-    base_tgt_dir=join(pred_input_dir, 'potential_controls') )
-print("Convert only potential controls now")
-src_tgt_ls =  pat_sids_potential_controls_src_tgt #+ pat_sids_cases_src_tgt
 
 #%%
 def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
@@ -271,7 +257,8 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
                 return 1
 
 
-                
+
+
 
 
 #%%
@@ -290,6 +277,24 @@ def main(source_target_list, procs=8):
     
 
 if __name__ == '__main__':
+
+    sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_long_sids.pkl')
+    with open(sids_3d_t1_path, 'rb') as f:
+        sids_3dt1_long = pickle.load(f)
+    sids_cases = np.loadtxt(join(pat_groups_dir, 
+                    't1_pre_post_suid.txt'), dtype=str).tolist()
+    df_cases_controls = dfc[dfc.SeriesInstanceUID.isin(sids_3dt1_long)]
+    df_cases = df_cases_controls[df_cases_controls.SeriesInstanceUID.isin(sids_cases)]
+    df_controls = df_cases_controls[~(df_cases_controls.SeriesInstanceUID.isin(sids_cases))]
+    pat_sids_cases_src_tgt = get_source_target_dirs(
+        df_cases, base_src_dir=disk_nii_dir, 
+        base_tgt_dir=join(pred_input_dir, 'cases') )
+    pat_sids_potential_controls_src_tgt = get_source_target_dirs(
+        df_controls, base_src_dir=disk_nii_dir, 
+        base_tgt_dir=join(pred_input_dir, 'potential_controls') )
+    print("Convert only potential controls now")
+    src_tgt_ls =  pat_sids_potential_controls_src_tgt #+ pat_sids_cases_src_tgt
+    
     test=False
     if test:
         print('Test')
