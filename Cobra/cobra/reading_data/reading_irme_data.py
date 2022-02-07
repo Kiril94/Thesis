@@ -155,6 +155,6 @@ new_df.to_csv(f'{new_tables_path}/{rCMB_doc[:-5]}.csv',index=False)
 
 # # Get dimensions sCMB no CMB
 # meta_data = get_dimensions(data_path)
-# meta_data.to_csv(f"{new_tables_path}/nifti_metadata.csv")
+# meta_data.to_csv(f"{new_tables_path}/nifti_metadata.csv",index=False)
 
 

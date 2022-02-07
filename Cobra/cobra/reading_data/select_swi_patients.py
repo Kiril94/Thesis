@@ -61,6 +61,7 @@ swi_pos_scans.dropna(subset=column_subset)
 swi_pos_scans = save_nscans(swi_pos_scans,f'{csv_folder}/{csv_swi_file_name}.csv')
 
 #Save extra files to send to computerome
-swi_pos_scans['PatientID'].to_csv(f'{csv_folder}/{label}_patientIds.csv')
-swi_pos_scans['DateTime'].to_csv(f'{csv_folder}/{label}_dateTime.csv')
+swi_pos_scans['PatientID'].to_csv(f'{csv_folder}/{label}_patientIds.csv',index=False)
+swi_pos_scans['DateTime'].to_csv(f'{csv_folder}/{label}_dateTime.csv',index=False)
+
 

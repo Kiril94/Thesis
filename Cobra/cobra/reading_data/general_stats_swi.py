@@ -13,16 +13,16 @@ from utilities.utils import load_scan_csv,df_unique_values,find_n_slices,save_ns
 from stats_tools.vis import create_1d_hist,create_2d_hist,create_boxplot
 import matplotlib.pyplot as plt 
 
-label = 'swi_neg'
+label = 'swi_pos'
 
 main_folder = "/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra"
 figs_folder = f'{main_folder}/figs/cmb_stats'
 csv_folder = f"{main_folder}/tables"
 csv_file_name = f"{label}_scans"
 
-swi_pos_scans =  load_scan_csv(f'{csv_folder}/{csv_file_name}.csv')
-n_scans = swi_pos_scans.shape[0]
-n_patients = swi_pos_scans.drop_duplicates(subset='PatientID').shape[0]
+swi_scans =  load_scan_csv(f'{csv_folder}/{csv_file_name}.csv')
+n_scans = swi_scans.shape[0]
+n_patients = swi_scans.drop_duplicates(subset='PatientID').shape[0]
 print(f'Number of scans:\t{n_scans}\nNumber of patients:\t{n_patients}')
 
 
@@ -33,15 +33,15 @@ print(f'Number of scans:\t{n_scans}\nNumber of patients:\t{n_patients}')
 # - From the patients with multiple scans, we have taken the last scan
 #################################################################################################
 
-n_scans = swi_pos_scans.shape[0]
-n_patients = swi_pos_scans.drop_duplicates(subset='PatientID').shape[0]
+n_scans = swi_scans.shape[0]
+n_patients = swi_scans.drop_duplicates(subset='PatientID').shape[0]
 print(f'AFTER FILTERING\nNumber of scans:\t{n_scans}\nNumber of patients:\t{n_patients}')
 
 #Series Description
-print(swi_pos_scans['SeriesDescription'].unique())
+print(swi_scans['SeriesDescription'].unique())
 
 # Slice thickness distribution (Nominal slice thickness, in mm.)
-thick_values = np.array(swi_pos_scans['SliceThickness'].dropna())
+thick_values = np.array(swi_scans['SliceThickness'].dropna())
 thick_min,thick_max = -0.5,11.5
 fig,ax = plt.subplots()
 ax.set(ylabel='Counts', xlabel='Slice Thickness [mm]')
@@ -50,7 +50,7 @@ fig.savefig(f'{figs_folder}/{label}_sliceThickness.png')
 
 #Spacing between slices distribution 
 #(Spacing between slices, in mm. The spacing is measured from the center-to-center of each slice.)
-spacing_values = np.array(swi_pos_scans['SpacingBetweenSlices'].dropna())
+spacing_values = np.array(swi_scans['SpacingBetweenSlices'].dropna())
 spacing_min,spacing_max = -0.5,10.5
 fig,ax = plt.subplots()
 ax.set(ylabel='Counts', xlabel='Spacing between slices (center-to-center) [mm]')
@@ -59,7 +59,7 @@ fig.savefig(f'{figs_folder}/{label}_SpacingBetweenSlices.png')
 
 #Uncovered space
 #(Spacing between slices - Slice thickness)
-uncovered_space = (swi_pos_scans['SpacingBetweenSlices']-swi_pos_scans['SliceThickness']).dropna()
+uncovered_space = (swi_scans['SpacingBetweenSlices']-swi_scans['SliceThickness']).dropna()
 uncov_min,uncov_max = np.min(uncovered_space),np.max(uncovered_space)
 fig,ax = plt.subplots()
 ax.set(ylabel='Counts', xlabel='(Spacing between slices - Slice thickness) [mm]')
@@ -67,12 +67,12 @@ create_1d_hist(ax,uncovered_space,9,(uncov_min-0.5,uncov_max+0.5),f'Uncovered/Ov
 fig.savefig(f'{figs_folder}/{label}_uncoveredSpce.png')
 
 #Do the patients with overlap 1 mm have the same resolution
-mask = ( (swi_pos_scans['SliceThickness']>=1.5) & (swi_pos_scans['SliceThickness']<2.5) & (swi_pos_scans['SpacingBetweenSlices']>=0.5) & (swi_pos_scans['SpacingBetweenSlices']<1.5) )
-print(f"N.patients with Spacing between slices = 1 and Slice thickness = 2 : \t {np.shape(swi_pos_scans[mask])[0]}")
+mask = ( (swi_scans['SliceThickness']>=1.5) & (swi_scans['SliceThickness']<2.5) & (swi_scans['SpacingBetweenSlices']>=0.5) & (swi_scans['SpacingBetweenSlices']<1.5) )
+print(f"N.patients with Spacing between slices = 1 and Slice thickness = 2 : \t {np.shape(swi_scans[mask])[0]}")
 
 #Pixel spacing distribution 
 #Physical distance in the patient between the center of each pixel
-px_spacing_values = swi_pos_scans['PixelSpacing'].dropna()
+px_spacing_values = swi_scans['PixelSpacing'].dropna()
 px_spacing_values = list(filter(lambda x: len(x)>0,px_spacing_values))
 px_spacing_x = np.array([float(px[0].split(' ')[0][1:]) for px in px_spacing_values])
 px_spacing_y = np.array([float(px[0].split(' ')[1][:-1]) for px in px_spacing_values])
@@ -87,7 +87,7 @@ fig.savefig(f'{figs_folder}/{label}_pixelSpacing.png')
 
 
 ##Magnetic field strength
-b_values = np.array(swi_pos_scans['MagneticFieldStrength'].dropna())
+b_values = np.array(swi_scans['MagneticFieldStrength'].dropna())
 b_min,b_max = np.min(b_values),np.max(b_values)
 fig,ax = plt.subplots()
 ax.set(ylabel='Counts', xlabel=f'B$_0$ [T]')
@@ -95,7 +95,7 @@ create_1d_hist(ax,b_values,4,(1.25,3.25),f'Magnetic Field Strength for {label}',
 fig.savefig(f'{figs_folder}/{label}_magneticFieldStrength.png')
 
 ##Echo time
-b_values = np.array(swi_pos_scans['EchoTime'].dropna())
+b_values = np.array(swi_scans['EchoTime'].dropna())
 b_min,b_max = np.min(b_values),np.max(b_values)
 fig,ax = plt.subplots()
 ax.set(ylabel='Counts', xlabel=f'time [ms]')
@@ -103,11 +103,11 @@ create_1d_hist(ax,b_values,6,(-5,55),f'Echo Time for {label}',display_counts=Tru
 fig.savefig(f'{figs_folder}/{label}_echoTime.png')
 
 #Box plot for dimensions
-swi_pos_scans.drop(index=2) #No slices in the folder????
+swi_scans.drop(index=2) #No slices in the folder????
  
-x_dim = swi_pos_scans['Rows']
-y_dim = swi_pos_scans['Columns']
-z_dim = swi_pos_scans['NumberOfSlices']
+x_dim = swi_scans['Rows']
+y_dim = swi_scans['Columns']
+z_dim = swi_scans['NumberOfSlices']
 
 fig,ax=plt.subplots(1,2,figsize=(12,5))
 ax = ax.flatten()

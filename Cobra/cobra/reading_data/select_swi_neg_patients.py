@@ -72,8 +72,8 @@ for date in creation_date:
 
 swi_neg_scans['DateTime'] = np.array(date_time).astype(str)
 
-swi_neg_scans['DateTime'].to_csv(f'{csv_folder}/swi_neg_dateTime.csv')
+swi_neg_scans['DateTime'].to_csv(f'{csv_folder}/swi_neg_dateTime.csv',index=False)
 
 # #Save extra files to send to computerome
-swi_neg_scans['PatientID'].to_csv(f'{csv_folder}/swi_neg_patientIds.csv')
-swi_neg_scans.to_csv(f'{csv_folder}/{csv_swi_file_name}.csv')
+swi_neg_scans['PatientID'].to_csv(f'{csv_folder}/swi_neg_patientIds.csv',index=False)
+swi_neg_scans.to_csv(f'{csv_folder}/{csv_swi_file_name}.csv',index=False)
