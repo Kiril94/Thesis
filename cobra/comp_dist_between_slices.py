@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 from functools import partial
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def get_value_from_header(dcm_dir, key):
     dcm = dcmread(dcm_dir)
@@ -55,22 +56,21 @@ def compute_dist_from_slice_location(dcm_dirs, aggregating_func, test=False):
         else:
             return slice_dist
 
-def get_value_from_header_except(dcm_dirs, file_num):
+def get_value_from_header_except(dcm_dirs, value, file_num=0):
     if file_num==int(len(dcm_dirs)/2):
         return None 
     try:
-        cosines = get_value_from_header(dcm_dirs[file_num], 
-            'ImageOrientationPatient')
+        cosines = get_value_from_header(dcm_dirs[file_num], value)
         return cosines
     except:
         file_num+=1
-        cosines = get_value_from_header(dcm_dirs[file_num],
-            'ImageOrientationPatient')
+        cosines = get_value_from_header_except(dcm_dirs, value, file_num)
         return cosines
 
 def compute_dist_from_img_pos_and_orientation(dcm_dirs, aggregation_func, test=False):
-    cosines = get_value_from_header_except(dcm_dirs, file_num=0)
-    assert cosines is not None, "cosines is None"
+    cosines = get_value_from_header_except(dcm_dirs, value='ImageOrientationPatient', file_num=0)
+    if cosines is None:
+        return -1
     normal = np.cross(cosines[:3], cosines[3:])
     distances = []
     n_missing = 0
@@ -120,6 +120,7 @@ def get_distances_for_series(series_dir,
         if dist==-1:
             sys.stdout.flush()
             print('x', end='')
+            print(sid)
         else: 
             if not test:
                 sys.stdout.flush()
@@ -203,28 +204,34 @@ with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
     volume_dir_dic = json.load(json_file)
 
 if __name__=="__main__":
-    #rest_sids = sorted(get_rest_sids(
-    #    join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'),
-    #    join(write_file_dir, 'all_distances.txt')))
-    with open(join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'), 'rb') as f:
-        sids = pickle.load(f)
-    test=False
-    if test:
-        main(1, write_file_dir='', volume_dir_dic=volume_dir_dic, sids=sids[:10], test=True)
+    compute_distance = False
+    if compute_distance:
+        rest_sids = sorted(get_rest_sids(
+            join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'),
+            join(write_file_dir, 'all_distances.txt')))
+        #with open(join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'), 'rb') as f:
+        #    sids = pickle.load(f)
+        test=False
+        if test:
+            main(1, write_file_dir='', volume_dir_dic=volume_dir_dic, sids=rest_sids[:2], test=True)
+        else:
+            start=time.time()
+            print("Compute distance between slices for ", len(rest_sids), 'volumes')
+            return_status = main(10, write_file_dir, volume_dir_dic, rest_sids)
+            print('finished')
+            print(f'status: {return_status}')
+            print(f'Time (min): {(time.time()-start)/60:.3f}')
+            print(dt.now())
     else:
-        start=time.time()
-        print("Compute distance between slices for ", len(sids), 'volumes')
-        return_status = main(14, write_file_dir, volume_dir_dic, sids)
-        print('finished')
-        print(f'status: {return_status}')
-        print(f'Time (min): {(time.time()-start)/60:.3f}')
-        print(dt.now())
-    assert False
-    distance_path = "C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\distance_between_slices\\all_distances.txt"
-    df_dist = pd.read_csv(distance_path, header=None, delimiter=' ', 
-            names=['SeriesInstanceUID','DistanceBetweenSlices'])        
-    df_dist = df_dist.drop_duplicates()
-    print(df_dist.DistanceBetweenSlices.max())
+        all_dist_path =  join(write_file_dir, 'all_distances.txt')
+        df_dist = pd.read_csv(all_dist_path, header=None, delimiter=' ', 
+                names=['SeriesInstanceUID','DistanceBetweenSlices'])        
+        df_dist = df_dist.drop_duplicates()
+        dfc = pd.read_csv(join(table_dir, 'neg_pos_clean.csv'))
+        print(dfc.SeriesInstanceUID.nunique())
+        dfc_new = pd.merge(dfc, df_dist, on='SeriesInstanceUID', how='left')
+        print(dfc_new.SeriesInstanceUID.nunique())
+        print(dfc_new.head())
 # For n images, how many images m can be missing
 # in order to compute the slice distance: 
 # m<floor(n)/2
