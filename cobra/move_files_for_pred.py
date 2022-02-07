@@ -42,6 +42,10 @@ def get_part_of_path(path, start, stop=None):
 
 def get_source_target_dirs(df, disk_volume_dir_dic_dcm, disk_volume_dir_dic_nii,
                         sif_volume_dir_dic):
+    """Creates a list of tuples with source dir and target dir. 
+    If nii is present on disk, use this file as source, 
+    elif dicom no disk use dicom dir as source 
+    else use dcm dir on sif as src"""
     sids_all = set(df.SeriesInstanceUID)
     sids_disk_nii = set(disk_volume_dir_dic_nii.keys())
     sids_disk_dcm = set(disk_volume_dir_dic_dcm.keys())
@@ -49,16 +53,17 @@ def get_source_target_dirs(df, disk_volume_dir_dic_dcm, disk_volume_dir_dic_nii,
     sids_nii_disk_ls = list(sids_all.intersection(sids_disk_nii))
     sids_dcm_disk_ls = list((sids_all.difference(sids_disk_nii)).intersection(sids_disk_dcm))
     sids_dcm_sif_ls = list(sids_all.difference(set(sids_dcm_disk_ls)))
-
+    
     nii_disk_dirs_ls = [disk_volume_dir_dic_nii[sid] for sid in sids_nii_disk_ls]
     dcm_disk_dirs_ls = [disk_volume_dir_dic_dcm[sid] for sid in sids_dcm_disk_ls]
     dcm_sif_dirs_ls = [sif_volume_dir_dic[sid] for sid in sids_dcm_sif_ls]
     disk_source_dirs_ls = nii_disk_dirs_ls + dcm_disk_dirs_ls
-    print(len(sids_dcm_sif_ls))
-    move_nii_src_tgt = [( dr, 
-        join(get_root_dir(dr,3)), get_part_of_path(dr, 5) )\
-                for dr in nii_disk_dirs_ls]]
+    print(len(sids_dcm_sif_ls), 'dcms not in dict')
+    disk_src_tgt = [( dr, 
+        join(get_root_dir(dr,3)), 'nii', get_part_of_path(dr, 5)+'.gz')\
+                for dr in disk_source_dirs_ls]
     assert False
+    return disk_src_tgt
 def get_proc_id(test=False):
     if test:
         return 0
@@ -292,7 +297,7 @@ if __name__ == '__main__':
     
     with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
         disk_volume_dir_dic_dcm = json.load(json_file)
-    with open(join(table_dir, "disk_series_directories_nii.json"), "r") as json_file:
+    with open(join(table_dir, "disk_series_directories_niis.json"), "r") as json_file:
         disk_volume_dir_dic_nii = json.load(json_file)
     dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
         usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
@@ -302,9 +307,10 @@ if __name__ == '__main__':
         sids_3dt1_long = pickle.load(f)
     sids_cases = np.loadtxt(join(pat_groups_dir, 
                     't1_pre_post_suid.txt'), dtype=str).tolist()
-    df_cases_controls = dfc[dfc.SeriesInstanceUID.isin(sids_3dt1_long)]
-    df_cases = df_cases_controls[df_cases_controls.SeriesInstanceUID.isin(sids_cases)]
-    df_controls = df_cases_controls[~(df_cases_controls.SeriesInstanceUID.isin(sids_cases))]
+    sids_3d_t1_long_cases = list(set(sids_3dt1_long).intersection(set(sids_cases)))
+    sids_3d_t1_long_controls = list(set(sids_3dt1_long).difference(set(sids_cases)))
+    df_cases = dfc[dfc.SeriesInstanceUID.isin(sids_3d_t1_long_cases)]
+    df_controls = dfc[~(dfc.SeriesInstanceUID.isin(sids_3d_t1_long_controls))]
     pat_sids_cases_src_tgt = get_source_target_dirs(df_cases, disk_volume_dir_dic_dcm,
                                       disk_volume_dir_dic_nii, sif_volume_dir_dic)
     pat_sids_potential_controls_src_tgt = get_source_target_dirs(

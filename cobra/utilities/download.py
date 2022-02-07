@@ -102,10 +102,12 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                 volume_uid = split(volume_src)[1]
                 volume_dst = join(dst_dir, patient_dir, volume_uid)
                 if not os.path.isdir(volume_dst):
-                        with open(volume_log_file, mode="w") as f:
-                            f.write(volume_dst)
-                        shutil.copytree(volume_src, volume_dst)
-                        print("|",  end='')
+                    with open(volume_log_file, mode="w") as f:
+                        f.write(volume_dst)
+                    shutil.copytree(volume_src, volume_dst)
+                    print("|",  end='')
+                elif len(os.listdir(volume_dst))==0:
+                    os.remove(volume_dst)
                 else:
                     print(volume_dst, 'already exists.')
 
