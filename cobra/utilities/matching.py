@@ -105,6 +105,13 @@ def get_positives_and_random_subset(df, n_subset, random_state=0):
     return df_subs
 
 ####################evaluation##############################
+
+def compute_bias(estimated_OR, true_OR):
+    """estimate bias as in https://academic.oup.com/aje/article/158/3/280/70529"""
+    return ((estimated_OR/true_OR)-1)*100
+
+def estimate_precision(logOR_SE_ls):
+    return np.median(logOR_SE_ls)
 def crude_estimation_OR(df, RR=False):
     """Estimation of the OR or RR if RR==True, 
     from the disease probabilities. 
