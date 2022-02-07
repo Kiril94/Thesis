@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from numpy.random import default_rng
 
+
+######################Simulate population##############
 def get_rand_uniform(num_variables, random_state=0):
     if type(random_state)==int:
         rng = np.random.RandomState(random_state)
@@ -20,8 +22,8 @@ def compute_PS(beta, X):
 def compute_disease_proba(df, gamma):
     variables_cols = [col for col in df.keys() \
         if col.startswith('x') or col.startswith('hx')]
-    disease_proba =  1/(1+np.exp(gamma[0]+gamma[1]*df.exposed\
-        +gamma[2:]@df[variables_cols].T))
+    disease_proba =  1/(1+np.exp(-(gamma[0]+gamma[1]*df.exposed\
+        +gamma[2:]@df[variables_cols].T)))
     df['disease_proba'] = disease_proba
     return df
 
@@ -53,6 +55,19 @@ def simulate_exposure(beta, num_hidden_variables,
     df = pd.DataFrame(data=df_data, columns=df_columns)
     return df
 
+def get_gamma1(true_OR, gamma0):
+    """ crude estimate: np.log(true_OR)
+    Calculate gamma in gamma*t from the OR (rare disease assumption)"""
+    gamma0_max = np.log(1/(true_OR-1))
+    assert gamma0<=gamma0_max, f'gamma0>np.log(1/(true_OR-1))={gamma0_max:.3f}'
+    return np.log(true_OR)-np.log(1-(true_OR-1)*np.exp(gamma0))
+
+def get_gamma(gamma0, true_OR, gamma_ls):
+    gamma1 = get_gamma1(true_OR, gamma0)
+    gamma = np.array([gamma0, gamma1, *gamma_ls])
+    return gamma
+
+
 def simulate_disease(df, odds_exp, OR, random_state=0):
     """
     Parameters:
@@ -75,8 +90,40 @@ def simulate_disease(df, odds_exp, OR, random_state=0):
     df['disease'] = df['disease']*1
     return df
 
+def get_positives_and_random_subset(df, n_subset, random_state=0):
+    """Selects all the sick and a random subset of size n_subset of the rest of the population"""
+    dfd = df[df.disease==1]
+    dfnd = df[df.disease==0]
+    deck = np.arange(len(dfnd))
+    if type(random_state)==int:
+        rng = default_rng(random_state)
+        rng.shuffle(deck)
+    else:
+        np.random.shuffle(deck)
+    df_rand = dfnd.iloc[deck[:n_subset], :].reset_index()
+    df_subs = pd.concat([dfd, df_rand], ignore_index=True)
+    return df_subs
 
-# evaluation
+####################evaluation##############################
+def crude_estimation_OR(df, RR=False):
+    """Estimation of the OR or RR if RR==True, 
+    from the disease probabilities. 
+    only works if gamma_i, i>1, is small"""
+    d1e1 = df[df.exposed==1].disease_proba.median()
+    print(d1e1)
+    d0e1 = 1 - d1e1
+    d1e0 = df[df.exposed==0].disease_proba.median()
+    print(d1e0)
+    d0e0 = 1 - d1e0
+    if RR:
+        return d1e1/d1e0
+    else:
+        return d0e0*d1e1/(d1e0*d0e1)
+def crude_estimation_exp1dis1(df):
+    return df[df.exposed==1].disease_proba.mean()*(df.exposed==1).sum()
+def crude_estimation_exp0dis1(df):
+    return df[df.exposed==0].disease_proba.mean()*(df.exposed==0).sum()
+
 def get_contingency_table(df, two_by_two=True):
     ct = pd.crosstab(index=df['exposed'], columns=df['disease'], margins=True)
     if two_by_two:
@@ -98,6 +145,7 @@ def plot_heatmap(ct):
 
 def get_num_variables(df):
     return len([k for k in df.keys() if k.startswith('x')])
+
 def get_num_hidden_variables(df):
     return len([k for k in df.keys() if k.startswith('hx')])
 
@@ -113,7 +161,6 @@ def plot_variables_kde(df, hue='exposed'):
         sns.kdeplot(data=df, x='x0', hue=hue, ax=ax,)
     fig.tight_layout()
 
-
 def compute_OR_pval(df):
     ct = get_contingency_table(df)
     OR, pval = fisher_exact(ct) 
@@ -122,8 +169,8 @@ def compute_OR_pval(df):
 def compute_logOR_SE(df):
     logOR = np.log(compute_OR_pval(df)[0])
     ct = get_contingency_table(df)
-    SE = np.sqrt(np.sum(1/ct))
-    return logOR, SE 
+    logOR_SE = np.sqrt(np.sum(1/ct))
+    return logOR, logOR_SE 
 
 def compute_OR_95CI(df):
     OR = compute_OR_pval(df)[0]
@@ -142,18 +189,28 @@ def compute_OR_CI_pval(df, print_=False, start_string=''):
             f'({CI[0]:.2f},{CI[1]:.2f})', '\n    p =', p_val)
     return OR, CI, p_val
 
+def z_test(df1, df2):
+    logOR1, logOR_SE1 = compute_logOR_SE(df1)
+    logOR2, logOR_SE2 = compute_logOR_SE(df2)
+    return np.abs(logOR1-logOR2)/np.sqrt(logOR_SE1**2+logOR_SE2**2)
 
-def estimate_PS(df, random_state=0):
+def run_logistic_regression(df, outcome='exposed',random_state=0):
+    # Predicts probability of being exposed
     num_variables = get_num_variables(df)
     variables_columns = ['x'+str(i) for i \
         in range(num_variables)]
     X = df[variables_columns]
-    y = df['exposed']
+    y = df[outcome]
     if type(random_state)==int:
         LR = LogisticRegression(random_state=random_state).fit(X, y)
     else:
         LR = LogisticRegression().fit(X, y)
-    df['PS'] = LR.predict_proba(X)[:,1]
+    if outcome=='exposed':
+        df['PS'] = LR.predict_proba(X)[:,1]
+    elif outcome=='disease':
+        df['P_disease'] = LR.predict_proba(X)[:,1]
+    else:
+        print("Choose either exposed or disease as outcome")
     return df
 
 
