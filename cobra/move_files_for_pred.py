@@ -222,6 +222,9 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
             else:
                 if check_if_philips(src_path)==0:
                     if fix_dcm_incomplete_vols.fix_incomplete_vols(src_path)==0:
+                        #now we have to adjust the src dir
+                        new_disk_dcm_src = join(src_path, 'corrected')
+                        src_tgt[0] = new_disk_dcm_src
                         return move_and_gz_files(src_tgt, test, trial)
                     else:
                         print('x')
