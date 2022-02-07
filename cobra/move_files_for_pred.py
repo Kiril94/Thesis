@@ -26,29 +26,39 @@ base_dir = Path(script_dir).parent
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
 pat_groups_dir = join(data_dir, 'patient_groups')
-
 df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
-volume_dir_dic = pd.Series(
-    df_volume_dir.Directory.values, index=df_volume_dir.SeriesInstanceUID)\
-        .to_dict()
-with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
-    disk_volume_dir_dic = json.load(json_file)
-dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
-    usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
-    'Sequence', 'NumberOfSlices'])
-
-
+sif_volume_dir_dic = pd.Series(
+        df_volume_dir.Directory.values, index=df_volume_dir.SeriesInstanceUID)\
+            .to_dict()
 # %%
 def get_root_dir(path, n=2):
     return join(*os.path.normpath(path).split(os.sep)[:n])
 
-def get_source_target_dirs(df, base_src_dir, 
-            base_tgt_dir):
-    return [
-        (join(base_src_dir, get_root_dir(disk_volume_dir_dic[sid]), split(disk_volume_dir_dic[sid])[1] +'.nii'),
-    join(base_tgt_dir, split(get_root_dir(volume_dir_dic[sid]))[1], split(volume_dir_dic[sid])[1] +'.nii.gz'))\
-    for sid in df.SeriesInstanceUID]  
+def get_part_of_path(path, start, stop=None):
+    if stop==None:
+        return os.path.normpath(path).split(os.sep)[start:]
+    else:
+        return os.path.normpath(path).split(os.sep)[start:stop]
 
+def get_source_target_dirs(df, disk_volume_dir_dic_dcm, disk_volume_dir_dic_nii,
+                        sif_volume_dir_dic):
+    sids_all = set(df.SeriesInstanceUID)
+    sids_disk_nii = set(disk_volume_dir_dic_nii.keys())
+    sids_disk_dcm = set(disk_volume_dir_dic_dcm.keys())
+
+    sids_nii_disk_ls = list(sids_all.intersection(sids_disk_nii))
+    sids_dcm_disk_ls = list((sids_all.difference(sids_disk_nii)).intersection(sids_disk_dcm))
+    sids_dcm_sif_ls = list(sids_all.difference(set(sids_dcm_disk_ls)))
+
+    nii_disk_dirs_ls = [disk_volume_dir_dic_nii[sid] for sid in sids_nii_disk_ls]
+    dcm_disk_dirs_ls = [disk_volume_dir_dic_dcm[sid] for sid in sids_dcm_disk_ls]
+    dcm_sif_dirs_ls = [sif_volume_dir_dic[sid] for sid in sids_dcm_sif_ls]
+    disk_source_dirs_ls = nii_disk_dirs_ls + dcm_disk_dirs_ls
+    print(len(sids_dcm_sif_ls))
+    move_nii_src_tgt = [( dr, 
+        join(get_root_dir(dr,3)), get_part_of_path(dr, 5) )\
+                for dr in nii_disk_dirs_ls]]
+    assert False
 def get_proc_id(test=False):
     if test:
         return 0
@@ -217,8 +227,9 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
     # create patient dir
     make_dir(get_dir(src_path))
     src_dir = get_dir(src_path)
-    
-    sif_dcm_path = join(sif_dir, volume_dir_dic[sid])
+    ### this has to be fixed!!!!!!!!!!!!!!!!!!!!
+    asassaasasas
+    sif_dcm_path = join(sif_dir, sif_volume_dir_dic[sid])
     disk_dcm_path = disk_volume_dir_dic[sid]
     nii_out_path = get_dir(src_path)
     make_dir(nii_out_path)
@@ -277,7 +288,15 @@ def main(source_target_list, procs=8):
     
 
 if __name__ == '__main__':
-
+    
+    
+    with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
+        disk_volume_dir_dic_dcm = json.load(json_file)
+    with open(join(table_dir, "disk_series_directories_nii.json"), "r") as json_file:
+        disk_volume_dir_dic_nii = json.load(json_file)
+    dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
+        usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
+        'Sequence', 'NumberOfSlices'])
     sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_long_sids.pkl')
     with open(sids_3d_t1_path, 'rb') as f:
         sids_3dt1_long = pickle.load(f)
@@ -286,9 +305,8 @@ if __name__ == '__main__':
     df_cases_controls = dfc[dfc.SeriesInstanceUID.isin(sids_3dt1_long)]
     df_cases = df_cases_controls[df_cases_controls.SeriesInstanceUID.isin(sids_cases)]
     df_controls = df_cases_controls[~(df_cases_controls.SeriesInstanceUID.isin(sids_cases))]
-    pat_sids_cases_src_tgt = get_source_target_dirs(
-        df_cases, base_src_dir=disk_nii_dir, 
-        base_tgt_dir=join(pred_input_dir, 'cases') )
+    pat_sids_cases_src_tgt = get_source_target_dirs(df_cases, disk_volume_dir_dic_dcm,
+                                      disk_volume_dir_dic_nii, sif_volume_dir_dic)
     pat_sids_potential_controls_src_tgt = get_source_target_dirs(
         df_controls, base_src_dir=disk_nii_dir, 
         base_tgt_dir=join(pred_input_dir, 'potential_controls') )
