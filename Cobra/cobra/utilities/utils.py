@@ -245,7 +245,7 @@ def save_nscans(data_frame,csv_file_path,print_level=0):
             print(f'Scan number {index}/{data_frame.shape[0]} \t {(time.time()-start)/60} minutes')
         n_slices.append(find_n_slices(row['PatientID'],row['StudyInstanceUID'],row['SeriesInstanceUID']))
     data_frame['NumberOfSlices'] = n_slices
-    data_frame.to_csv(csv_file_path)
+    data_frame.to_csv(csv_file_path,index=False)
 
     return data_frame
 
