@@ -13,7 +13,8 @@ from datetime import datetime as dt
 import time
 import json
 import pickle
-from utilities import basic
+from utilities import basic, fix_dcm_incomplete_vols
+from pydicom import dcmread
 from utilities.basic import get_dir, make_dir, remove_file
 #%%
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
@@ -36,34 +37,12 @@ def get_root_dir(path, n=2):
 
 def get_part_of_path(path, start, stop=None):
     if stop==None:
-        return os.path.normpath(path).split(os.sep)[start:]
+        return join(*os.path.normpath(path).split(os.sep)[start:])
     else:
-        return os.path.normpath(path).split(os.sep)[start:stop]
+        return join(*os.path.normpath(path).split(os.sep)[start:stop])
 
-def get_source_target_dirs(df, disk_volume_dir_dic_dcm, disk_volume_dir_dic_nii,
-                        sif_volume_dir_dic):
-    """Creates a list of tuples with source dir and target dir. 
-    If nii is present on disk, use this file as source, 
-    elif dicom no disk use dicom dir as source 
-    else use dcm dir on sif as src"""
-    sids_all = set(df.SeriesInstanceUID)
-    sids_disk_nii = set(disk_volume_dir_dic_nii.keys())
-    sids_disk_dcm = set(disk_volume_dir_dic_dcm.keys())
 
-    sids_nii_disk_ls = list(sids_all.intersection(sids_disk_nii))
-    sids_dcm_disk_ls = list((sids_all.difference(sids_disk_nii)).intersection(sids_disk_dcm))
-    sids_dcm_sif_ls = list(sids_all.difference(set(sids_dcm_disk_ls)))
-    
-    nii_disk_dirs_ls = [disk_volume_dir_dic_nii[sid] for sid in sids_nii_disk_ls]
-    dcm_disk_dirs_ls = [disk_volume_dir_dic_dcm[sid] for sid in sids_dcm_disk_ls]
-    dcm_sif_dirs_ls = [sif_volume_dir_dic[sid] for sid in sids_dcm_sif_ls]
-    disk_source_dirs_ls = nii_disk_dirs_ls + dcm_disk_dirs_ls
-    print(len(sids_dcm_sif_ls), 'dcms not in dict')
-    disk_src_tgt = [( dr, 
-        join(get_root_dir(dr,3)), 'nii', get_part_of_path(dr, 5)+'.gz')\
-                for dr in disk_source_dirs_ls]
-    assert False
-    return disk_src_tgt
+
 def get_proc_id(test=False):
     if test:
         return 0
@@ -86,78 +65,43 @@ def move_compress(src, tgt):
                 with gzip.open(tgt, 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
 
-def dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, sid, test, trial, timeout=2000):
+def dcm2nii_safe(disk_dcm_path, nii_out_path, sid, test,  timeout=2000):
     "Only keep dicoms if dcm2nii converter returns 0"
-    if trial<=1 and os.path.isdir(disk_dcm_path):
-        if test:
-                log_(disk_dcm_path + " exists, start nii conversion")
-                start=time.time()
-        print(get_proc_id(test), " Convert from disk")
-        dcm2nii_out = dcm2nii.convert_dcm2nii(
-            disk_dcm_path, nii_out_path, verbose=0, op_sys=0,
-                    output_filename='%j', create_info_json='y', timeout=timeout)
-        if test:
-                log_("The conversion took "+str(round(time.time()-start,3))+'s')
-                if dcm2nii_out==1:
-                    log_("conversion from disk fail")
-                else:
-                    log_("conversion from disk success")
-        
-        if dcm2nii_out==0:
-            print(get_proc_id(test), " worked")
-            return 0
-        elif dcm2nii_out==1: #if dcm2nii produces error, remove all the output files
-            if not test:
-                    write_problematic_files(disk_dcm_path, test)
-            if len(os.listdir(disk_dcm_path))==len(os.listdir(sif_dcm_path)):
-                print(get_proc_id(test), "Error from conversion on disk, but same data on sif")
-                return 0
-            else:
-                print(get_proc_id(test), "There is more data on sif, use this!")
-                rm_files = [f for f in os.listdir(nii_out_path) if f.startswith(sid)]
-                for rm_file in rm_files:
-                    remove_file(rm_file)
-                    return 1 
-    else:
-        print(get_proc_id(test), " convert from sif")
-        if not os.path.isdir(sif_dcm_path):
-            write_problematic_files(sif_dcm_path, test)
-            print("DCM missing on sif")
-            return 1
-        if test:
-                log_('dicoms for ' + sid + ' do not exist on disk')
-                log_('Convert directly from sif') 
-                start=time.time()            
-        dcm2nii_out = dcm2nii.convert_dcm2nii(
-            sif_dcm_path, nii_out_path, verbose=0, op_sys=0,
-                    output_filename='%j', create_info_json='y', timeout=timeout)
-        if test:
-                log_("The conversion took "+str(round(time.time()-start,3))+'s')
-                if dcm2nii_out==1:
-                    log_("Conversion from sif error, write file path to problematic files")
-                else:
-                    log_("Conversion from sif success") 
-        if dcm2nii_out==0:
-            print(get_proc_id(test), " worked")
-            return 0
-        elif dcm2nii_out==1: #if dcm2nii from sif produces error, still keep the output file
-            print('/')
-            if not test:
-                write_problematic_files(disk_dcm_path, test)
-            print(get_proc_id(test), " SIF conversion gave error for  ", sif_dcm_path)
-            return 2
     
-        
+    if test:
+            log_(disk_dcm_path + " exists, start nii conversion")
+            start=time.time()
+    print(get_proc_id(test), " Convert from disk")
+    dcm2nii_out = dcm2nii.convert_dcm2nii(
+        disk_dcm_path, nii_out_path, verbose=0, op_sys=0,
+                output_filename='%j', create_info_json='y', timeout=timeout)
+    if test:
+            log_("The conversion took "+str(round(time.time()-start,3))+'s')
+            if dcm2nii_out==1:
+                log_("conversion from disk fail")
+            else:
+                log_("conversion from disk success")
+    
+    if dcm2nii_out==0:
+        print(get_proc_id(test), " worked")
+        return 0
+    else: #if dcm2nii produces error, remove all the output files
+        if not test:
+                write_problematic_files(disk_dcm_path, test)
+        print("Remove output files")
+        rm_files = [f for f in os.listdir(nii_out_path) if f.startswith(sid)]
+        for rm_file in rm_files:
+            remove_file(rm_file)
+            return 1 
 
 def summarize_problematic_files():
     dir_ = join(pred_input_dir, 'logs')
     error_log_files = [f for f in basic.list_subdir(dir_) \
         if f.endswith("error_sids.txt")]
-    string = '\n'
+    string = ''
     for error_log_file in error_log_files:
         with open(error_log_file, 'r') as f:
-            text = f.read() + '\n'
-        string+=text
+            string+=f.read()
     with open(join(dir_, 'nii_conversion_error_sids_all.txt'), 'a+') as f:
         f.write(string)
 
@@ -209,76 +153,121 @@ def check_tgt_files(tgt_path, sid):
     else:
         return False
 
+def check_dicoms(src_path, sif_src_path):
+    if len(os.listdir(src_path))==len(os.listdir(sif_src_path)):
+        return 0
+    else: return 1
+
+def move_missing_files(src_path, sif_src_path):
+    assert len(os.listdir(src_path))>len(os.listdir(sif_src_path)), f'There are less files on sif than on disk {src_path}'
+    disk_filenames = [f for f in os.listdir(src_path) if f.endswith('.dcm')]
+    sif_filenames = [f for f in os.listdir(sif_src_path) if f.endswith('.dcm')]
+    add_filenames = list(set(sif_filenames).difference(set(disk_filenames)))
+    src_tgt = [(join(sif_src_path, f), join(src_path, f)) for f in add_filenames]
+    shutil.copyfile(src_tgt[0], src_tgt[1])
+    return 0
+
+def get_value_from_header(dcm_dir, key):
+    dcm = dcmread(dcm_dir)
+    return dcm[key].value
+
+def check_if_philips(src_path):
+    dcm_dirs = [join(src_path, f) for f in os.listdir(src_path)]
+    found = False
+    n_missing = 0
+    manufacturer = 'Unknown'
+    while not found and n_missing<=len(dcm_dirs):
+        try:
+            manufacturer = get_value_from_header(dcm_dirs[n_missing], 'Manufacturer')
+            found = True
+        except:
+            n_missing+=1
+    if 'Philips' in manufacturer:
+        return True
+    else:
+        return False
+
 
 def move_and_gz_files(src_tgt, test=False, trial=0):
     if test:
         log_("trial number "+ str(trial))
     if trial>2:
         return 1
+    trial+=1
     sys.stdout.flush()
-    src_path = src_tgt[0]
-    sid = os.path.normpath(src_path).split(os.sep)[-1] #we will need it later
-    sid = sid[:-4] #remove .nii extension
-    tgt_path = src_tgt[1]
+    src_path, tgt_path, sif_src_path = src_tgt
     tgt_pat_dir = get_dir(tgt_path)
+    # create target patient dir
     make_dir(tgt_pat_dir)
+    sid = split(sif_src_path)[1] 
     if check_tgt_files(tgt_path, sid):
         print('|', end='')
         if test:
             log_("The file(s) already exists at " + tgt_path)
             log_('Stop')
         return 0
-    print(get_proc_id(test), " Trial: ", trial, " sid: ", sid)
-    # create patient dir
-    make_dir(get_dir(src_path))
-    src_dir = get_dir(src_path)
-    ### this has to be fixed!!!!!!!!!!!!!!!!!!!!
-    asassaasasas
-    sif_dcm_path = join(sif_dir, sif_volume_dir_dic[sid])
-    disk_dcm_path = disk_volume_dir_dic[sid]
-    nii_out_path = get_dir(src_path)
-    make_dir(nii_out_path)
-    # Handle the case if at least one nii file already exists on the disk
-    existing_src_files = [f for f in os.listdir(src_dir) \
-        if f.startswith(sid) and f.endswith('.nii')]
-    if len(existing_src_files)>0 and trial==0: 
-        print(get_proc_id(test), " Check existing niis")
-        check_niis_out = check_niis(existing_src_files, src_dir, tgt_path, test, trial)
-        trial+=1
-        if check_niis_out==1:
-            move_and_gz_files(src_tgt, trial=trial)
-    else: # if nii does not exist, try to create it
-        print(get_proc_id(test), " No niis")
-        if test:
-            log_("Nii file does NOT exist at "+ src_path)
-        # check if dcm dir exists
-        dcm2nii_out = dcm2nii_safe(disk_dcm_path, sif_dcm_path, nii_out_path, 
-                                sid, test, trial=trial)
-        trial+=1     
-        if dcm2nii_out==1:
-            move_and_gz_files(src_tgt, trial=trial)
-        else:
-            existing_src_files = [f for f in os.listdir(src_dir) \
-                if f.startswith(sid) and f.endswith('.nii')]
-            if len(existing_src_files)>0:
-                check_niis_out = check_niis(existing_src_files, src_dir, tgt_path, test, trial)            
-            else:
-                print(get_proc_id(test), " Conversion did not work for", disk_dcm_path, nii_out_path)
-                sys.stdout.flush()
-                print('x')
+    if split(src_path)[1].endswith('.nii'): #nii is present, we need just to move
+        print('->', end='')
+        move_compress(src_path, tgt_path)
+        return 0
+    else: #nii is not present, try to convert dicoms on disk to nii
+        if check_dicoms(src_path, sif_src_path)==0: # check if all the dicoms are on the disk
+            print('c', end='')
+            dcm2nii_out = dcm2nii_safe(src_path, tgt_pat_dir, 
+                                    sid, test)
+            if dcm2nii_out==0:
                 if test:
-                    log_('dcm2nii failed')
+                    log_("Conversion worked")
+                return 0
+            else:
+                if check_if_philips(src_path)==0:
+                    if fix_dcm_incomplete_vols.fix_incomplete_vols(src_path)==0:
+                        return move_and_gz_files(src_tgt, test, trial)
+                    else:
+                        print('x')
+                        return 1
                 else:
-                    write_problematic_files(disk_dcm_path, test)
-                return 1
+                    print('x')
+                    return 1
+        else:    
+            print('s->d')
+            move_missing_files(src_path, sif_src_path)
+            return move_and_gz_files(src_tgt, trial)
 
 
+def get_source_target_dirs(sids_ls, disk_volume_dir_dic_dcm, disk_volume_dir_dic_nii,
+                        sif_volume_dir_dic, 
+                        base_nii_target_dir):
+    """Creates a list of triplet (source_nii_dir/source_dcm_dir, target_nii_dir, source_sif_dir) 
+    with source dir and target dir. 
+    If nii is present on disk, use this file as source, 
+    elif dicom no disk use dicom dir as source 
+    else use dcm dir on sif as src"""
+    sids_all = set(sids_ls)
+    sids_disk_nii = set(disk_volume_dir_dic_nii.keys())
+    sids_disk_dcm = set(disk_volume_dir_dic_dcm.keys())
 
+    sids_nii_disk_ls = list(sids_all.intersection(sids_disk_nii))
+    sids_dcm_disk_ls = list((sids_all.difference(sids_disk_nii)).intersection(sids_disk_dcm))
+    sids_dcm_sif_ls = list(sids_all.difference(sids_disk_nii.union(sids_disk_dcm)))
 
+    assert len(sids_dcm_sif_ls)==0, f"There are {len(sids_dcm_sif_ls)} sids in sids_ls thate are not in the disk dictionaries"
+    disk_src_sif_src_nii_tgt = [(
+        disk_volume_dir_dic_nii[sid],
+        join(base_nii_target_dir, get_part_of_path(disk_volume_dir_dic_nii[sid], 5) + '.gz'), 
+        sif_volume_dir_dic[sid]) \
+        for sid in sids_nii_disk_ls]
+    disk_src_sif_src_dcm_tgt = [(
+        disk_volume_dir_dic_dcm[sid],
+        join(base_nii_target_dir, get_part_of_path(disk_volume_dir_dic_dcm[sid], 5) + '.gz'), 
+        join(sif_dir, sif_volume_dir_dic[sid])) \
+        for sid in sids_dcm_disk_ls]
+    disk_src_sif_src_tgt = disk_src_sif_src_nii_tgt + disk_src_sif_src_dcm_tgt
+    return disk_src_sif_src_tgt
 
 
 #%%
-def main(source_target_list, procs=8):
+def main(src_tgt_ls, procs=8):
     print('file moved: .')
     print('file exists: |')
     print('file converted to nii: +')
@@ -287,44 +276,51 @@ def main(source_target_list, procs=8):
     print(f"Using {procs} processes")
     with mp.Pool(procs) as pool:
                 pool.map(move_and_gz_files, 
-                        source_target_list)
+                        src_tgt_ls)
     summarize_problematic_files()
     print("Finished at: ", dt.now())
     
+with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
+    disk_volume_dir_dic_dcm = json.load(json_file)
+with open(join(table_dir, "disk_series_directories_niis.json"), "r") as json_file:
+    disk_volume_dir_dic_nii = json.load(json_file)
+
+dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
+    usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
+    'Sequence', 'NumberOfSlices'])
+sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_long_sids.pkl')
+with open(sids_3d_t1_path, 'rb') as f:
+    sids_3dt1_long = pickle.load(f)
+df_3dt1_long = dfc[dfc.SeriesInstanceUID.isin(sids_3dt1_long)]
+
+sids_cases = np.loadtxt(join(pat_groups_dir, 
+                't1_pre_post_suid.txt'), dtype=str).tolist()
+sids_3d_t1_long_cases = list(set(sids_3dt1_long).intersection(set(sids_cases)))
+print('num cases: ',len(sids_3d_t1_long_cases))
+sids_3d_t1_long_controls = list(set(sids_3dt1_long).difference(set(sids_cases)))
+print('num controls: ',len(sids_3d_t1_long_controls))
+df_cases = dfc[dfc.SeriesInstanceUID.isin(sids_3d_t1_long_cases)]
+sids_cases_ls = list(df_cases.SeriesInstanceUID)
+df_controls = dfc[(dfc.SeriesInstanceUID.isin(sids_3d_t1_long_controls))]
+sids_controls_ls = list(df_controls.SeriesInstanceUID)
+
+pat_sids_cases_src_tgt = get_source_target_dirs(sids_cases_ls, disk_volume_dir_dic_dcm,
+                                    disk_volume_dir_dic_nii, sif_volume_dir_dic,
+                                    base_nii_target_dir=join(pred_input_dir,'cases'))
+pat_sids_potential_controls_src_tgt = get_source_target_dirs(
+        sids_controls_ls, disk_volume_dir_dic_dcm,
+        disk_volume_dir_dic_nii, sif_volume_dir_dic,
+        base_nii_target_dir=join(pred_input_dir,'potential_controls'))
+
 
 if __name__ == '__main__':
-    
-    
-    with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
-        disk_volume_dir_dic_dcm = json.load(json_file)
-    with open(join(table_dir, "disk_series_directories_niis.json"), "r") as json_file:
-        disk_volume_dir_dic_nii = json.load(json_file)
-    dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
-        usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
-        'Sequence', 'NumberOfSlices'])
-    sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_long_sids.pkl')
-    with open(sids_3d_t1_path, 'rb') as f:
-        sids_3dt1_long = pickle.load(f)
-    sids_cases = np.loadtxt(join(pat_groups_dir, 
-                    't1_pre_post_suid.txt'), dtype=str).tolist()
-    sids_3d_t1_long_cases = list(set(sids_3dt1_long).intersection(set(sids_cases)))
-    sids_3d_t1_long_controls = list(set(sids_3dt1_long).difference(set(sids_cases)))
-    df_cases = dfc[dfc.SeriesInstanceUID.isin(sids_3d_t1_long_cases)]
-    df_controls = dfc[~(dfc.SeriesInstanceUID.isin(sids_3d_t1_long_controls))]
-    pat_sids_cases_src_tgt = get_source_target_dirs(df_cases, disk_volume_dir_dic_dcm,
-                                      disk_volume_dir_dic_nii, sif_volume_dir_dic)
-    pat_sids_potential_controls_src_tgt = get_source_target_dirs(
-        df_controls, base_src_dir=disk_nii_dir, 
-        base_tgt_dir=join(pred_input_dir, 'potential_controls') )
-    print("Convert only potential controls now")
-    src_tgt_ls =  pat_sids_potential_controls_src_tgt #+ pat_sids_cases_src_tgt
-    
+    print("Convert all")
+    src_tgt_ls =  pat_sids_potential_controls_src_tgt + pat_sids_cases_src_tgt
     test=False
     if test:
         print('Test')
-        summarize_problematic_files()
         start = time.time()
-        for i in range(1000,1004):
+        for i in range(200,205):
             sid_num = i
             move_and_gz_files(src_tgt_ls[sid_num], test=True)
         print("Finished at: ", dt.now())

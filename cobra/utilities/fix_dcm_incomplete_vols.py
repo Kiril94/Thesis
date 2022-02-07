@@ -8,6 +8,7 @@
 
 import os, shutil, glob
 import pydicom
+import sys
 
 def fix_incomplete_vols(dcm_dir):
     dcmpath = os.path.join(os.getcwd(), dcm_dir)
@@ -75,8 +76,14 @@ def fix_incomplete_vols(dcm_dir):
             for f in corr_dcm_list:
                 corr_filename = os.path.split(f)
                 shutil.move(f,os.path.join(dcmpath , 'corrected_dcm', corr_filename[1]))
+            return 0
         else:
             print('All volumes are complete, will not mess with dcm files.')
+            return 1
 
 if __name__ == '__main__':
-    fix_incomplete_vols("F:\\CoBra\\Data\\dcm\\2019_01\\0a32043a1a038873355c7d86aa7362e5\\7bb75f883163bd29f50b04bc81f16bc5")
+    if len(sys.argv) > 1:
+        dcm_dir = sys.argv[1]
+        fix_incomplete_vols(dcm_dir)
+    else:
+        print('No dicom-folder specified. Please re-run with path argument.')
