@@ -159,7 +159,7 @@ def check_dicoms(src_path, sif_src_path):
     else: return 1
 
 def move_missing_files(src_path, sif_src_path):
-    assert len(os.listdir(src_path))>len(os.listdir(sif_src_path)), f'There are less files on sif than on disk {src_path}'
+    assert len(os.listdir(src_path))<len(os.listdir(sif_src_path)), f'There are less files on sif than on disk {src_path}'
     disk_filenames = [f for f in os.listdir(src_path) if f.endswith('.dcm')]
     sif_filenames = [f for f in os.listdir(sif_src_path) if f.endswith('.dcm')]
     add_filenames = list(set(sif_filenames).difference(set(disk_filenames)))
@@ -223,7 +223,7 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
                 if check_if_philips(src_path)==0:
                     if fix_dcm_incomplete_vols.fix_incomplete_vols(src_path)==0:
                         #now we have to adjust the src dir
-                        new_disk_dcm_src = join(src_path, 'corrected')
+                        new_disk_dcm_src = join(src_path, 'corrected_dcm')
                         src_tgt[0] = new_disk_dcm_src
                         return move_and_gz_files(src_tgt, test, trial)
                     else:
