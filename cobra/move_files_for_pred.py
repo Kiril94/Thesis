@@ -163,8 +163,9 @@ def move_missing_files(src_path, sif_src_path):
     disk_filenames = [f for f in os.listdir(src_path) if f.endswith('.dcm')]
     sif_filenames = [f for f in os.listdir(sif_src_path) if f.endswith('.dcm')]
     add_filenames = list(set(sif_filenames).difference(set(disk_filenames)))
-    src_tgt = [(join(sif_src_path, f), join(src_path, f)) for f in add_filenames]
-    shutil.copyfile(src_tgt[0], src_tgt[1])
+    src_tgt_ls = [(join(sif_src_path, f), join(src_path, f)) for f in add_filenames]
+    for src_tgt in src_tgt_ls:
+        shutil.copyfile(src_tgt[0], src_tgt[1])
     return 0
 
 def get_value_from_header(dcm_dir, key):
@@ -319,13 +320,15 @@ pat_sids_potential_controls_src_tgt = get_source_target_dirs(
 if __name__ == '__main__':
     print("Convert all")
     src_tgt_ls =  pat_sids_potential_controls_src_tgt + pat_sids_cases_src_tgt
-    test=False
+    test_src_tgt_ls = [src_tgt for src_tgt in src_tgt_ls if not src_tgt[0].endswith('.nii')]
+    test=True
     if test:
+
         print('Test')
         start = time.time()
-        for i in range(200,205):
+        for i in range(200,201):
             sid_num = i
-            move_and_gz_files(src_tgt_ls[sid_num], test=True)
+            move_and_gz_files(test_src_tgt_ls[sid_num], test=True)
         print("Finished at: ", dt.now())
         print("Total time: ",round(time.time()-start, 3))
     else:

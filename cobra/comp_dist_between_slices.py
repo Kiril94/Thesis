@@ -204,7 +204,7 @@ with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
     volume_dir_dic = json.load(json_file)
 
 if __name__=="__main__":
-    compute_distance = False
+    compute_distance = True
     if compute_distance:
         rest_sids = sorted(get_rest_sids(
             join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'),
