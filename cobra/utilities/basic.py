@@ -7,7 +7,7 @@ Created on Wed Sep 15 10:41:26 2021
 import numpy as np
 import pandas as pd
 import os
-from os.path import split
+from os.path import split, join
 
 def get_dir(file):
     return split(file)[0]
@@ -17,6 +17,15 @@ def make_dir(dir_):
 def remove_file(file):
     if os.path.exists(file):
         os.remove(file) # one file at a time
+
+def get_part_of_path(path, start, stop=None):
+    if stop==None:
+        return join(*os.path.normpath(path).split(os.sep)[start:])
+    else:
+        return join(*os.path.normpath(path).split(os.sep)[start:stop])
+
+def get_root_dir(path, n):
+    return join(*os.path.normpath(path).split(os.sep)[:n])
 
 def list_subdir(dir_, ending=""):
     return [os.path.join(dir_, x) for x in os.listdir(dir_) \
@@ -72,3 +81,12 @@ def df_to_dict(df, col_key, col_val):
     return pd.Series(df[col_val].values, index=df[col_key]).to_dict()
 
 def p(x): print(x)
+
+##########multiprocesseing##############
+def get_proc_id(test=False):
+    if test:
+        return 0
+    else:
+        current_proc = mp.current_process()    
+        current_proc_id = str(int(current_proc._identity[0]))
+        return current_proc_id

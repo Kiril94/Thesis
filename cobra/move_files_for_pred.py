@@ -15,7 +15,7 @@ import json
 import pickle
 from utilities import basic, fix_dcm_incomplete_vols
 from pydicom import dcmread
-from utilities.basic import get_dir, make_dir, remove_file
+from utilities.basic import get_dir, make_dir, remove_file, get_part_of_path, get_proc_id
 #%%
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
 dcm_base_dir = join(disk_data_dir, 'dcm')
@@ -32,24 +32,6 @@ sif_volume_dir_dic = pd.Series(
         df_volume_dir.Directory.values, index=df_volume_dir.SeriesInstanceUID)\
             .to_dict()
 # %%
-def get_root_dir(path, n=2):
-    return join(*os.path.normpath(path).split(os.sep)[:n])
-
-def get_part_of_path(path, start, stop=None):
-    if stop==None:
-        return join(*os.path.normpath(path).split(os.sep)[start:])
-    else:
-        return join(*os.path.normpath(path).split(os.sep)[start:stop])
-
-
-
-def get_proc_id(test=False):
-    if test:
-        return 0
-    else:
-        current_proc = mp.current_process()    
-        current_proc_id = str(int(current_proc._identity[0]))
-        return current_proc_id
 def write_problematic_files(file, test):
     if test:
         return 0
@@ -60,10 +42,12 @@ def write_problematic_files(file, test):
     with open(write_file,'a+') as f:
         f.write(file+'\n')
 
-def move_compress(src, tgt):
+def move_compress(src, tgt, remove=False):
     with open(src, 'rb') as f_in:
                 with gzip.open(tgt, 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+                        shutil.copyfileobj(f_in, f_out)
+    if remove:
+        os.remove(src)
 
 def dcm2nii_safe(disk_dcm_path, nii_out_path, sid, test,  timeout=2000):
     "Only keep dicoms if dcm2nii converter returns 0"
@@ -74,7 +58,8 @@ def dcm2nii_safe(disk_dcm_path, nii_out_path, sid, test,  timeout=2000):
     print(get_proc_id(test), " Convert from disk")
     dcm2nii_out = dcm2nii.convert_dcm2nii(
         disk_dcm_path, nii_out_path, verbose=0, op_sys=0,
-                output_filename='%j', create_info_json='y', timeout=timeout)
+                output_filename='%j', create_info_json='n', gz_compress='y',
+                timeout=timeout)
     if test:
             log_("The conversion took "+str(round(time.time()-start,3))+'s')
             if dcm2nii_out==1:
@@ -316,20 +301,42 @@ pat_sids_potential_controls_src_tgt = get_source_target_dirs(
         disk_volume_dir_dic_nii, sif_volume_dir_dic,
         base_nii_target_dir=join(pred_input_dir,'potential_controls'))
 
+def postprocessing(pat_dir):
+    files_paths = basic.list_subdir(pat_dir)
+    nii_vols = [f for f in files_paths if f.endswith('.nii')]
+    json_files = [f for f in files_paths if f.endswith('.json')]
+    for json_file in json_files:
+        if os.path.exists(json_file):
+            os.remove(json_file)
+            print(json_file)
+    for nii_vol in nii_vols:
+        print(nii_vol)
+        move_compress(nii_vol, nii_vol+'.gz', remove=True)
+def postprocessing_parallel(pat_sup_dir, procs=10):
+    pat_dirs = basic.list_subdir(pat_sup_dir)
+    with mp.Pool(procs) as pool:
+                pool.map(postprocessing, pat_dirs)
 
 if __name__ == '__main__':
     print("Convert all")
     src_tgt_ls =  pat_sids_potential_controls_src_tgt + pat_sids_cases_src_tgt
-    test_src_tgt_ls = [src_tgt for src_tgt in src_tgt_ls if not src_tgt[0].endswith('.nii')]
-    test=True
-    if test:
-
-        print('Test')
-        start = time.time()
-        for i in range(200,201):
-            sid_num = i
-            move_and_gz_files(test_src_tgt_ls[sid_num], test=True)
-        print("Finished at: ", dt.now())
-        print("Total time: ",round(time.time()-start, 3))
+    #test_src_tgt_ls = [src_tgt for src_tgt in src_tgt_ls if not src_tgt[0].endswith('.nii')]
+    move=True
+    test=False
+    if move:
+        if test:
+            print('Test')
+            start = time.time()
+            for i in range(200,201):
+                sid_num = i
+                move_and_gz_files(src_tgt_ls[sid_num], test=True)
+            print("Finished at: ", dt.now())
+            print("Total time: ",round(time.time()-start, 3))
+        else:
+            main(src_tgt_ls, procs=12)
     else:
-        main(src_tgt_ls, procs=12)
+        if test:
+            pat_dirs = basic.list_subdir(join(pred_input_dir, 'potential_controls'))
+            postprocessing(pat_dirs[102])
+        else:
+            postprocessing_parallel(join(pred_input_dir, 'cases'), 12)
