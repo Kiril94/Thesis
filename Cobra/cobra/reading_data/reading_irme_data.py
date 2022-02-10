@@ -11,7 +11,8 @@ from access_sif_data.load_data_tools import load_nifti_array_dim
 from numpy import NaN
 import pandas as pd
 from glob import iglob 
-main_path = "/home/neus/Documents/09.UCPH/MasterThesis/DATA/Synthetic Cerebral Microbleed on SWI images/PublicDataShare_2020"
+
+main_path = "/media/neus/USB DISK/Synthetic_Cerebral_Microbleed_on_SWI_images/PublicDataShare_2020"
 rCMB_doc = "rCMBInformationInfo.xlsx"
 sCMB_doc = "sCMBInformationInfo.xlsx"
 sCMB_fromNoCMB_doc = "sCMBLocationInformationInfoNocmb.xlsx"
@@ -19,7 +20,7 @@ sCMB_fromNoCMB_doc = "sCMBLocationInformationInfoNocmb.xlsx"
 main_folder = "/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra"
 new_tables_path = f"{main_folder}/tables/SynthCMB"
 
-data_path = "/home/neus/Documents/09.UCPH/MasterThesis/DATA/Synthetic Cerebral Microbleed on SWI images/PublicDataShare_2020/sCMB_NoCMBSubject"
+data_path = f"{main_path}/{rCMB_doc}"
 
 def convert_table(file_path,nCMB_max,synth=True):
     #Dictionary of equivalences for the column names
@@ -86,34 +87,33 @@ def convert_table(file_path,nCMB_max,synth=True):
                         'LocationCirclewholeReal_60':'LocationCirclewholeReal_60',
                         }
 
-    r_cmb_df = pd.read_excel(file_path)
+    cmb_df = pd.read_excel(file_path)
     #Create new dataframe for CMB information (1row, 1CMB)
-    column_names = ['NIFTI File Name','SubjectID','T_ID','x_position','y_position','z_position','real','synth_version']
+    column_names = ['NIFTI File Name','x_position','y_position','z_position','real','synth_version']
     new_df = pd.DataFrame(columns=column_names)
-    for i in range(nCMB_max,0,-1):
-        mask = (r_cmb_df[key_dict[f'CMB_{i}_x']].astype(str).str.isspace())
-        cmbs_data = r_cmb_df[~mask]
 
+    for i in range(nCMB_max,0,-1):
+
+        mask = (cmb_df[key_dict[f'CMB_{i}_x']].astype(str).str.isspace()) #mask for empty cells
+        cmbs_data = cmb_df[~mask]
+
+        print(f'CMB {i}, {cmbs_data.shape[0]} samples')
         if cmbs_data.shape[0]>0:
 
             if (synth):
                 new_rows = pd.DataFrame( {'NIFTI File Name': cmbs_data[key_dict['NIFTI File Name']],
-                                'SubjectID':[int(x.split('_')[0]) for x in cmbs_data[key_dict['NIFTI File Name']]],
-                                'T_ID':[int(x.split('_')[1][1]) for x in cmbs_data[key_dict['NIFTI File Name']]],
-                                'x_position':cmbs_data[key_dict[f'CMB_{i}_x']].astype(int),
-                                'y_position':cmbs_data[key_dict[f'CMB_{i}_y']].astype(int),
-                                'z_position':cmbs_data[key_dict[f'CMB_{i}_z']].astype(int),
+                                'x_position':(cmbs_data[key_dict[f'CMB_{i}_x']].astype(int) -1),
+                                'y_position':(cmbs_data[key_dict[f'CMB_{i}_y']].astype(int) -1),
+                                'z_position':(cmbs_data[key_dict[f'CMB_{i}_z']].astype(int) -1),
                                 'real':False,
                                 'synth_version':[x.split('_')[-1][:-7] for x in cmbs_data[key_dict['NIFTI File Name']]]
                 }
                 )            
             else:
                 new_rows = pd.DataFrame( {'NIFTI File Name': cmbs_data[key_dict['NIFTI File Name']],
-                                'SubjectID':[int(x.split('_')[0]) for x in cmbs_data[key_dict['NIFTI File Name']]],
-                                'T_ID':[int(x.split('_')[1][1]) for x in cmbs_data[key_dict['NIFTI File Name']]],
-                                'x_position':cmbs_data[key_dict[f'CMB_{i}_x']].astype(int),
-                                'y_position':cmbs_data[key_dict[f'CMB_{i}_y']].astype(int),
-                                'z_position':cmbs_data[key_dict[f'CMB_{i}_z']].astype(int),
+                                'x_position':(cmbs_data[key_dict[f'CMB_{i}_x']].astype(int)-1),
+                                'y_position':(cmbs_data[key_dict[f'CMB_{i}_y']].astype(int)-1),
+                                'z_position':(cmbs_data[key_dict[f'CMB_{i}_z']].astype(int)-1),
                                 'real':True,
                                 'synth_version':NaN
                 }
@@ -142,14 +142,14 @@ def get_dimensions(data_folder):
 
 
 #Convert rCMB
-new_df = convert_table(f"{main_path}/{rCMB_doc}",19,synth=False)
-new_df.to_csv(f'{new_tables_path}/{rCMB_doc[:-5]}.csv',index=False)
+# new_df = convert_table(f"{main_path}/{rCMB_doc}",19,synth=False)
+# new_df.to_csv(f'{new_tables_path}/{rCMB_doc[:-5]}.csv',index=False)
 
-# #Convert sCMB
+#Convert sCMB
 # new_df = convert_table(f"{main_path}/{sCMB_doc}",10)
 # new_df.to_csv(f'{new_tables_path}/{sCMB_doc[:-5]}.csv',index=False)
 
-# #Conver sCMB noCMB
+#Conver sCMB noCMB
 # new_df = convert_table(f"{main_path}/{sCMB_fromNoCMB_doc}",10)
 # new_df.to_csv(f'{new_tables_path}/{sCMB_fromNoCMB_doc[:-5]}.csv',index=False)
 
@@ -158,3 +158,10 @@ new_df.to_csv(f'{new_tables_path}/{rCMB_doc[:-5]}.csv',index=False)
 # meta_data.to_csv(f"{new_tables_path}/nifti_metadata.csv",index=False)
 
 
+# Concatenate 3 tables
+df1 = pd.read_csv(f'{new_tables_path}/{rCMB_doc[:-5]}.csv')
+df2 = pd.read_csv(f'{new_tables_path}/{sCMB_doc[:-5]}.csv')
+df3 = pd.read_csv(f'{new_tables_path}/{sCMB_fromNoCMB_doc[:-5]}.csv')
+
+df_all = pd.concat([df1,df2,df3])
+df_all.to_csv(f'{new_tables_path}/all_info.csv',index=False)
