@@ -57,8 +57,9 @@ def reconstruct3d(scan_dir):
 def get_patient_key_list():
     return [('PatientID', 'str'), ('PatientSex','str'), ('Positive', 'boolean')]
 
-def get_scan_key_list():
-    """"List containing keys and corresponding datatype as tuples."""
+def get_scan_key_list(tags='all', ignore_warnings=True):
+    """"List containing keys and corresponding datatype as tuples.
+    tags: str or list, (default: 'all') """
     key_list = [('SeriesInstanceUID','str'),
                 ('StudyInstanceUID','str'),
                 ('PatientID', 'str'), 
@@ -108,9 +109,19 @@ def get_scan_key_list():
                 ('SecondEcho', 'float'),
                 ('VariableFlipAngleFlag', 'str')
                 ]
-    return key_list
-
-def get_scan_dictionary(scan_dir, reconstruct_3d=True, slice=0):
+    if tags=='all':
+        return key_list
+    else:
+        key_names = [k[0] for k in key_list]
+        missing_tags = [k for k in tags if k not in key_names]
+        if len(missing_tags)>0 and not ignore_warnings:
+            print(missing_tags, 
+                "are not valid dicom entries, or not defined in this function")
+            return 1
+        key_list = [k for k in key_list if k[0] in tags]
+        return key_list
+def get_scan_dictionary(scan_dir, tags='all', ignore_warnings=False,
+                    reconstruct_3d=True, slice=0):
     """Returns a dictionary for scan at scan_dir"""
     if len(os.listdir(scan_dir))!=0:
         try:
@@ -131,7 +142,7 @@ def get_scan_dictionary(scan_dir, reconstruct_3d=True, slice=0):
         dicom = None
         print(f"{scan_dir} is empty")
         
-    key_list = get_scan_key_list()
+    key_list = get_scan_key_list(tags, ignore_warnings)
     
     if reconstruct_3d:
         scan_dict = {'arr3d': reconstruct3d(scan_dir)}
@@ -226,7 +237,8 @@ class Patient():
         arr3d = arr2d[indices_sort]
         return arr3d
 
-    def get_scan_dictionary(self, scan_number, reconstruct_3d=True):
+    def get_scan_dictionary(self, scan_number, tags='all', ignore_warnings=False,
+            reconstruct_3d=True):
         """Returns a dictionary for scan with scan_number, if reconstruct """
         scan_directories = self.get_scan_directories()
         scan_dir = scan_directories[scan_number]
@@ -248,7 +260,7 @@ class Patient():
         else:
             dicom = None
             print(f"{scan_dir} is empty")
-        key_list = get_scan_key_list()
+        key_list = get_scan_key_list(tags, ignore_warnings)
         
         if reconstruct_3d:
             scan_dict = {'arr3d': self.reconstruct3d(scan_dir)}
