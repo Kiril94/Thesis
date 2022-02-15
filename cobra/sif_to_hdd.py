@@ -21,10 +21,9 @@ dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
 
-sids_file_name = "3dt1_sids"
-sids_3d_t1_path = join(data_dir, 't1_longitudinal', f'{sids_file_name}.pkl')
+
 update_downloaded_files = False
-print("Using sids from the file: ", sids_3d_t1_path )
+
 
 #%% 
 # In[Load df]
@@ -33,6 +32,11 @@ df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 df_patient_dir = pd.read_csv(join(table_dir, 'patient_directories.csv'))
 df_all = pd.read_csv(join(table_dir, "neg_pos_clean.csv"))
 print("Load dataframes finished")
+
+
+sids_file_name = "3dt1_sids"
+sids_3d_t1_path = join(data_dir, 't1_longitudinal', f'{sids_file_name}.pkl')
+print("Using sids from the file: ", sids_3d_t1_path )
 with open(sids_3d_t1_path, 'rb') as f:
     sids_3d_t1_ls = pickle.load(f)
 #%%

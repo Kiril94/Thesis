@@ -20,19 +20,20 @@ from utilities.basic import get_dir, make_dir, remove_file, get_part_of_path, ge
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
 dcm_base_dir = join(disk_data_dir, 'dcm')
 disk_nii_dir = join(disk_data_dir, 'nii')
-pred_input_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input')
-sif_dir = 'Y:\\'
+pred_input_dir = ""#join(disk_data_dir, 'volume_longitudinal_nii', 'input')
+sif_dir = 'Y:\\' 
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
 pat_groups_dir = join(data_dir, 'patient_groups')
-df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
+df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv')) #contains sif directories for sids
 sif_volume_dir_dic = pd.Series(
         df_volume_dir.Directory.values, index=df_volume_dir.SeriesInstanceUID)\
             .to_dict()
 # %%
 def write_problematic_files(file, test):
+    """Write path of file to log"""
     if test:
         return 0
     current_proc_id = get_proc_id(test)
@@ -43,6 +44,7 @@ def write_problematic_files(file, test):
         f.write(file+'\n')
 
 def move_compress(src, tgt, remove=False):
+    """Move and gz file from src to tgt"""
     with open(src, 'rb') as f_in:
                 with gzip.open(tgt, 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
@@ -50,8 +52,7 @@ def move_compress(src, tgt, remove=False):
         os.remove(src)
 
 def dcm2nii_safe(disk_dcm_path, nii_out_path, sid, test,  timeout=2000):
-    "Only keep dicoms if dcm2nii converter returns 0"
-    
+    "Only keeps niis if dcm2nii converter returns 0"
     if test:
             log_(disk_dcm_path + " exists, start nii conversion")
             start=time.time()
@@ -80,6 +81,7 @@ def dcm2nii_safe(disk_dcm_path, nii_out_path, sid, test,  timeout=2000):
             return 1 
 
 def summarize_problematic_files():
+    """Convert the log files from individual processes to one final log file"""
     dir_ = join(pred_input_dir, 'logs')
     error_log_files = [f for f in basic.list_subdir(dir_) \
         if f.endswith("error_sids.txt")]
@@ -93,6 +95,8 @@ def summarize_problematic_files():
 
 #%%
 def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
+    """Currently not used. Checks existig_src_files (niis), if 2 files keep the one with _i00002.nii ending,
+    else remove all"""
     if trial==0:
         if test:
             log_("Following nii file(s) were found " + str(existing_src_files))
@@ -128,10 +132,12 @@ def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
         return 0
 
 def log_(str_):
+    """Used for testing, writes log to move_files_for_pred_log.txt"""
     with open(join(base_dir, "move_files_for_pred_log.txt"), 'a+') as f:
         f.write(str_+'\n')
 
 def check_tgt_files(tgt_path, sid):
+    """Checks tgt dir for files starting with sid"""
     tgt_dir = get_dir(tgt_path)
     if len([f for f in os.listdir(tgt_dir) if f.startswith(sid)])>0:
         return True
@@ -139,11 +145,13 @@ def check_tgt_files(tgt_path, sid):
         return False
 
 def check_dicoms(src_path, sif_src_path):
+    """Checks whether all the dcm files from sif were downloaded."""
     if len(os.listdir(src_path))==len(os.listdir(sif_src_path)):
         return 0
     else: return 1
 
 def move_missing_files(src_path, sif_src_path):
+    """Downloads missing dcm files form sif"""
     assert len(os.listdir(src_path))<len(os.listdir(sif_src_path)), f'There are less files on sif than on disk {src_path}'
     disk_filenames = [f for f in os.listdir(src_path) if f.endswith('.dcm')]
     sif_filenames = [f for f in os.listdir(sif_src_path) if f.endswith('.dcm')]
@@ -154,10 +162,12 @@ def move_missing_files(src_path, sif_src_path):
     return 0
 
 def get_value_from_header(dcm_dir, key):
+    """Read value from dcm header stored under key"""
     dcm = dcmread(dcm_dir)
     return dcm[key].value
 
 def check_if_philips(src_path):
+    """Given the src_path of the dicoms, check if the Manufacturer is Philips"""
     dcm_dirs = [join(src_path, f) for f in os.listdir(src_path)]
     found = False
     n_missing = 0
@@ -175,6 +185,9 @@ def check_if_philips(src_path):
 
 
 def move_and_gz_files(src_tgt, test=False, trial=0):
+    """Move and gzip niis from src_tgt[0] (hdd path of the file), 
+    to src_tgt[1] (directory to store the gzipped nii file),
+    src_tgt[2] is the sif dcm dir in case src_tgt[0] has missing files."""
     if test:
         log_("trial number "+ str(trial))
     if trial>2:
@@ -256,18 +269,7 @@ def get_source_target_dirs(sids_ls, disk_volume_dir_dic_dcm, disk_volume_dir_dic
 
 
 #%%
-def main(src_tgt_ls, procs=8):
-    print('file moved: .')
-    print('file exists: |')
-    print('file converted to nii: +')
-    print('fail: x')
-    print("Move ", len(src_tgt_ls), "files.")
-    print(f"Using {procs} processes")
-    with mp.Pool(procs) as pool:
-                pool.map(move_and_gz_files, 
-                        src_tgt_ls)
-    summarize_problematic_files()
-    print("Finished at: ", dt.now())
+
     
 with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
     disk_volume_dir_dic_dcm = json.load(json_file)
@@ -294,49 +296,69 @@ df_controls = dfc[(dfc.SeriesInstanceUID.isin(sids_3d_t1_long_controls))]
 sids_controls_ls = list(df_controls.SeriesInstanceUID)
 
 pat_sids_cases_src_tgt = get_source_target_dirs(sids_cases_ls, disk_volume_dir_dic_dcm,
-                                    disk_volume_dir_dic_nii, sif_volume_dir_dic,
-                                    base_nii_target_dir=join(pred_input_dir,'cases'))
+                                disk_volume_dir_dic_nii, sif_volume_dir_dic,
+                                base_nii_target_dir=join(pred_input_dir,'cases'))
 pat_sids_potential_controls_src_tgt = get_source_target_dirs(
-        sids_controls_ls, disk_volume_dir_dic_dcm,
-        disk_volume_dir_dic_nii, sif_volume_dir_dic,
-        base_nii_target_dir=join(pred_input_dir,'potential_controls'))
+    sids_controls_ls, disk_volume_dir_dic_dcm,
+    disk_volume_dir_dic_nii, sif_volume_dir_dic,
+    base_nii_target_dir=join(pred_input_dir,'potential_controls'))
+src_tgt_ls =  pat_sids_potential_controls_src_tgt + pat_sids_cases_src_tgt
+
+
 
 def postprocessing(pat_dir):
+    """Remove json files and move and gzip existing niis."""
     files_paths = basic.list_subdir(pat_dir)
-    nii_vols = [f for f in files_paths if f.endswith('.nii')]
+    #nii_vols = [f for f in files_paths if f.endswith('.nii')]
     json_files = [f for f in files_paths if f.endswith('.json')]
     for json_file in json_files:
         if os.path.exists(json_file):
             os.remove(json_file)
-            print(json_file)
-    for nii_vol in nii_vols:
-        print(nii_vol)
-        move_compress(nii_vol, nii_vol+'.gz', remove=True)
+    #for nii_vol in nii_vols:
+    #    move_compress(nii_vol, nii_vol+'.gz', remove=True)
+
 def postprocessing_parallel(pat_sup_dir, procs=10):
     pat_dirs = basic.list_subdir(pat_sup_dir)
     with mp.Pool(procs) as pool:
                 pool.map(postprocessing, pat_dirs)
 
+
+
+def main(base_nii_tgt_dir, procs=8):
+    print("Create src_tgt directories list")
+    src_tgt_ls = get_source_target_dirs(
+        sids_cases_ls, disk_volume_dir_dic_dcm, disk_volume_dir_dic_nii, 
+        sif_volume_dir_dic, base_nii_target_dir=base_nii_tgt_dir)
+    print('file already exists at destination: |')
+    print('nii exists, just move and gzip: ->')
+    print('move missing dcms from sif to disk: s->d')
+    print('dcm to nii conversion: c')
+    print('fail: x')
+    print("Move ", len(src_tgt_ls), "files.")
+    print(f"Using {procs} processes")
+    with mp.Pool(procs) as pool:
+                pool.map(move_and_gz_files, 
+                        src_tgt_ls)
+    summarize_problematic_files()
+    print("Remove json files")
+    postprocessing_parallel(base_nii_tgt_dir, procs)
+    print("Finished at: ", dt.now())
+
 if __name__ == '__main__':
     print("Convert all")
-    src_tgt_ls =  pat_sids_potential_controls_src_tgt + pat_sids_cases_src_tgt
+    src_tgt_ls = pat_sids_cases_src_tgt + pat_sids_potential_controls_src_tgt
     #test_src_tgt_ls = [src_tgt for src_tgt in src_tgt_ls if not src_tgt[0].endswith('.nii')]
-    move=True
-    test=False
-    if move:
-        if test:
-            print('Test')
-            start = time.time()
-            for i in range(200,201):
-                sid_num = i
-                move_and_gz_files(src_tgt_ls[sid_num], test=True)
-            print("Finished at: ", dt.now())
-            print("Total time: ",round(time.time()-start, 3))
-        else:
-            main(src_tgt_ls, procs=12)
+    test=True
+    if test:
+        print('Test')
+        start = time.time()
+        for i in range(200,201):
+            sid_num = i
+            move_and_gz_files(src_tgt_ls[sid_num], test=True)
+        print("Finished at: ", dt.now())
+        print("Total time: ",round(time.time()-start, 3))
+        pat_dirs = basic.list_subdir(join(pred_input_dir, 'potential_controls'))
+        postprocessing(pat_dirs[102])
     else:
-        if test:
-            pat_dirs = basic.list_subdir(join(pred_input_dir, 'potential_controls'))
-            postprocessing(pat_dirs[102])
-        else:
-            postprocessing_parallel(join(pred_input_dir, 'cases'), 12)
+        main(src_tgt_ls, procs=12)
+           
