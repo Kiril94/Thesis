@@ -65,7 +65,7 @@ group_list = list(set(group_list).difference(set(downloaded_ls)))
 print("Volumes still to download: ", len(group_list))
 use_batches = True
 if use_batches:
-    batch = 2
+    batch = 4
     start = 0
     batch_size = 1000
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+batch*batch_size:start+batch_size*(batch+1)])]
