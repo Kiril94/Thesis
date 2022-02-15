@@ -124,3 +124,11 @@ celerybeat-schedule
 .mypy_cache/
 .dmypy.json
 dmypy.json
+*.txt
+*.csv
+*.json
+cobra/handle_problematic_files.py
+*.pkl
+*.png
+cobra/matching/exclude_downloaded_pats.py
+cobra/test.py
