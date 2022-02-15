@@ -5,6 +5,7 @@ import glob
 from os.path import join, realpath, split
 from pathlib import Path
 import shutil
+import os
 
 #%%
 script_dir = realpath(__file__)
