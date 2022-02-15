@@ -65,12 +65,14 @@ group_list = list(set(group_list).difference(set(downloaded_ls)))
 
 #print('Download 3dt1 scans that occur in pairs')
 print("Volumes still to download: ", len(group_list))
-
-#part = 0
-#start = 5000
-#step = 200
-#df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+part*step:start+step*(part+1)])]
-df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]
+use_batches = True
+if use_batches:
+    batch = 2
+    start = 0
+    batch_size = 1000
+    df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+batch*batch_size:start+batch_size*(batch+1)])]
+else:
+    df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]
 df_group = df_group.sort_values('PatientID')                            
 
 #df_group = df_all.iloc[start+part*500:start+50*(part+1),:]
