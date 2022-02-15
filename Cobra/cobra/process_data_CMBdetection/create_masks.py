@@ -97,8 +97,9 @@ def create_masks(input_folder: List[Path],
 
             #save slice and mask 
             if (output_file_extension=='nii.gz'):
-                nib.save(nib.Nifti1Image(img_slice,np.eye(4)),f"{output_folder}/{set}/images/{file_name}_slice{z}.{output_file_extension}")
-                nib.save(nib.Nifti1Image(img_mask,np.eye(4)),f"{output_folder}/{set}/masks/{file_name}_slice{z}.{output_file_extension}")
+                img_name = file_name[:-7]
+                nib.save(nib.Nifti1Image(img_slice,np.eye(4)),f"{output_folder}/{set}/images/{img_name}_slice{z}.{output_file_extension}")
+                nib.save(nib.Nifti1Image(img_mask,np.eye(4)),f"{output_folder}/{set}/masks/{img_name}_slice{z}.{output_file_extension}")
 
             else:
                 imageio.imwrite(f"{output_folder}/{set}/images/{file_name}_slice{z}.{output_file_extension}",img_slice.astype(np.uint8))
