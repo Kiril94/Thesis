@@ -65,7 +65,8 @@ group_list = list(set(group_list).difference(set(downloaded_ls)))
 print("Volumes still to download: ", len(group_list))
 use_batches = True
 if use_batches:
-    batch = 4
+    batch = 10
+    print("batch:", {batch})
     start = 0
     batch_size = 1000
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+batch*batch_size:start+batch_size*(batch+1)])]
@@ -73,12 +74,9 @@ else:
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]
 df_group = df_group.sort_values('PatientID')                            
 
-#df_group = df_all.iloc[start+part*500:start+50*(part+1),:]
-
 print("Move ", len(df_group), "Volumes")
 print("Move ", df_group.PatientID.nunique(), "Patients")
 
-# In case you want to download only specific sequences uncomment next lines
 #%%
 # In[Move]
 if use_batches:
