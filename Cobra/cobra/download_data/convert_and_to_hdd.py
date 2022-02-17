@@ -11,12 +11,17 @@ import shutil
 from dcm2nii import dcm2nii
 from basic import remove_file
 #%% DIRECTORIES 
-
+def _log(msg,file=None):
+    
+    if (file is not None): file.write(msg)
+    print(msg)
+    
 #from repository
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parents[1]  #cobra directory
 table_dir = join(base_dir, 'tables')
 input_file = join(table_dir,'excluded.csv')
+included = False
 
 #from hdd
 disk_dir = "F:" #hdd
@@ -28,21 +33,19 @@ dst_log_file = join(dst_data_dir,"log_general_swi.csv")
 dst_log_file2 = join(dst_data_dir,"log_downloaded_swi.csv")
 dst_log_file3 = join(dst_data_dir,"log_to_download_swi.csv")
 
-#make destination directories if they dont exist
-# os.makedirs(dcm_dst_data_dir)
-# os.makedirs(nii_included_dst_data_dir)
+# make destination directories if they dont exist
+os.makedirs(dcm_dst_data_dir)
+os.makedirs(nii_included_dst_data_dir)
 
 #from sif
-sif_dir = ""
-
-
-included = False
+sif_dir = "X:"
 
 #%% EXTRACT SCANS INFO + DIRECTORY IN SIF 
 df_ids_to_download = pd.read_csv(input_file)
 df_scan_info = pd.read_csv(join(table_dir,'swi_all.csv'))
+df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 
-df_info_to_download = df_ids_to_download.merge(df_scan_info,how='inner',left_on='',right_on='PatientID',validate='one_to_one')
+df_info_to_download = df_ids_to_download.merge(df_scan_info,how='inner',left_on='PatientID',right_on='PatientID',validate='one_to_one')
 
 #open log files
 log_file = open(dst_log_file,'a') #general logfile
@@ -63,28 +66,29 @@ else:
 try: 
     for idx,row in df_info_to_download.iterrows():
 
+        scan_dir = df_volume_dir[ df_volume_dir['SeriesInstanceUID']==row['SeriesInstanceUID'] ]['Directory'].values[0]
         #check if it is in the logfile!! 
 
         #check if it is already downloaded
-        origin_dcm_file_path = join(sif_dir,month,row['PatientID'],row['SeriesInstanceUID']) #find out
-        dst_dcm_file_path = join(dcm_dst_data_dir,month,row['PatientID'],row['SeriesInstanceUID']) #find out 
+        origin_dcm_file_path = join(sif_dir,scan_dir) #find out
+        dst_dcm_file_path = join(dcm_dst_data_dir,scan_dir) #find out 
         
         #download
         if (not os.path.exists(dst_dcm_file_path)):
             #download 
             shutil.copytree(origin_dcm_file_path,dst_dcm_file_path)
-            log_file.write(f"Patient {row['PatientID']} DICOM downloaded")
-        
+            _log(f"Patient {row['PatientID']} DICOM downloaded",log_file)
+
         #check if it is converted
-        origin_nii_file_path = join(dst_data_dir,month,row['PatientID'],row['SeriesInstanceUID']) #find out
+        origin_nii_file_path = join(dst_data_dir,scan_dir) #find out
         if (included): dst_nii_file_path = join(nii_included_dst_data_dir,) #find out     
         else:   dst_nii_file_path = join(nii_excluded_dst_data_dir,) 
 
         #convert
-        if (os.path.exists()):
+        if (os.path.exists(origin_nii_file_path)):
             #move to swi folder 
             shutil.copytree(origin_nii_file_path,dst_nii_file_path)
-            log_file.write(f"Patient {row['PatientID']} nifti moved to swi folder.")
+            _log(f"Patient {row['PatientID']} nifti moved to swi folder.",log_file)
         else: 
             #convert
             dcm2nii_out = dcm2nii.convert_dcm2nii(
@@ -92,7 +96,7 @@ try:
 
             #conversion failed, remove output files
             if dcm2nii_out==1:
-                log_file.write(f"Patient {row['PatientID']}: conversion from disk fail")
+                _log(f"Patient {row['PatientID']}: conversion from disk fail",log_file)
                 log_file3.write(row['PatientID'])
 
                 rm_files = [f for f in os.listdir(dst_nii_file_path) if f.startswith(row['PatientID'])]
@@ -102,12 +106,12 @@ try:
                 continue
             # conversion succeed write in log
             else:
-                log_file.write(f"Patient {row['PatientID']}: conversion from disk success")
+                _log(f"Patient {row['PatientID']}: conversion from disk success",log_file)
 
             #fix nifti conversion
 
         log_file2.write(row['PatientID'])
-
+        _log('||||||||||||||||||||\n',log_file)
 except:
     log_file.write("!!!!INTERRUPTED!!!!")
     log_file.close()
