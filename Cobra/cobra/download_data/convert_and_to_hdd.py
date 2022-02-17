@@ -66,17 +66,17 @@ try:
         #check if it is in the logfile!! 
 
         #check if it is already downloaded
-        origin_dcm_file_path = join(sif_dir,month,) #find out
-        dst_dcm_file_path = join(dcm_dst_data_dir,) #find out 
+        origin_dcm_file_path = join(sif_dir,month,row['PatientID'],row['SeriesInstanceUID']) #find out
+        dst_dcm_file_path = join(dcm_dst_data_dir,month,row['PatientID'],row['SeriesInstanceUID']) #find out 
         
         #download
-        if (not os.path.exists()):
+        if (not os.path.exists(dst_dcm_file_path)):
             #download 
-            shutil.copytree(origin_file_path,dst_file_path)
+            shutil.copytree(origin_dcm_file_path,dst_dcm_file_path)
             log_file.write(f"Patient {row['PatientID']} DICOM downloaded")
         
         #check if it is converted
-        origin_nii_file_path = join(dst_data_dir,month,) #find out
+        origin_nii_file_path = join(dst_data_dir,month,row['PatientID'],row['SeriesInstanceUID']) #find out
         if (included): dst_nii_file_path = join(nii_included_dst_data_dir,) #find out     
         else:   dst_nii_file_path = join(nii_excluded_dst_data_dir,) 
 
