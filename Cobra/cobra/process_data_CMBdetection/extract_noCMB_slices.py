@@ -52,7 +52,7 @@ def slice_niftis(input_folder: List[Path],
         for idx_slice in range(img.shape[2]):                
             nib.save(nib.Nifti1Image(img[:,:,idx_slice],np.eye(4)),
             f"{output_folder}/slices/images/{file_name[:-7]}_slice{idx_slice}.nii.gz")
-            nib.save(np.zeros_like(img[:,:,idx_slice]),np.eye(4)),
+            nib.save(nib.Nifti1Image(np.zeros_like(img[:,:,idx_slice]),np.eye(4)),
             f"{output_folder}/slices/masks/{file_name[:-7]}_slice{idx_slice}.nii.gz")
 
 
