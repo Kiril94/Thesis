@@ -1,5 +1,5 @@
 from datetime import datetime as dt
-from os.path import join, split, normpath
+from os.path import join, split
 import os
 from utilities.basic import list_subdir
 import numpy as np
@@ -12,7 +12,6 @@ import sys
 from pathlib import Path
 from functools import partial
 import pandas as pd
-import matplotlib.pyplot as plt
 
 def get_value_from_header(dcm_dir, key):
     dcm = dcmread(dcm_dir)
