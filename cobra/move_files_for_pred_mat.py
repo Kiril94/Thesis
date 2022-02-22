@@ -51,12 +51,17 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
     tmp_dir_sp = tmp_dir#join(tmp_dir, str(get_proc_id(test)))
     #make_dir(tmp_dir_sp)
     try:
-        eng.dcm2nii_main(src_dir, tmp_dir_sp)
+        eng.spm12_main(src_dir, tmp_dir_sp)
     except:
+        # sometimes .nii files are produced that look reasonable
+        # rename them and keep them in these folder
+        nii_files = list_subdir(tmp_dir_sp, '.nii')
+        if len(nii_files)==1:
+            shutil.move(nii_files[0], join(tmp_dir_sp, 'spm_conv_error', split(tgt_path)[1]))
         remove_files(tmp_dir_sp, ending='.nii.gz')
-        print("dcm2nii failed, try spm")
+        print("spm failed, try dcm2nii")
         try:
-            eng.spm12_main(src_dir, tmp_dir_sp)
+            eng.dcm2nii_main(src_dir, tmp_dir_sp)
         except:
             remove_files(tmp_dir_sp, ending='.nii.gz')
             print('x')
@@ -71,7 +76,7 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, test=False):
     """sids_ls: List of sids that need to be converted"""
     missing_files = get_missing_files(sids_ls, tgt_dir, id_dic)
     if test:
-        missing_files = missing_files[:20]
+        missing_files = missing_files[:5]
     sids = [split(f)[1] for f in missing_files]
     tgt_paths = [join(tgt_dir, id_dic[sid]+'.nii.gz') for sid in sids]
     src_dirs = [dir_dic[sid] for sid in sids]
@@ -82,4 +87,6 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, test=False):
     #            pool.starmap(dcm2nii_mat_p, mp_input)
 
 if __name__ == '__main__':
-    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, test=True)
+    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, test=False)
+    #sid = "b335b85dea99e5766283a3a6a75b17d7"
+    #print(dir_dic[sid])
