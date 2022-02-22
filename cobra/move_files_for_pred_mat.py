@@ -32,8 +32,10 @@ def get_missing_files(sids_to_download, download_dir, newid_dic):
     missing_files = set(sids_to_download).difference(set(downloaded_files_sids))
     return list(missing_files)
 
-def dcm2nii_mat():
+def dcm2nii_mat_conversion(src_dir, tgt_dir, tgt_name)
     eng.dcm2nii_main('F:\\CoBra\\Data\\dcm\\2019_01\\00ade8f21e97e455352491aab6b00cb3', 'F:\\CoBra\\Data\\test')
 if __name__ == '__main__':
     dcm2nii_mat()
+    src_test = 'F:\\CoBra\\Data\\dcm\\2019_01\\00ade8f21e97e455352491aab6b00cb3'
+    tgt_test = 'F:\\CoBra\\Data\\test'
     #print(eng.foo(1,0))
