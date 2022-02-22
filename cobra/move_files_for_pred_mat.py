@@ -17,6 +17,7 @@ tables_dir = join(base_dir, 'data', 'tables')
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
 tgt_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files')
 tmp_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'temp')
+excl_files_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
 # matlab engine
 eng = matlab.engine.start_matlab()
 eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\functions', nargout=0)
@@ -31,7 +32,7 @@ with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\tables\\disk_series_dir
     dir_dic = json.load(f)
 
 # define functions
-def get_missing_files(sids_to_conv, nii_dir, newid_dic):
+def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
     """
     sids_to_conv: List of SeriesInstanceUIDs that need to be converted to nii
     nii_dir: str, directory where converted files are placed
@@ -41,7 +42,10 @@ def get_missing_files(sids_to_conv, nii_dir, newid_dic):
     inv_map = {v: k for k, v in newid_dic.items()}
     conv_files_ids = [file[:-7] for file in os.listdir(nii_dir)]
     conv_files_sids = [inv_map[id] for id in conv_files_ids]
-    missing_files = set(sids_to_conv).difference(set(conv_files_sids))
+    if not isinstance(excl_nii_dir, type(None)):
+        excl_files_ids = [file[:-7] for file in os.listdir(excl_nii_dir)]
+        excl_files_sids = [inv_map[id] for id in excl_files_ids]
+    missing_files = (set(sids_to_conv).difference(set(conv_files_sids))).difference(set(excl_files_sids))
     return list(missing_files)
     
 def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
@@ -72,9 +76,10 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
     else:
         pass
     return 0
-def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, test=False):
+def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, test=False):
     """sids_ls: List of sids that need to be converted"""
-    missing_files = get_missing_files(sids_ls, tgt_dir, id_dic)
+    missing_files = get_missing_files(sids_ls, tgt_dir, id_dic, excl_files_dir)
+    print(len(missing_files), ' files will be converted')
     if test:
         missing_files = missing_files[:5]
     sids = [split(f)[1] for f in missing_files]
@@ -87,6 +92,4 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, test=False):
     #            pool.starmap(dcm2nii_mat_p, mp_input)
 
 if __name__ == '__main__':
-    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, test=False)
-    #sid = "b335b85dea99e5766283a3a6a75b17d7"
-    #print(dir_dic[sid])
+    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=False)
