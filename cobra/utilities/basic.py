@@ -18,6 +18,9 @@ def make_dir(dir_):
 def remove_file(file):
     if os.path.exists(file):
         os.remove(file) # one file at a time
+def remove_files(dir, ending=''):
+    for f in [f for f in list_subdir(dir) if f.endswith(ending)]:
+        os.remove(f)
 
 def get_part_of_path(path, start, stop=None):
     if stop==None:

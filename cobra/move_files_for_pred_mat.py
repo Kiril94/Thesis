@@ -7,7 +7,7 @@ import multiprocessing as mp
 import time
 import json
 import pickle
-from utilities.basic import list_subdir, make_dir, get_proc_id
+from utilities.basic import list_subdir, make_dir, get_proc_id, remove_files
 import matlab.engine
 from functools import partial
 # paths
@@ -48,18 +48,17 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
     """Converts dcm to nii using dcm2nii (matlab) or spm12 (matlab) if first fails
     src_dir: Directory with dcm series
     tgt_path: Full path of the nii file that will be produced (should end with .nii.gz)"""
-    tmp_dir_sp = join(tmp_dir, str(get_proc_id(test)))
-    make_dir(tmp_dir_sp)
+    tmp_dir_sp = tmp_dir#join(tmp_dir, str(get_proc_id(test)))
+    #make_dir(tmp_dir_sp)
     try:
         eng.dcm2nii_main(src_dir, tmp_dir_sp)
     except:
-        shutil.remove()
+        remove_files(tmp_dir_sp, ending='.nii.gz')
         print("dcm2nii failed, try spm")
         try:
             eng.spm12_main(src_dir, tmp_dir_sp)
         except:
-            for f in list_subdir(tmp_dir_sp):
-                shutil.remove(f)
+            remove_files(tmp_dir_sp, ending='.nii.gz')
             print('x')
     out_files = list_subdir(tmp_dir_sp, ending='.nii.gz')
     assert len(out_files)<=1, f'More than 1 nii file was created for {src_dir}'
@@ -72,15 +71,15 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, test=False):
     """sids_ls: List of sids that need to be converted"""
     missing_files = get_missing_files(sids_ls, tgt_dir, id_dic)
     if test:
-        missing_files = missing_files[10:12]
+        missing_files = missing_files[:20]
     sids = [split(f)[1] for f in missing_files]
     tgt_paths = [join(tgt_dir, id_dic[sid]+'.nii.gz') for sid in sids]
     src_dirs = [dir_dic[sid] for sid in sids]
-
     mp_input = [(src_dir, tgt_path) for src_dir, tgt_path in zip(src_dirs, tgt_paths)]
-    dcm2nii_mat_p = partial(dcm2nii_mat, tmp_dir=tmp_dir)
-    with mp.Pool() as pool:
-                pool.starmap(dcm2nii_mat_p, mp_input)
+    for src_dir, tgt_path in mp_input:
+        dcm2nii_mat(src_dir, tgt_path, tmp_dir)
+    #with mp.Pool(2) as pool:
+    #            pool.starmap(dcm2nii_mat_p, mp_input)
 
 if __name__ == '__main__':
     dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, test=True)
