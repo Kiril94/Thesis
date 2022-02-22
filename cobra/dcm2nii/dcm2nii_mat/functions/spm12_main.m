@@ -1,7 +1,14 @@
-function [outputArg1,outputArg2] = spm12_main(inputArg1,inputArg2)
+function outFile = spm12_main(src_dir, tgt_dir)
 %SPM12_MAIN Summary of this function goes here
 %   Detailed explanation goes here
-outputArg1 = inputArg1;
-outputArg2 = inputArg2;
+%addpath('../spm12/');
+dcmFiles = dir(strcat(src_dir,'\*.dcm'));
+dcmFiles = strcat({dcmFiles(:).folder}, '\', {dcmFiles(:).name});
+headers = spm_dicom_headers(dcmFiles, false);
+outFile = spm_dicom_convert(headers, 'all', 'flat', 'nii', tgt_dir, false);
+gzip(outFile.files{:});
+delete(outFile.files{:});
+[filePath, ~, ~] = fileparts(outFile.files{:});
+movefile([outFile.files{:}, '.gz'], fullfile(filePath, 'result.nii.gz'));
 end
 

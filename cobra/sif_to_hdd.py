@@ -65,8 +65,8 @@ group_list = list(set(group_list).difference(set(downloaded_ls)))
 print("Volumes still to download: ", len(group_list))
 use_batches = True
 if use_batches:
-    batch = 5
-    print("batch:", {batch})
+    batch = 2
+    print("batch:", batch)
     start = 0
     batch_size = 1000
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+batch*batch_size:start+batch_size*(batch+1)])]
@@ -86,7 +86,7 @@ else:
     patient_log_file = join(base_dir, 'logs', f"{sids_file_name}_patient_log.txt" )
     volume_log_file = join(base_dir, 'logs', f"{sids_file_name}_volume_log.txt" )
 download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
-                        dst_data_dir, patient_log_file, volume_log_file)
+                        dst_data_dir, patient_log_file, volume_log_file, src_dir="X:\\")
 
 #%%
 # In[move GE ]
