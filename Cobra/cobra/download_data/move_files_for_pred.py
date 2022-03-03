@@ -8,40 +8,40 @@ import pandas as pd
 import numpy as np
 import gzip
 import multiprocessing as mp
-from dcm2nii import dcm2nii
+from cobra.dcm2nii import dcm2nii
 from datetime import datetime as dt
 import time
 import json
 import pickle
-import basic, fix_dcm_incomplete_vols
+from cobra.download_data import basic, fix_dcm_incomplete_vols
 from pydicom import dcmread
-from basic import get_dir, make_dir, remove_file, get_part_of_path, get_proc_id
+from cobra.download_data.basic import get_dir, make_dir, remove_file, get_part_of_path, get_proc_id
 #%%
-# define directories
-print("Define directories")
-disk_data_dir = join("F:\\", 'CoBra', 'Data')
-dcm_base_dir = join(disk_data_dir, 'dcm')
-disk_nii_dir = join(disk_data_dir, 'nii')
-pred_input_dir = ""#join(disk_data_dir, 'volume_longitudinal_nii', 'input')
-nii_base_pred_dir = ""#join(pred_input_dir, 'cases') 
-print("gzipped niis will be stored at: ", nii_base_pred_dir)
-sif_dir = 'Y:\\' 
-script_dir = os.path.realpath(__file__)
-base_dir = Path(script_dir).parent
-data_dir = join(base_dir, 'data')
-table_dir = join(data_dir, 'tables')
-pat_groups_dir = join(data_dir, 'patient_groups')
+# # define directories
+# print("Define directories")
+# disk_data_dir = join("F:\\", 'CoBra', 'Data')
+# dcm_base_dir = join(disk_data_dir, 'dcm')
+# disk_nii_dir = join(disk_data_dir, 'nii')
+# pred_input_dir = ""#join(disk_data_dir, 'volume_longitudinal_nii', 'input')
+# nii_base_pred_dir = ""#join(pred_input_dir, 'cases') 
+# print("gzipped niis will be stored at: ", nii_base_pred_dir)
+# sif_dir = 'Y:\\' 
+# script_dir = os.path.realpath(__file__)
+# base_dir = Path(script_dir).parents[1]
+# data_dir = join(base_dir, 'data')
+# table_dir = join(data_dir, 'tables')
+# pat_groups_dir = join(data_dir, 'patient_groups')
 
-# load helper files
-print("Load helper files")
-df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv')) #contains sif directories for sids
-sif_volume_dir_dic = pd.Series(
-        df_volume_dir.Directory.values, index=df_volume_dir.SeriesInstanceUID)\
-            .to_dict()
-with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
-    disk_volume_dir_dic_dcm = json.load(json_file)
-with open(join(table_dir, "disk_series_directories_niis.json"), "r") as json_file:
-    disk_volume_dir_dic_nii = json.load(json_file)
+# # load helper files
+# print("Load helper files")
+# df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv')) #contains sif directories for sids
+# sif_volume_dir_dic = pd.Series(
+#         df_volume_dir.Directory.values, index=df_volume_dir.SeriesInstanceUID)\
+#             .to_dict()
+# with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
+#     disk_volume_dir_dic_dcm = json.load(json_file)
+# with open(join(table_dir, "disk_series_directories_niis.json"), "r") as json_file:
+#     disk_volume_dir_dic_nii = json.load(json_file)
 
 ##################Currently not used#############################################
 def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
@@ -83,23 +83,23 @@ def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
 ####################################################################################
 
 #######################Only for test purposes#######################################
-dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
-    usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
-    'Sequence', 'NumberOfSlices'])
-sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_long_sids.pkl')
-with open(sids_3d_t1_path, 'rb') as f:
-    sids_3dt1_long = pickle.load(f)
-df_3dt1_long = dfc[dfc.SeriesInstanceUID.isin(sids_3dt1_long)]
-sids_cases = np.loadtxt(join(pat_groups_dir, 
-                't1_pre_post_suid.txt'), dtype=str).tolist()
-sids_3d_t1_long_cases = list(set(sids_3dt1_long).intersection(set(sids_cases)))
-print('num cases: ',len(sids_3d_t1_long_cases))
-sids_3d_t1_long_controls = list(set(sids_3dt1_long).difference(set(sids_cases)))
-print('num controls: ',len(sids_3d_t1_long_controls))
-df_cases = dfc[dfc.SeriesInstanceUID.isin(sids_3d_t1_long_cases)]
-sids_cases_ls = list(df_cases.SeriesInstanceUID)
-df_controls = dfc[(dfc.SeriesInstanceUID.isin(sids_3d_t1_long_controls))]
-sids_controls_ls = list(df_controls.SeriesInstanceUID)
+# dfc = pd.read_csv(join(table_dir, "neg_pos_clean.csv"), 
+#     usecols=['SeriesInstanceUID', 'PatientID', 'MRAcquisitionType',
+#     'Sequence', 'NumberOfSlices'])
+# sids_3d_t1_path = join(data_dir, 't1_longitudinal', 'pairs_3dt1_long_sids.pkl')
+# with open(sids_3d_t1_path, 'rb') as f:
+#     sids_3dt1_long = pickle.load(f)
+# df_3dt1_long = dfc[dfc.SeriesInstanceUID.isin(sids_3dt1_long)]
+# sids_cases = np.loadtxt(join(pat_groups_dir, 
+#                 't1_pre_post_suid.txt'), dtype=str).tolist()
+# sids_3d_t1_long_cases = list(set(sids_3dt1_long).intersection(set(sids_cases)))
+# print('num cases: ',len(sids_3d_t1_long_cases))
+# sids_3d_t1_long_controls = list(set(sids_3dt1_long).difference(set(sids_cases)))
+# print('num controls: ',len(sids_3d_t1_long_controls))
+# df_cases = dfc[dfc.SeriesInstanceUID.isin(sids_3d_t1_long_cases)]
+# sids_cases_ls = list(df_cases.SeriesInstanceUID)
+# df_controls = dfc[(dfc.SeriesInstanceUID.isin(sids_3d_t1_long_controls))]
+# sids_controls_ls = list(df_controls.SeriesInstanceUID)
 ###################################################################################
 
 ########################functions##########################################
