@@ -4,6 +4,7 @@ from numpy import linalg
 def is_pos_def(x):
     return np.all(np.linalg.eigvals(x) > 0)
 # distance matrix
+
 D = np.array([
                 [0, 2, 2, 2],
                 [2, 0, np.sqrt(8), np.sqrt(8)],
