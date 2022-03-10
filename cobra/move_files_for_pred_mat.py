@@ -3,13 +3,11 @@ import shutil
 import os
 from os.path import join, split
 from pathlib import Path
-import multiprocessing as mp
-import time
 import json
 import pickle
-from utilities.basic import list_subdir, make_dir, get_proc_id, remove_files
+from utilities.basic import list_subdir, remove_files
 import matlab.engine
-from functools import partial
+
 # paths
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
@@ -47,7 +45,8 @@ def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
         excl_files_sids = [inv_map[id] for id in excl_files_ids]
     missing_files = (set(sids_to_conv).difference(set(conv_files_sids))).difference(set(excl_files_sids))
     return list(missing_files)
-    
+
+
 def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
     """Converts dcm to nii using dcm2nii (matlab) or spm12 (matlab) if first fails
     src_dir: Directory with dcm series
