@@ -86,7 +86,7 @@ else:
     patient_log_file = join(base_dir, 'logs', f"{sids_file_name}_patient_log.txt" )
     volume_log_file = join(base_dir, 'logs', f"{sids_file_name}_volume_log.txt" )
 download.move_files_from_sif(df_group, df_volume_dir, df_patient_dir, 
-                        dst_data_dir, patient_log_file, volume_log_file, src_dir="X:\\")
+                        dst_data_dir, patient_log_file, volume_log_file, src_dir="Y:\\")
 
 #%%
 # In[move GE ]

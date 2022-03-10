@@ -85,6 +85,7 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
     """Converts dcm to nii using dcm2nii (matlab) or spm12 (matlab) if first fails
     src_dir: Directory with dcm series
     tgt_path: Full path of the nii file that will be produced (should end with .nii.gz)"""
+    print(tgt_path)
     tmp_dir_sp = tmp_dir#join(tmp_dir, str(get_proc_id(test)))
     #make_dir(tmp_dir_sp)
     try:
@@ -115,7 +116,7 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, tes
     missing_files = get_missing_files(sids_ls, tgt_dir, id_dic, excl_files_dir)
     print(len(missing_files), ' files will be converted')
     if test:
-        missing_files = missing_files[:5]
+        missing_files = missing_files[4:5]
     sids = [split(f)[1] for f in missing_files]
     tgt_paths = [join(tgt_dir, id_dic[sid]+'.nii.gz') for sid in sids]
     src_dirs = [dir_dic[sid] for sid in sids]
@@ -124,4 +125,4 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, tes
         dcm2nii_mat(src_dir, tgt_path, tmp_dir)
 
 if __name__ == '__main__':
-    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=False)
+    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=True)
