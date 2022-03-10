@@ -42,11 +42,20 @@ for i, line in enumerate(lines):
             corr_new_ids.append(line[-13:-7])
 
 print('Check ids: ', all([len(id)==6 for id in corr_new_ids]))
-print('Remove corrupted niis')
-for corr_new_id in corr_new_ids:
-    file = corr_new_id+'.nii.gz'
-    #print(file)
-    remove_file(join(tgt_dir, file))
+
+exclude_ids = []
+with open(join(log_corr_dir, 'exclude_files.txt'), 'r') as f:
+    for line in f:
+        exclude_ids.append(line[:6])
+print('exclude: ',exclude_ids)
+corr_new_ids = list(set(corr_new_ids).difference(set(exclude_ids)))
+print(len(corr_new_ids))
+def remove_corr_files():
+    print('Remove corrupted niis')
+    for corr_new_id in corr_new_ids:
+        file = corr_new_id+'.nii.gz'
+        #print(file)
+        remove_file(join(tgt_dir, file))
 #assert False
 
 
@@ -85,9 +94,11 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
     """Converts dcm to nii using dcm2nii (matlab) or spm12 (matlab) if first fails
     src_dir: Directory with dcm series
     tgt_path: Full path of the nii file that will be produced (should end with .nii.gz)"""
-    print(tgt_path)
+    print(src_dir)
+    print('->', tgt_path)
     tmp_dir_sp = tmp_dir#join(tmp_dir, str(get_proc_id(test)))
     #make_dir(tmp_dir_sp)
+
     try:
         eng.spm12_main(src_dir, tmp_dir_sp)
     except:
