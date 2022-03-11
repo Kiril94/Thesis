@@ -18,6 +18,7 @@ log_corr_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input')
 tgt_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files')
 tmp_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'temp')
 excl_files_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
+excl_files_dir = [excl_files_dir, join(tmp_dir, 'spm_conv_error', 'inc_imageorientation')]
 # read ids of corrupted files
 with open(join(log_corr_dir, 'Corrupted.txt'), 'r') as f:
     lines = []
@@ -47,9 +48,10 @@ exclude_ids = []
 with open(join(log_corr_dir, 'exclude_files.txt'), 'r') as f:
     for line in f:
         exclude_ids.append(line[:6])
-print('exclude: ',exclude_ids)
+
+print('Exclude ', len(exclude_ids), 'files in', (join(log_corr_dir, 'exclude_files.txt')))
 corr_new_ids = list(set(corr_new_ids).difference(set(exclude_ids)))
-print(len(corr_new_ids))
+
 def remove_corr_files():
     print('Remove corrupted niis')
     for corr_new_id in corr_new_ids:
@@ -66,7 +68,7 @@ eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\spm12
 # load necessary files
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
-with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\pairs_3dt1_long_sids.pkl", 'rb') as f:
+with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\sids_long_new.pkl", 'rb') as f:
     sids_ls = pickle.load(f)
 with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\tables\\disk_series_directories.json", 'rb') as f:
     dir_dic = json.load(f)
@@ -85,8 +87,16 @@ def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
     conv_files_ids = [file[:-7] for file in os.listdir(nii_dir)]
     conv_files_sids = [inv_map[id] for id in conv_files_ids]
     if not isinstance(excl_nii_dir, type(None)):
-        excl_files_ids = [file[:-7] for file in os.listdir(excl_nii_dir)]
-        excl_files_sids = [inv_map[id] for id in excl_files_ids]
+        print('Exclude files that are in', excl_nii_dir)
+        if isinstance(excl_nii_dir, list):
+            excl_files_sids = []
+            for dir_ in excl_nii_dir:
+                excl_files_ids = [file[:-7] for file in os.listdir(dir_)]
+                excl_files_sids_temp = [inv_map[id] for id in excl_files_ids]
+                excl_files_sids = excl_files_sids + excl_files_sids_temp
+        else:
+            excl_files_ids = [file[:-7] for file in os.listdir(excl_nii_dir)]
+            excl_files_sids = [inv_map[id] for id in excl_files_ids]
     missing_files = (set(sids_to_conv).difference(set(conv_files_sids))).difference(set(excl_files_sids))
     return list(missing_files)
 
@@ -127,7 +137,7 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, tes
     missing_files = get_missing_files(sids_ls, tgt_dir, id_dic, excl_files_dir)
     print(len(missing_files), ' files will be converted')
     if test:
-        missing_files = missing_files[4:5]
+        missing_files = missing_files[1:2]
     sids = [split(f)[1] for f in missing_files]
     tgt_paths = [join(tgt_dir, id_dic[sid]+'.nii.gz') for sid in sids]
     src_dirs = [dir_dic[sid] for sid in sids]
@@ -136,4 +146,4 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, tes
         dcm2nii_mat(src_dir, tgt_path, tmp_dir)
 
 if __name__ == '__main__':
-    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=True)
+    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=False)
