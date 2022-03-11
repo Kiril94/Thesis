@@ -17,8 +17,10 @@ tables_dir = join(data_dir, 'tables')
 log_corr_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input')
 tgt_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files')
 tmp_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'temp')
-excl_files_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
-excl_files_dir = [excl_files_dir, join(tmp_dir, 'spm_conv_error', 'inc_imageorientation')]
+
+excl_files_dir = [join(tmp_dir, 'spm_conv_error', 'cut_off'), 
+                join(tmp_dir, 'spm_conv_error', 'inc_imageorientation'),
+                ]
 # read ids of corrupted files
 with open(join(log_corr_dir, 'Corrupted.txt'), 'r') as f:
     lines = []
@@ -50,6 +52,7 @@ with open(join(log_corr_dir, 'exclude_files.txt'), 'r') as f:
         exclude_ids.append(line[:6])
 
 print('Exclude ', len(exclude_ids), 'files in', (join(log_corr_dir, 'exclude_files.txt')))
+print('Excluded files', exclude_ids)
 corr_new_ids = list(set(corr_new_ids).difference(set(exclude_ids)))
 
 def remove_corr_files():
@@ -113,7 +116,7 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
         eng.spm12_main(src_dir, tmp_dir_sp)
     except:
         # sometimes .nii files are produced that look reasonable
-        # rename them and keep them in these folder
+        # rename them and keep them in this folder
         nii_files = list_subdir(tmp_dir_sp, '.nii')
         if len(nii_files)==1:
             shutil.move(nii_files[0], join(tmp_dir_sp, 'spm_conv_error', split(tgt_path)[1]))
@@ -130,6 +133,8 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
         shutil.move(out_files[0], tgt_path)
     else:
         pass
+    print('remove all remaining nii files')
+    remove_files(tmp_dir_sp, ending='.nii')
     return 0
 def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, test=False):
     """sids_ls: List of sids that need to be converted"""
