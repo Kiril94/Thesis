@@ -17,8 +17,10 @@ tables_dir = join(data_dir, 'tables')
 log_corr_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input')
 tgt_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files')
 tmp_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'temp')
-cutoff_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
-cutoff_newids = [split(f)[1][:-7] for f in os.listdir(cutoff_dir)]
+#cutoff_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
+#cutoff_newids = [split(f)[1][:-7] for f in os.listdir(cutoff_dir)]
+with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\sids_long_stroke.pkl", 'rb') as f:
+    newids = pickle.load(f) 
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
 with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\sids_long_new.pkl", 'rb') as f:
@@ -26,6 +28,6 @@ with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\sids_l
 with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\tables\\disk_series_directories.json", 'rb') as f:
     dir_dic = json.load(f)
 inv_id_map = {v: k for k, v in id_dic.items()}
-dcm_dirs = {newid:os.path.normpath(dir_dic[inv_id_map[newid]]) for newid in cutoff_newids}
+dcm_dirs = {newid:os.path.normpath(dir_dic[inv_id_map[newid]]) for newid in newids}
 for item in dcm_dirs.items():
     print(item)
