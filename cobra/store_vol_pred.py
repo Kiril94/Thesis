@@ -73,8 +73,8 @@ def main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None):
 
 
 if __name__ == '__main__':
-    #converted_files_df = pd.read_feather(join(data_long_dir, 'results', 'volume_prediction_results.feather'))
-    df = main(pred_files[:1000], brain_regions_dic, inv_id_map, converted_files_df=None)
+    converted_files_df = pd.read_feather(join(data_long_dir, 'results', 'volume_prediction_results.feather'))
+    df = main(pred_files, brain_regions_dic, inv_id_map, converted_files_df)
     df.to_feather(join(data_long_dir,'results', 'volume_prediction_results.feather'))
     print(df.head())
     

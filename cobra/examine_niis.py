@@ -17,7 +17,7 @@ tmp_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'temp')
 data_long_dir = join(data_dir, 't1_longitudinal')
 #cutoff_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
 #cutoff_newids = [split(f)[1][:-7] for f in os.listdir(cutoff_dir)]
-with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\sids_long_stroke.pkl", 'rb') as f:
+with open(join(data_long_dir,"sids_long_stroke.pkl"), 'rb') as f:
     sids = pickle.load(f) 
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
