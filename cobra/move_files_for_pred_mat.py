@@ -16,6 +16,8 @@ disk_data_dir = join("F:\\", 'CoBra', 'Data')
 tgt_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files')
 tmp_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'temp')
 excl_files_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
+data_dir = join(base_dir, 'data')
+data_long_dir = join(data_dir, 't1_longitudinal')
 # matlab engine
 eng = matlab.engine.start_matlab()
 eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\functions', nargout=0)
@@ -24,9 +26,9 @@ eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\spm12
 # load necessary files
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
-with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\pairs_3dt1_long_sids.pkl", 'rb') as f:
+with open(join(data_long_dir, "pairs_3dt1_long_sids.pkl"), 'rb') as f:
     sids_ls = pickle.load(f)
-with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\tables\\disk_series_directories.json", 'rb') as f:
+with open(join(tables_dir, "disk_series_directories.json"), 'rb') as f:
     dir_dic = json.load(f)
 
 # define functions
