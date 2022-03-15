@@ -1,3 +1,11 @@
+"""Creating a csv file which contains all the predicted brain volumes.
+Modifies existing df stored under 
+join('t1_longitudinal', 'results', 'volume_prediction_results.feather').
+Files which are already in this dataframe are skipped by default!! 
+When reruning volume prediction for some files
+either remove them from the dataframe (recommended) or set converted_files_df to None.
+"""
+
 import os
 import sys
 from os.path import join, split

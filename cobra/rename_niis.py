@@ -1,3 +1,6 @@
+"""Creating new ids for converted niis. Ranging from 000000 to num_scans
+The result is stored in tables_dir = join(base_dir, 'data', 'tables','newIDs_dic.pkl') """
+
 from os.path import join, split
 import os
 import time

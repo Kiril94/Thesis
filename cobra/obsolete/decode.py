@@ -1,3 +1,5 @@
+"""Used to decode encrypted information exported from computerome."""
+
 #%%
 import pandas as pd
 from cryptography.fernet import Fernet

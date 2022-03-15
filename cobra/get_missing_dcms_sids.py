@@ -2,6 +2,8 @@
 """
 Created on Fri Sep 17 10:58:38 2021
 @author: klein
+Storing sids of series that were not completely downloded,
+
 """
 #%% 
 # In[Import]

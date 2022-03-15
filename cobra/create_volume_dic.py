@@ -1,3 +1,7 @@
+"""Create a dictionary (in parallel) with
+all the downloaded files as keys (niis or dcms) and the correpsonding directory
+on the disk as value."""
+
 import os
 from os.path import join, split
 from pathlib import Path
