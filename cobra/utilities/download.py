@@ -50,7 +50,7 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
 
     patient_list = df_group.PatientID.unique()
     counter = last_patient_idx
-    for pat in patient_list[last_patient_idx:]:
+    for i, pat in enumerate(patient_list[last_patient_idx:]):
         counter += 1
         patient_dir = patient_dir_dic[pat]
         print(f"Patient: {patient_dir}", end='\n')
@@ -59,6 +59,8 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                 \n {datetime.now()}\n"
         with open(patient_log_file, mode="a+") as f:
             f.write(log_str)
+            if i==(len(patient_list[last_patient_idx:])-1):
+                f.write('\nfinished')
         # Copy doc files
         if download_docs:
             doc_dst_dir = join(dst_dir, patient_dir, 'DOC')
