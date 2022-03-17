@@ -17,7 +17,7 @@ tables_dir = join(data_dir, 'tables')
 log_corr_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input')
 tgt_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files')
 tmp_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'temp')
-
+logfile = join(tmp_dir, 'conv_log.txt')
 excl_files_dir = [join(tmp_dir, 'spm_conv_error', 'cut_off'), 
                 join(tmp_dir, 'spm_conv_error', 'inc_imageorientation'),
                 ]
@@ -33,6 +33,7 @@ for i, line in enumerate(lines):
         else:
             corr_new_ids.append(split(line)[1][:-8])
 
+
 with open(join(log_corr_dir, 'Corrupted2.txt'), 'r') as f:
     lines = []
     for line in f:
@@ -44,16 +45,20 @@ for i, line in enumerate(lines):
         else:
             corr_new_ids.append(line[-13:-7])
 
+
+corr_new_ids = corr_new_ids + ['109983', '047205', '083072', '109644', '287546', '258402',
+                '258387', '258391', '258394','258397','258402', '258403']
+
 print('Check ids: ', all([len(id)==6 for id in corr_new_ids]))
 
-exclude_ids = []
-with open(join(log_corr_dir, 'exclude_files.txt'), 'r') as f:
-    for line in f:
-        exclude_ids.append(line[:6])
+# exclude_ids = []
+# with open(join(log_corr_dir, 'exclude_files.txt'), 'r') as f:
+    # for line in f:
+        # exclude_ids.append(line[:6])
 
-print('Exclude ', len(exclude_ids), 'files in', (join(log_corr_dir, 'exclude_files.txt')))
-print('Excluded files', exclude_ids)
-corr_new_ids = list(set(corr_new_ids).difference(set(exclude_ids)))
+# print('Exclude ', len(exclude_ids), 'files in', (join(log_corr_dir, 'exclude_files.txt')))
+# print('Excluded files', exclude_ids)
+# corr_new_ids = list(set(corr_new_ids).difference(set(exclude_ids)))
 
 def remove_corr_files():
     print('Remove corrupted niis')
@@ -71,13 +76,15 @@ eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\spm12
 # load necessary files
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
-with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\sids_long_new.pkl", 'rb') as f:
+with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\3dt1_sids.pkl", 'rb') as f:
     sids_ls = pickle.load(f)
 with open(join(tables_dir, "disk_series_directories.json"), 'rb') as f:
     dir_dic = json.load(f)
 
 # define functions
-
+def log_(s):
+    with open(logfile, 'w') as f:
+        f.write(s)
 
 def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
     """
@@ -100,7 +107,9 @@ def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
         else:
             excl_files_ids = [file[:-7] for file in os.listdir(excl_nii_dir)]
             excl_files_sids = [inv_map[id] for id in excl_files_ids]
-    missing_files = (set(sids_to_conv).difference(set(conv_files_sids))).difference(set(excl_files_sids))
+        missing_files = (set(sids_to_conv).difference(set(conv_files_sids))).difference(set(excl_files_sids))
+    else:
+        missing_files = (set(sids_to_conv).difference(set(conv_files_sids)))
     return list(missing_files)
 
 def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
@@ -113,18 +122,21 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
     #make_dir(tmp_dir_sp)
 
     try:
-        eng.spm12_main(src_dir, tmp_dir_sp)
+        eng.dcm2nii_main(src_dir, tmp_dir_sp)
+        
     except:
         # sometimes .nii files are produced that look reasonable
         # rename them and keep them in this folder
         nii_files = list_subdir(tmp_dir_sp, '.nii')
         if len(nii_files)==1:
-            shutil.move(nii_files[0], join(tmp_dir_sp, 'spm_conv_error', split(tgt_path)[1]))
+            shutil.move(nii_files[0], join(tmp_dir_sp, 'dcm2nii_conv_error', split(tgt_path)[1]))
         remove_files(tmp_dir_sp, ending='.nii.gz')
-        print("spm failed, try dcm2nii")
+        print("dcm2nii failed, try som")
+        log_('dcm2nii failed on '+ split(tgt_path)[1]+ '\n')
         try:
-            eng.dcm2nii_main(src_dir, tmp_dir_sp)
+            eng.spm12_main(src_dir, tmp_dir_sp)
         except:
+            log_('spm failed on '+ split(tgt_path)[1]+'\n')
             remove_files(tmp_dir_sp, ending='.nii.gz')
             print('x')
     out_files = list_subdir(tmp_dir_sp, ending='.nii.gz')
@@ -151,4 +163,4 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, tes
         dcm2nii_mat(src_dir, tgt_path, tmp_dir)
 
 if __name__ == '__main__':
-    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=False)
+    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, test=False)
