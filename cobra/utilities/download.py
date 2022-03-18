@@ -31,7 +31,6 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
         print(f"Try to remove {last_volume_path}")
     except Exception as e:
         print("ERROR : "+str(e))
-    
     try:
         shutil.rmtree(last_volume_path)
     except Exception as e:
@@ -80,13 +79,14 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                         shutil.copy(doc_path_src, doc_path_dst)
                     except Exception as e:
                         print("ERROR : "+str(e))
+                    
             print('\n')
             if doc_counter==0:
                 print("No reports found.")   
         # copy dcm files
         volumes = df_group[df_group.PatientID==pat]['SeriesInstanceUID']
         print(f"download {len(volumes)} volumes")
-        for volume in volumes:
+        for i, volume in enumerate(volumes):
             try:
                 volume_dir = volume_dir_dic[volume]
             except:
@@ -107,6 +107,9 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                     with open(volume_log_file, mode="w") as f:
                         f.write(volume_dst)
                     shutil.copytree(volume_src, volume_dst)
+                    if i==(len(volumes)-1):
+                        with open(volume_log_file, mode="w") as f:
+                            f.write("finished")
                     print("|",  end='')
                 elif len(os.listdir(volume_dst))==0:
                     os.remove(volume_dst)

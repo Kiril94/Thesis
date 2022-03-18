@@ -13,11 +13,12 @@ script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 tables_dir = join(base_dir, 'data', 'tables')
 disk_data_dir = join("F:\\", 'CoBra', 'Data')
-tgt_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files')
-tmp_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'temp')
-excl_files_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
+tgt_dir = join(disk_data_dir, 'volume_cross_nii', 'input', 'nii_files')
+tmp_dir = join(disk_data_dir, 'volume_cross_nii', 'temp')
+#excl_files_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
+excl_files_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files')
 data_dir = join(base_dir, 'data')
-data_long_dir = join(data_dir, 't1_longitudinal')
+data_cross_dir = join(data_dir, 't1_cross')
 # matlab engine
 eng = matlab.engine.start_matlab()
 eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\functions', nargout=0)
@@ -26,7 +27,7 @@ eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\spm12
 # load necessary files
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
-with open(join(data_long_dir, "pairs_3dt1_long_sids.pkl"), 'rb') as f:
+with open(join(data_cross_dir, "3dt1_sids.pkl"), 'rb') as f:
     sids_ls = pickle.load(f)
 with open(join(tables_dir, "disk_series_directories.json"), 'rb') as f:
     dir_dic = json.load(f)
@@ -43,8 +44,15 @@ def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
     conv_files_ids = [file[:-7] for file in os.listdir(nii_dir)]
     conv_files_sids = [inv_map[id] for id in conv_files_ids]
     if not isinstance(excl_nii_dir, type(None)):
-        excl_files_ids = [file[:-7] for file in os.listdir(excl_nii_dir)]
-        excl_files_sids = [inv_map[id] for id in excl_files_ids]
+        if isinstance(excl_nii_dir, list):
+            excl_files_sids = []
+            for dir_ in excl_nii_dir:
+                excl_files_ids = [file[:-7] for file in os.listdir(dir_)]
+                excl_files_sids_temp = [inv_map[id] for id in excl_files_ids]
+                excl_files_sids = excl_files_sids + excl_files_sids_temp
+        else:
+            excl_files_ids = [file[:-7] for file in os.listdir(excl_nii_dir)]
+            excl_files_sids = [inv_map[id] for id in excl_files_ids]
     missing_files = (set(sids_to_conv).difference(set(conv_files_sids))).difference(set(excl_files_sids))
     return list(missing_files)
 
@@ -93,4 +101,4 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, tes
     #            pool.starmap(dcm2nii_mat_p, mp_input)
 
 if __name__ == '__main__':
-    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=False)
+    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=True)
