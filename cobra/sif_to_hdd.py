@@ -20,7 +20,7 @@ disk_dir = "F:"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
-update_downloaded_files = False
+update_downloaded_files = True
 
 
 #%% 
@@ -60,7 +60,6 @@ if update_downloaded_files:
 downloaded_ls = download.get_downloaded_volumes_ls()
 print('interesection', len(set(group_list).intersection(set(downloaded_ls))))
 group_list = list(set(group_list).difference(set(downloaded_ls)))
-
 #print('Download 3dt1 scans that occur in pairs')
 print("Volumes still to download: ", len(group_list))
 use_batches = True

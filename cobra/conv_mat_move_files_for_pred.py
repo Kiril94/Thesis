@@ -7,6 +7,7 @@ import json
 import pickle
 from utilities.basic import list_subdir, remove_files
 import matlab.engine
+import numpy as np
 
 # paths
 script_dir = os.path.realpath(__file__)
@@ -31,6 +32,10 @@ with open(join(data_cross_dir, "3dt1_sids.pkl"), 'rb') as f:
     sids_ls = pickle.load(f)
 with open(join(tables_dir, "disk_series_directories.json"), 'rb') as f:
     dir_dic = json.load(f)
+downloaded_sids = np.loadtxt(join(disk_data_dir,'dcm', 'volume_log.txt'), dtype=str).tolist()
+sids_ls = list(set(sids_ls).intersection(set(downloaded_sids)))
+
+
 
 # define functions
 def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):

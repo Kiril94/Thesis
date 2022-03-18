@@ -1,5 +1,5 @@
 """Create a dictionary (in parallel) with
-all the downloaded files as keys (niis or dcms) and the correpsonding directory
+all the downloaded files as keys (niis or dcms) and the corresponding directory
 on the disk as value."""
 
 import os
