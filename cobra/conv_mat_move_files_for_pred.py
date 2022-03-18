@@ -17,7 +17,8 @@ disk_data_dir = join("F:\\", 'CoBra', 'Data')
 tgt_dir = join(disk_data_dir, 'volume_cross_nii', 'input', 'nii_files')
 tmp_dir = join(disk_data_dir, 'volume_cross_nii', 'temp')
 #excl_files_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
-excl_files_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files')
+excl_files_dir = [join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files'), 
+    join(disk_data_dir, 'volume_cross_nii', 'input', 'nii_files')]
 data_dir = join(base_dir, 'data')
 data_cross_dir = join(data_dir, 't1_cross')
 # matlab engine
@@ -49,6 +50,7 @@ def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
     conv_files_ids = [file[:-7] for file in os.listdir(nii_dir)]
     conv_files_sids = [inv_map[id] for id in conv_files_ids]
     if not isinstance(excl_nii_dir, type(None)):
+        print('exclude files in', excl_nii_dir)
         if isinstance(excl_nii_dir, list):
             excl_files_sids = []
             for dir_ in excl_nii_dir:
@@ -66,25 +68,29 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
     """Converts dcm to nii using dcm2nii (matlab) or spm12 (matlab) if first fails
     src_dir: Directory with dcm series
     tgt_path: Full path of the nii file that will be produced (should end with .nii.gz)"""
-    tmp_dir_sp = tmp_dir#join(tmp_dir, str(get_proc_id(test)))
-    #make_dir(tmp_dir_sp)
+    
     try:
-        eng.spm12_main(src_dir, tmp_dir_sp)
+        eng.spm12_main(src_dir, tmp_dir)
     except:
         # sometimes .nii files are produced that look reasonable
         # rename them and keep them in these folder
-        nii_files = list_subdir(tmp_dir_sp, '.nii')
+        nii_files = list_subdir(tmp_dir, '.nii')
         if len(nii_files)==1:
-            shutil.move(nii_files[0], join(tmp_dir_sp, 'spm_conv_error', split(tgt_path)[1]))
-        remove_files(tmp_dir_sp, ending='.nii.gz')
+            shutil.move(nii_files[0], join(tmp_dir, 'spm_conv_error', split(tgt_path)[1][:-7]))
+        remove_files(tmp_dir, ending='.nii.gz')
+        remove_files(tmp_dir, ending='.nii')
         print("spm failed, try dcm2nii")
         try:
-            eng.dcm2nii_main(src_dir, tmp_dir_sp)
+            eng.dcm2nii_main(src_dir, tmp_dir)
         except:
-            remove_files(tmp_dir_sp, ending='.nii.gz')
+            nii_files = list_subdir(tmp_dir, '.nii')
+            if len(nii_files)==1:
+                shutil.move(nii_files[0], join(tmp_dir, 'dcm2nii_conv_error', split(tgt_path)[1][:-7]))
+            remove_files(tmp_dir, ending='.nii.gz')
+            remove_files(tmp_dir, ending='.nii')
             print('x')
-    out_files = list_subdir(tmp_dir_sp, ending='.nii.gz')
-    assert len(out_files)<=1, f'More than 1 nii file was created for {src_dir}'
+    out_files = list_subdir(tmp_dir, ending='.nii.gz')
+    assert len(out_files)<=1, f'More than 1 nii.gz file was created for {src_dir}'
     if len(out_files)==1:
         shutil.move(out_files[0], tgt_path)
     else:
@@ -95,15 +101,13 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, tes
     missing_files = get_missing_files(sids_ls, tgt_dir, id_dic, excl_files_dir)
     print(len(missing_files), ' files will be converted')
     if test:
-        missing_files = missing_files[:5]
+        missing_files = missing_files[:3]
     sids = [split(f)[1] for f in missing_files]
     tgt_paths = [join(tgt_dir, id_dic[sid]+'.nii.gz') for sid in sids]
     src_dirs = [dir_dic[sid] for sid in sids]
     mp_input = [(src_dir, tgt_path) for src_dir, tgt_path in zip(src_dirs, tgt_paths)]
     for src_dir, tgt_path in mp_input:
         dcm2nii_mat(src_dir, tgt_path, tmp_dir)
-    #with mp.Pool(2) as pool:
-    #            pool.starmap(dcm2nii_mat_p, mp_input)
-
+    
 if __name__ == '__main__':
-    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=True)
+    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=False)

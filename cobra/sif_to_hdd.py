@@ -20,7 +20,7 @@ disk_dir = "F:"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
-update_downloaded_files = True
+update_downloaded_files = False
 
 
 #%% 
@@ -64,7 +64,7 @@ group_list = list(set(group_list).difference(set(downloaded_ls)))
 print("Volumes still to download: ", len(group_list))
 use_batches = True
 if use_batches:
-    batch = 12
+    batch = 5
     print("batch:", batch)
     start = 0
     batch_size = 1000
