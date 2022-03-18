@@ -76,7 +76,7 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
         # rename them and keep them in these folder
         nii_files = list_subdir(tmp_dir, '.nii')
         if len(nii_files)==1:
-            shutil.move(nii_files[0], join(tmp_dir, 'spm_conv_error', split(tgt_path)[1][:-7]))
+            shutil.move(nii_files[0], join(tmp_dir, 'spm_conv_error', split(tgt_path)[1][:-3]))
         remove_files(tmp_dir, ending='.nii.gz')
         remove_files(tmp_dir, ending='.nii')
         print("spm failed, try dcm2nii")
@@ -85,7 +85,7 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
         except:
             nii_files = list_subdir(tmp_dir, '.nii')
             if len(nii_files)==1:
-                shutil.move(nii_files[0], join(tmp_dir, 'dcm2nii_conv_error', split(tgt_path)[1][:-7]))
+                shutil.move(nii_files[0], join(tmp_dir, 'dcm2nii_conv_error', split(tgt_path)[1][:-3]))
             remove_files(tmp_dir, ending='.nii.gz')
             remove_files(tmp_dir, ending='.nii')
             print('x')
