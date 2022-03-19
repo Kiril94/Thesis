@@ -5,7 +5,7 @@ from os.path import join, split
 from pathlib import Path
 import json
 import pickle
-from utilities.basic import list_subdir, remove_files
+from utilities.basic import list_subdir, move_compress, remove_files
 import matlab.engine
 import numpy as np
 
@@ -76,7 +76,7 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
         # rename them and keep them in these folder
         nii_files = list_subdir(tmp_dir, '.nii')
         if len(nii_files)==1:
-            shutil.move(nii_files[0], join(tmp_dir, 'spm_conv_error', split(tgt_path)[1][:-3]))
+            move_compress(nii_files[0], join(tmp_dir, 'spm_conv_error', split(nii_files[0])[1]+'.gz'), True)
         remove_files(tmp_dir, ending='.nii.gz')
         remove_files(tmp_dir, ending='.nii')
         print("spm failed, try dcm2nii")
@@ -90,11 +90,13 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
             remove_files(tmp_dir, ending='.nii')
             print('x')
     out_files = list_subdir(tmp_dir, ending='.nii.gz')
-    assert len(out_files)<=1, f'More than 1 nii.gz file was created for {src_dir}'
-    if len(out_files)==1:
+    if len(out_files)==0:
+        pass
+    elif len(out_files)==1:
         shutil.move(out_files[0], tgt_path)
     else:
-        pass
+        for out_file in out_files:
+            shutil.move(out_file, join(tmp_dir, 'dcm2nii_conv_error', split(out_file)[1]))
     return 0
 def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, test=False):
     """sids_ls: List of sids that need to be converted"""

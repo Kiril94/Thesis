@@ -54,14 +54,14 @@ def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
         if len(existing_src_files)==1: # if only 1 file it is probably the 3d vol.
             sys.stdout.flush()
             print(".", end='')
-            move_compress(join(src_dir, existing_src_files[0]), tgt_path)
+            basic.move_compress(join(src_dir, existing_src_files[0]), tgt_path)
             return 0
         elif len(existing_src_files)==2: # if 2 files, the one with _i00002.nii is probably the 3d vol.
             files3d = [f for f in existing_src_files if f.endswith("_i00002.nii")]
             if len(files3d)==1:
                 sys.stdout.flush()
                 print(".", end='')
-                move_compress(join(src_dir, files3d[0]), tgt_path)
+                basic.move_compress(join(src_dir, files3d[0]), tgt_path)
             else: # otherwise remove all the files and call the function again
                 for ex_src_file in existing_src_files:
                     remove_file(join(src_dir, ex_src_file))
@@ -72,11 +72,11 @@ def check_niis(existing_src_files, src_dir, tgt_path, test, trial):
             return 1
     else:
         if len(existing_src_files)==1:
-            move_compress(join(src_dir, existing_src_files[0]), tgt_path)
+            basic.move_compress(join(src_dir, existing_src_files[0]), tgt_path)
         else:
             for i, ex_src_file in enumerate(existing_src_files):
                 tgt_path_tmp = tgt_path[:-7] + '_' + str(i) + '.nii.gz'
-                move_compress(join(src_dir, ex_src_file), tgt_path_tmp)
+                basic.move_compress(join(src_dir, ex_src_file), tgt_path_tmp)
         sys.stdout.flush()
         print(".", end='')
         return 0
@@ -113,14 +113,6 @@ def write_problematic_files(file, test):
             current_proc_id+'nii_conversion_error_sids.txt')
     with open(write_file,'a+') as f:
         f.write(file+'\n')
-
-def move_compress(src, tgt, remove=False):
-    """Move and gz file from src to tgt"""
-    with open(src, 'rb') as f_in:
-                with gzip.open(tgt, 'wb') as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-    if remove:
-        os.remove(src)
 
 def dcm2nii_safe(disk_dcm_path, nii_out_path, sid, test,  timeout=2000):
     "Only keeps niis if dcm2nii converter returns 0"
@@ -240,7 +232,7 @@ def move_and_gz_files(src_tgt, test=False, trial=0):
         return 0
     if split(src_path)[1].endswith('.nii'): #nii is present, we need just to move
         print('->', end='')
-        move_compress(src_path, tgt_path)
+        basic.move_compress(src_path, tgt_path)
         return 0
     else: #nii is not present, try to convert dicoms on disk to nii
         if check_dicoms(src_path, sif_src_path)==0: # check if all the dicoms are on the disk

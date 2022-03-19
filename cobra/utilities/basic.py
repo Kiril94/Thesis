@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 import os
 from os.path import split, join
+import gzip
+import shutil
 import multiprocessing as mp
 
 def get_dir(file):
@@ -94,3 +96,11 @@ def get_proc_id(test=False):
         current_proc = mp.current_process()    
         current_proc_id = str(int(current_proc._identity[0]))
         return current_proc_id
+
+def move_compress(src, tgt, remove=False):
+    """Move and gz file from src to tgt"""
+    with open(src, 'rb') as f_in:
+                with gzip.open(tgt, 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+    if remove:
+        os.remove(src)    
