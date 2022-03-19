@@ -76,7 +76,7 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
         # rename them and keep them in these folder
         nii_files = list_subdir(tmp_dir, '.nii')
         if len(nii_files)==1:
-            move_compress(nii_files[0], join(tmp_dir, 'spm_conv_error', split(tgt_path)[1]+'.gz'), True)
+            move_compress(nii_files[0], join(tmp_dir, 'spm_conv_error', split(tgt_path)[1]), True)
         remove_files(tmp_dir, ending='.nii.gz')
         remove_files(tmp_dir, ending='.nii')
         print("spm failed, try dcm2nii")
@@ -96,7 +96,7 @@ def dcm2nii_mat(src_dir, tgt_path, tmp_dir, test=False):
         shutil.move(out_files[0], tgt_path)
     else:
         for out_file in out_files:
-            shutil.move(out_file, join(tmp_dir, 'dcm2nii_conv_error', split(tgt_path)[1]+'.gz'))
+            shutil.move(out_file, join(tmp_dir, 'dcm2nii_conv_error', split(tgt_path)[1]))
     return 0
 def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, test=False):
     """sids_ls: List of sids that need to be converted"""
