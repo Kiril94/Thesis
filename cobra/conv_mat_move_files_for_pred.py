@@ -18,7 +18,9 @@ tgt_dir = join(disk_data_dir, 'volume_cross_nii', 'input', 'nii_files')
 tmp_dir = join(disk_data_dir, 'volume_cross_nii', 'temp')
 #excl_files_dir = join(tmp_dir, 'spm_conv_error', 'cut_off')
 excl_files_dir = [join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files'), 
-    join(disk_data_dir, 'volume_cross_nii', 'input', 'nii_files')]
+    join(disk_data_dir, 'volume_cross_nii', 'input', 'nii_files'),
+    join(disk_data_dir, 'volume_cross_nii', 'temp', 'dcm2nii_conv_error','corrupted'),
+    join(disk_data_dir, 'volume_cross_nii', 'temp', 'spm_conv_error','corrupted'),]
 data_dir = join(base_dir, 'data')
 data_cross_dir = join(data_dir, 't1_cross')
 # matlab engine
