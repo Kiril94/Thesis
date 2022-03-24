@@ -4,7 +4,9 @@ from scipy.stats import ks_2samp
 
 def get_dV_df(brain_regions_ls, sids, case_control_dic, pred_df):
     """Compute rate of brain volume change for brain_regions_ls in cm^3/year.
-    For SeriesInstanceUIDs in sids and patients in case_control_dic."""
+    For SeriesInstanceUIDs in sids and patients in case_control_dic.
+    Returns two dataframes df_differences, with differences for every patient and every brain region
+    and pred_df which is original datafram only including the relevant patients and sids"""
     # list of all cases and controls
     all_patients = [item for sublist in list(case_control_dic.values()) for item in sublist]\
         + list(case_control_dic.keys())
@@ -27,7 +29,7 @@ def get_dV_df(brain_regions_ls, sids, case_control_dic, pred_df):
     df_differences['Date_diff'] = df_differences.Date_diff.map(lambda x: x.days)
     # compute change rate of brain volume in %/year
     df_differences.iloc[:, 2:] = df_differences[brain_regions_ls].div(df_differences.Date_diff, axis=0)*100 #absolute change per day in percent
-    return df_differences
+    return df_differences, pred_df
 
 def compute_unadj_pvals(df_dV, case_control_dic, brain_regions_ls):
     controls = [item for sublist in list(case_control_dic.values()) for item in sublist]
