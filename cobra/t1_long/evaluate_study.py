@@ -1,6 +1,6 @@
 import pandas as pd
 from scipy.stats import ks_2samp
-
+import numpy as np
 
 def get_dV_df(brain_regions_ls, sids, case_control_dic, pred_df):
     """Compute rate of brain volume change for brain_regions_ls in cm^3/year.
@@ -20,16 +20,22 @@ def get_dV_df(brain_regions_ls, sids, case_control_dic, pred_df):
     # create patient groups and sort by date diff, Date_diff==0 is first scan Date_diff>0 is second scan
     pred_df2 = pred_df.groupby(['PatientID']).apply(lambda x: (x.sort_values('Date_diff', ascending=False)))
     # select brain regions of interest and compute difference in volume
-    df_differences = pred_df2[brain_regions_ls].pct_change(-1)                
+    df_differences = pred_df2[brain_regions_ls].pct_change(-1)   
+    df_log_diff = np.log(pred_df2[brain_regions_ls]).diff(-1)             
+
     # select first entry (1st scan V - 2nd scan V)                
     df_differences = df_differences.reset_index(drop=False).drop_duplicates('PatientID', keep='first').drop(columns=['level_1'])
+    df_log_diff = df_log_diff.reset_index(drop=False).drop_duplicates('PatientID', keep='first').drop(columns=['level_1'])
     df_differences = pd.merge(df_pat, df_differences, on='PatientID', how='outer')
+    df_log_diff = pd.merge(df_pat, df_log_diff, on='PatientID', how='outer')
     assert len(df_differences)==len(all_patients), 'length of dataframe is not equal to the number of all patients'
     # turn timedelta to days
     df_differences['Date_diff'] = df_differences.Date_diff.map(lambda x: x.days)
-    # compute change rate of brain volume in %/year
-    df_differences.iloc[:, 2:] = df_differences[brain_regions_ls].div(df_differences.Date_diff, axis=0)*100 #absolute change per day in percent
-    return df_differences, pred_df
+    df_log_diff['Date_diff'] = df_log_diff.Date_diff.map(lambda x: x.days)
+    # compute change rate of brain volume in %/day
+    df_differences.iloc[:, 2:] = df_differences[brain_regions_ls].div(df_differences.Date_diff, axis=0)*100 #relative change per day in percent
+    df_log_diff.iloc[:, 2:] = df_log_diff[brain_regions_ls].div(df_log_diff.Date_diff, axis=0)*365 #log change per year
+    return df_differences, df_log_diff, pred_df
 
 def compute_unadj_pvals(df_dV, case_control_dic, brain_regions_ls):
     controls = [item for sublist in list(case_control_dic.values()) for item in sublist]

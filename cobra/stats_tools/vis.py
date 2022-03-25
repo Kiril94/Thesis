@@ -511,16 +511,20 @@ def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled',displ
 
 def create_boxplot(data, data_labels=None,title='',fig=None, ax=None,
                     plot_style='ggplot', figsize=(10, 10), kwargs={},
-                    stripplot=False):
+                    stripplot=False, orient='v'):
     if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
     plt.style.use(plot_style)
     if (data_labels is None):
         data_labels = [int(i+1) for i in range(len(data))]
-    ax = sns.boxplot(data=data,palette='Set2',medianprops=dict(color="red"), ax=ax)
+    ax = sns.boxplot(data=data,palette='Set2', medianprops=dict(color="red"), ax=ax,
+        orient=orient)
     if stripplot:
         ax = sns.stripplot(data=data, color=".25",alpha=0.3, ax=ax)
-    ax.set_xticklabels(data_labels)
+    if orient=='v':
+        ax.set_xticklabels(data_labels)
+    else:
+        ax.set_yticklabels(data_labels)
     ax.get_xaxis().tick_bottom()
     ax.set_title(title)
     fig, ax = ax_decorator(fig, ax, **kwargs)
