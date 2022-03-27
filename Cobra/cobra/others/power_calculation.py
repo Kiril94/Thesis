@@ -67,8 +67,8 @@ print(f'For >=50 y.o. population\n# CMBs = \t({cmbs_number_mean_50:.2f}+\-{cmbs_
 
 power = 0.8
 significance = 0.05
-P = 124/366
-N = 124
+P = 129/381
+N = 129
 std_number = 0.5
 mde_number = get_MDE(std_number,N,power,significance,P)
 std_volume = 27

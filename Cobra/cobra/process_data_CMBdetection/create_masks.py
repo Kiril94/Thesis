@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """
+
+NOT CORRECT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+
 Created on Thu Dec 2 12:06:00 2021
 
 @author: neusRodeja

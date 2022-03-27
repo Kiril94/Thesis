@@ -4,6 +4,8 @@ Created on Mon Nov  30 12:06:00 2021
 
 @author: neusRodeja
 """
+
+#%%
 import sys
 sys.path.insert(0, '/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/')
 
@@ -20,7 +22,7 @@ sCMB_fromNoCMB_doc = "sCMBLocationInformationInfoNocmb.xlsx"
 main_folder = "/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra"
 new_tables_path = f"{main_folder}/tables/SynthCMB"
 
-data_path = f"{main_path}/{rCMB_doc}"
+data_path = f"{new_tables_path}/{rCMB_doc}"
 
 def convert_table(file_path,nCMB_max,synth=True):
     #Dictionary of equivalences for the column names
@@ -145,13 +147,13 @@ def get_dimensions(data_folder):
 # new_df = convert_table(f"{main_path}/{rCMB_doc}",19,synth=False)
 # new_df.to_csv(f'{new_tables_path}/{rCMB_doc[:-5]}.csv',index=False)
 
-#Convert sCMB
-# new_df = convert_table(f"{main_path}/{sCMB_doc}",10)
-# new_df.to_csv(f'{new_tables_path}/{sCMB_doc[:-5]}.csv',index=False)
+# Convert sCMB
+new_df = convert_table(f"{new_tables_path}/{sCMB_doc}",10)
+new_df.to_csv(f'{new_tables_path}/{sCMB_doc[:-5]}v2.csv',index=False)
 
 #Conver sCMB noCMB
-# new_df = convert_table(f"{main_path}/{sCMB_fromNoCMB_doc}",10)
-# new_df.to_csv(f'{new_tables_path}/{sCMB_fromNoCMB_doc[:-5]}.csv',index=False)
+new_df2 = convert_table(f"{new_tables_path}/{sCMB_fromNoCMB_doc}",10)
+new_df2.to_csv(f'{new_tables_path}/{sCMB_fromNoCMB_doc[:-5]}v2.csv',index=False)
 
 # # Get dimensions sCMB no CMB
 # meta_data = get_dimensions(data_path)
@@ -159,9 +161,9 @@ def get_dimensions(data_folder):
 
 
 # Concatenate 3 tables
-df1 = pd.read_csv(f'{new_tables_path}/{rCMB_doc[:-5]}.csv')
-df2 = pd.read_csv(f'{new_tables_path}/{sCMB_doc[:-5]}.csv')
-df3 = pd.read_csv(f'{new_tables_path}/{sCMB_fromNoCMB_doc[:-5]}.csv')
+#df1 = pd.read_csv(f'{new_tables_path}/{rCMB_doc[:-5]}v2.csv')
+# df2 = pd.read_csv(f'{new_tables_path}/{sCMB_doc[:-5]}.csv')
+# df3 = pd.read_csv(f'{new_tables_path}/{sCMB_fromNoCMB_doc[:-5]}v2.csv')
 
-df_all = pd.concat([df1,df2,df3])
-df_all.to_csv(f'{new_tables_path}/all_info.csv',index=False)
+#df_all = pd.concat([df1,df2,df3])
+#df_all.to_csv(f'{new_tables_path}/all_info.csv',index=False)
