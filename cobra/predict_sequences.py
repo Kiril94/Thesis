@@ -66,9 +66,11 @@ print(df_all[SV_k].astype(str).unique())
 # In[Get masks for the different series descriptions]
 mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
 #%%
-print(sorted(list(tag_dict.keys())))
-print(len(tag_dict.keys()))
-print(sorted(['t1','gd','t2','flair','swi', 'dwi', 'mpr','other','t2s', 'adc' ]))
+# print(sorted(list(tag_dict.keys())))
+# print(len(tag_dict.keys()))
+# print(sorted(['t1','gd','t2','flair','swi', 'dwi', 'mpr',
+        # 'other','t2s', 'adc' ]))
+print(tag_dict['more'])
 #%% 
 print(df_all.PatientID.nunique())
 #%%
