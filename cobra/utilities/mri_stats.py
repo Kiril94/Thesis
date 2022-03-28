@@ -6,7 +6,7 @@ Created on Mon Sep 20 14:34:12 2021
 """
 from utilities.basic import DotDict
 import utilities.stats as stats
-
+import pandas as pd
 
 def get_masks_dict(df, return_tags=True):
 
@@ -29,8 +29,8 @@ def get_masks_dict(df, return_tags=True):
     tag_dict['swi'] = ['SWI', 'swi', 'SUSCEPTABILITET']
     tag_dict['dwi'] = ['DWI', 'dwi', 'MUSE', 'Diffusion']
     tag_dict['adc'] = ['ADC', 'Apparent Diffusion Coefficient', 'adc']
-    tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd',
-                      'gd', 'GD', 'Gadolinium', 'T1\+', 't1\+']
+    tag_dict['gd'] = ['dotarem', 'Dotarem', 'Gd', 'gd', 
+                    'GD', 'Gadolinium', 'T1\+', 't1\+']
     tag_dict['stir'] = ['STIR', 'stir']
     tag_dict['tracew'] = ['TRACEW', 'travew']
     tag_dict['asl'] = ['ASL', 'asl']
