@@ -70,7 +70,7 @@ mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
 # print(len(tag_dict.keys()))
 # print(sorted(['t1','gd','t2','flair','swi', 'dwi', 'mpr',
         # 'other','t2s', 'adc' ]))
-print(tag_dict['more'])
+print(tag_dict['loc'])
 #%% 
 print(df_all.PatientID.nunique())
 #%%
@@ -86,6 +86,7 @@ df_all[sq] = np.where((mask_dict.t1gd), "t1", df_all[sq])
 df_all[sq] = np.where((mask_dict.t2gd), "t2", df_all[sq])
 df_all[sq] = np.where((mask_dict.gd), "none_nid", df_all[sq])
 print(df_all[sq])
+print(mask_dict.gre.sum())
 # %%
 print(df_all.Sequence.value_counts())
 print(df_all[df_all.Sequence=='dti'].PatientID.nunique())
