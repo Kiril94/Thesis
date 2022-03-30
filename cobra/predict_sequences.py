@@ -52,6 +52,7 @@ table_all_dir = f"{table_dir}/neg_pos.csv"
 df_all = utils.load_scan_csv(table_all_dir)[rel_cols]
 print("Fraction of missing values for every column")
 print(df_all.isna().mean(axis=0))
+
 #%%
 # In[Select only relevant columns]
 print(f"all elements {len(df_all)}")
@@ -65,12 +66,7 @@ print(df_all[SS_k].astype(str).unique())
 print(df_all[SV_k].astype(str).unique())
 # In[Get masks for the different series descriptions]
 mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
-#%%
-# print(sorted(list(tag_dict.keys())))
-# print(len(tag_dict.keys()))
-# print(sorted(['t1','gd','t2','flair','swi', 'dwi', 'mpr',
-        # 'other','t2s', 'adc' ]))
-print(tag_dict['loc'])
+
 #%% 
 print(df_all.PatientID.nunique())
 #%%
@@ -87,6 +83,17 @@ df_all[sq] = np.where((mask_dict.t2gd), "t2", df_all[sq])
 df_all[sq] = np.where((mask_dict.gd), "none_nid", df_all[sq])
 print(df_all[sq])
 print(mask_dict.gre.sum())
+
+#%% 
+# print some numbers of scans
+rel_seq = ['t1', 't2', 't2s', 'swi', 'flair', 'gd', 'dwi']
+for name, mask in mask_dict.items():    
+    if name in rel_seq:
+        print(name, ':',mask.sum())
+print('other',(mask_dict.more|mask_dict.mip| mask_dict.bold| mask_dict.loc|mask_dict.b1calib|
+    mask_dict.autosave|mask_dict.screensave|mask_dict.pd| mask_dict.angio|mask_dict.survey|
+    mask_dict.cest|mask_dict.asl|mask_dict.tracew|mask_dict.stir|mask_dict.adc|
+    mask_dict.pwi|mask_dict.dti).sum())
 # %%
 print(df_all.Sequence.value_counts())
 print(df_all[df_all.Sequence=='dti'].PatientID.nunique())
@@ -107,7 +114,28 @@ g.set(xlabel=('Sequence Type'), ylabel=('Volume Count'), xticklabels=labels)
 fig = g.get_figure()
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
+#%%
+# In[PLot class counts, no pos. neg.]
+#fig, ax = plt.subplots()
 
+mpl.rcParams['figure.dpi'] = 300
+mpl.rcParams['xtick.labelsize']=12
+mpl.rcParams['ytick.labelsize']=12
+mpl.rcParams.update({'font.size': 1})
+print(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+plt.style.use('ggplot')
+fig, ax = plt.subplots()
+labels = ['Unlabeled', 'OIS', 'T1', 'T2', 'DWI', 'FLAIR', 'SWI', 'T2*']
+g2 = sns.countplot(x="Sequence", data=df_all, 
+    order = df_all['Sequence'].value_counts().index, color='#8EBA42',ax=ax)
+# g2.set(xlabel=, ylabel=('# Scans'), xticklabels=labels,)
+ax.set_xlabel('Class', fontsize=15)
+ax.set_ylabel('# Scans', fontsize=15)
+ax.set_xticklabels(labels)
+#fig2 = g2.get_figure()
+fig.tight_layout()
+fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
+print(df_all.Sequence.value_counts())
 #%%
 # In[plot sequence counts grouped by patients]
 
@@ -146,6 +174,29 @@ df_all = df_all[columns_list].join(pd.crosstab(s.index, s))
 print("Unique Sequence Variants:")
 print(set(df_all.columns)-set(columns_list))
 del s, columns_list
+#%% 
+# In[plot distribution of the values that we want to predict]
+columns_list = list(df_all.columns)
+sparse_columns = ['EP', 'GR', 'IR', 'RM', 'SE', 'DE', 'MP', 'MTC',
+                  'OSP', 'SK', 'SP', 'SS', 'TOF', 'No_SV', 'No_SS']
+rmv_list = [SID_k, PID_k] + sparse_columns + ['DateTime', 'Positive'] 
+
+for itm in rmv_list:
+    columns_list.remove(itm)
+fig, ax = plt.subplots(figsize=(10, 10))
+ax = df_all.hist(column=columns_list, figsize=(10, 10), ax=ax, log=False)
+fig.tight_layout()
+fig.savefig(f"{fig_dir}/sequence_pred/X_distr.png")
+
+#%%
+# In[Produce Pairplot]
+print('he')
+fig, ax = plt.subplots()
+sns.pairplot(df_all[columns_list], hue="Sequence", diag_kind="hist",ax=ax)
+fig.tight_layout()
+fig.savefig(f"{fig_dir}/sequence_pred/X_pairplot.png")
+
+
 #%%
 # In[Fraction of missing values in each column]
 print("Number of missing values")
@@ -200,6 +251,7 @@ y = df_train[sq].map(target_dict)
 print(y)
 print(target_dict)
 
+
 #%%
 # In[Now we separate the patient ID and the SeriesInstance UID]
 # From now on we should not change the order or remove any values,
@@ -214,6 +266,8 @@ try:
         [PID_k, SID_k, 'Sequence', SD_k, DT_k, ICD_k], axis=1)
 except:
     print("those columns are not present")
+
+print('Actual training columns ',df_train.keys())
 #%%
 # In[Min max scale non bin columns]
 num_cols = df_train.select_dtypes(include="float64").columns
@@ -226,9 +280,11 @@ for col in num_cols:
         (df_test[col].max()-df_test[col].min())
 #%%
 # In[Split train and val]
+
 X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.1, random_state=42)
-
+print('X_train shape', X_train.shape)
+print('X_val shape', X_val.shape)
 #%%
 # In[Initialize and train]
 xgb_cl = xgb.XGBClassifier()
