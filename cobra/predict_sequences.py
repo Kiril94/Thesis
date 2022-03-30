@@ -179,7 +179,7 @@ del s, columns_list
 columns_list = list(df_all.columns)
 sparse_columns = ['EP', 'GR', 'IR', 'RM', 'SE', 'DE', 'MP', 'MTC',
                   'OSP', 'SK', 'SP', 'SS', 'TOF', 'No_SV', 'No_SS']
-rmv_list = [SID_k, PID_k] + sparse_columns + ['DateTime', 'Positive'] 
+rmv_list = [SID_k, PID_k] + sparse_columns + ['DateTime', 'Positive','InstanceCreationDate','SeriesDescription'] 
 
 for itm in rmv_list:
     columns_list.remove(itm)
@@ -190,12 +190,13 @@ fig.savefig(f"{fig_dir}/sequence_pred/X_distr.png")
 
 #%%
 # In[Produce Pairplot]
-print('he')
-fig, ax = plt.subplots()
-sns.pairplot(df_all[columns_list], hue="Sequence", diag_kind="hist",ax=ax)
-fig.tight_layout()
-fig.savefig(f"{fig_dir}/sequence_pred/X_pairplot.png")
-
+# fig, ax = plt.subplots()
+sns.pairplot(df_all, 
+    vars=['EchoTime', 'RepetitionTime','FlipAngle','InversionTime','EchoTrainLength'],
+     hue="Sequence", diag_kind="hist")
+# fig.tight_layout()
+# fig.savefig(f"{fig_dir}/sequence_pred/X_pairplot.png")
+#print(df_all[columns_list].head())
 
 #%%
 # In[Fraction of missing values in each column]
