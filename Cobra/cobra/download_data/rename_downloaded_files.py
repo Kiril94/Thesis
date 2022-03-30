@@ -11,6 +11,7 @@ import shutil
 from cobra.dcm2nii import dcm2nii
 from cobra.download_data.basic import remove_file
 from cobra.download_data import check_dicoms,check_if_philips,fix_dcm_incomplete_vols,dcm2nii_safe
+
 # DIRECTORIES 
 def _log(msg,file=None):
     
@@ -40,6 +41,7 @@ if (not os.path.exists(dst_folder)): os.makedirs(dst_folder)
 #from sif
 sif_dir = "X:"
 
+#%%
 #initialize log files
 if (os.path.isfile(dst_log_file2)): 
     log_file = open(dst_log_file,'a') 
@@ -64,9 +66,24 @@ df_ids_to_rename = pd.read_csv(input_file)
 df_scan_info = pd.read_csv(join(table_dir,'swi_all.csv'))
 df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 
-df_info_to_rename = df_ids_to_rename.merge(df_scan_info,how='inner',left_on='PatientID',right_on='PatientID',validate='one_to_one')
-df_info_to_rename = df_info_to_rename.merge(df_volume_dir,how='inner',left_on='SeriesInstanceUID',right_on='SeriesInstanceUID',validate='one_to_one')
-df_info_to_rename.sort_values(by='Directory',inplace=True)
+# df_info_to_rename = df_ids_to_rename.merge(df_scan_info,how='inner',left_on='PatientID',right_on='PatientID',validate='one_to_one')
+# df_info_to_rename = df_info_to_rename.merge(df_volume_dir,how='inner',left_on='SeriesInstanceUID',right_on='SeriesInstanceUID',validate='one_to_one')
+# df_info_to_rename.sort_values(by='Directory',inplace=True)
+
+#configuration to rename the new downloaded files in v3
+orig_folder = join(nii_included_dst_data_dir,"new_nii")
+dst_folder = join(nii_included_dst_data_dir,"renamed_new_nii")
+
+df_new_names = pd.read_csv(join(nii_included_dst_data_dir,"names_new_nii.csv"))
+df_new_names.rename(columns={'old_path':'Directory'},inplace=True)
+df_info_new_names = df_new_names.merge(df_scan_info,on='SeriesInstanceUID',how='inner',validate='one_to_one')
+df_info_to_rename = df_info_new_names.sort_values(by='Directory')
+#########################
+
+log_names_path = join(nii_included_dst_data_dir,"included_nii_v3_names.csv")
+df_names = pd.read_csv(log_names_path)
+df_names['month'] = df_names['new_name'].map(lambda x: x[:2])
+df_names['n_vol'] = df_names['new_name'].map(lambda x: x[2:-7])
 
 name_prev = ''
 n_vols_from_folder = 1
@@ -75,7 +92,8 @@ for idx,row in df_info_to_rename.iterrows():
     try:
         # find path
         dir = row['Directory']
-        orig_path  = join(orig_folder,dir)
+        #orig_path  = join(orig_folder,dir)
+        orig_path = join(orig_folder,row['new_name']) #configuration to download new files in v3
         suid = row['SeriesInstanceUID']
         
         #check that it is downloaded
@@ -96,56 +114,73 @@ for idx,row in df_info_to_rename.iterrows():
             
         # if we change folder, restart the n_vols_from_folder
         if (name_prev[:2]!=name):
-            n_vols_from_folder = 1            
+            prev_max = int(df_names[ df_names['month']==name]['n_vol'].max())
+            n_vols_from_folder = prev_max+1            
         name = name + str(n_vols_from_folder).zfill(4) + '.nii.gz'
         
         # move file 
         dst_path = join(dst_folder,name)
-        files_in_orig_path =  [f for f in os.listdir(orig_path) if os.path.isfile(join(orig_path, f))]
+        # check that we are not overwriting anything
+        if (not os.path.exists(join(nii_included_dst_data_dir,"nii",name))):
+            shutil.copy(orig_path,dst_path) # configuration to rename new files in v3
+            df_names = df_names.append({'SeriesInstanceUID':row['SeriesInstanceUID'],
+                             'old_path':row['Directory'],
+                             'new_name':name}, ignore_index=True)
+        else: 
+            print("Path already existed")
+            print(f"new_name\t{name} \n old_name\t{row['new_name']}")
+            continue
         
-        if (len(files_in_orig_path)==1):
-            shutil.copy(join(orig_path,files_in_orig_path[0]),dst_path)
-            log_file.write(f'{suid},{dir},{name}\n')
-            n_vols_from_folder += 1
-            name_prev = name
+        # dst_path = join(dst_folder,name)
+        # files_in_orig_path =  [f for f in os.listdir(orig_path) if os.path.isfile(join(orig_path, f))]
+        
+        # if (len(files_in_orig_path)==1):
+        #     shutil.copy(join(orig_path,files_in_orig_path[0]),dst_path)
+        #     log_file.write(f'{suid},{dir},{name}\n')
+        #     n_vols_from_folder += 1
+        #     name_prev = name
             
-        elif (len(files_in_orig_path)==2):
-            filename1 = files_in_orig_path[0]
-            filename2 = files_in_orig_path[1].split('_')
+        # elif (len(files_in_orig_path)==2):
+        #     filename1 = files_in_orig_path[0]
+        #     filename2 = files_in_orig_path[1].split('_')
                         
-            if (filename1[:-7] == filename2[0])&(filename2[1]=='ph.nii.gz'):
-                #copy both files
-                shutil.copy(join(orig_path,filename1),dst_path)
-                shutil.copy(join(orig_path,files_in_orig_path[1]),join(dst_folder,'phases',name[:-7]+'_ph.nii.gz'))
-                log_file.write(f'{suid},{dir},{name}\n')
-                n_vols_from_folder += 1
-                name_prev = name
+        #     if (filename1[:-7] == filename2[0])&(filename2[1]=='ph.nii.gz'):
+        #         #copy both files
+        #         shutil.copy(join(orig_path,filename1),dst_path)
+        #         shutil.copy(join(orig_path,files_in_orig_path[1]),join(dst_folder,'phases',name[:-7]+'_ph.nii.gz'))
+        #         log_file.write(f'{suid},{dir},{name}\n')
+        #         n_vols_from_folder += 1
+        #         name_prev = name
             
-            else:    
-                filename1 = files_in_orig_path[0].split('_') 
-                filename2 = files_in_orig_path[1]
-                if (filename1[0] == filename2[:-7])&(filename1[1]=='ph.nii.gz'):
-                    #copy both files
-                    shutil.copy(join(orig_path,filename2),dst_path)
-                    shutil.copy(join(orig_path,files_in_orig_path[0]),join(dst_folder,'phases',name[:-7]+'_ph.nii.gz'))        
-                    log_file.write(f'{suid},{dir},{name}\n')
-                    n_vols_from_folder += 1
-                    name_prev = name
+        #     else:    
+        #         filename1 = files_in_orig_path[0].split('_') 
+        #         filename2 = files_in_orig_path[1]
+        #         if (filename1[0] == filename2[:-7])&(filename1[1]=='ph.nii.gz'):
+        #             #copy both files
+        #             shutil.copy(join(orig_path,filename2),dst_path)
+        #             shutil.copy(join(orig_path,files_in_orig_path[0]),join(dst_folder,'phases',name[:-7]+'_ph.nii.gz'))        
+        #             log_file.write(f'{suid},{dir},{name}\n')
+        #             n_vols_from_folder += 1
+        #             name_prev = name
                 
-        elif (len(files_in_orig_path)>2):
-            print(f'More than 2 files in SeriesInstanceUID {suid}')
-            log_file2.write(suid+'\n')
-        else:
-            print(f'No files found in SeriesInstanceUID {suid}')
-            log_file2.write(suid+'\n')      
+        # elif (len(files_in_orig_path)>2):
+        #     print(f'More than 2 files in SeriesInstanceUID {suid}')
+        #     log_file2.write(suid+'\n')
+        # else:
+        #     print(f'No files found in SeriesInstanceUID {suid}')
+        #     log_file2.write(suid+'\n')      
 
     except Exception as e:
         print(e)
         print(f'Scan {suid} raised an error.')
         log_file2.write(suid+'\n')
         log_file2.write(str(e) + '\n\n')
-        
+
+df_names.to_csv(log_names_path,index=False)        
         
 log_file.close()
 log_file2.close()
 log_file3.close()
+
+#%%
+# rename new files

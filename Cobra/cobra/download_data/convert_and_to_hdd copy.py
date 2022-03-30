@@ -21,8 +21,8 @@ def _log(msg,file=None):
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parents[1]  #cobra directory
 table_dir = join(base_dir, 'tables')
-input_file = join(table_dir,'ids_swi_included_v3.csv')
-included = True
+input_file = join(table_dir,'swi_included_not_found.csv')
+included = False
 
 #from hdd
 disk_dir = "F:" #hdd
@@ -30,34 +30,26 @@ dst_data_dir = join(disk_dir,"CoBra","Data")
 dcm_dst_data_dir = join(dst_data_dir,"dcm")
 nii_excluded_dst_data_dir = join(dst_data_dir,"swi_nii")
 nii_included_dst_data_dir =  join(nii_excluded_dst_data_dir,"cmb_study")
-dst_log_file = join(dst_data_dir,"logs","log_general_swi_v3.txt")
-dst_log_file2 = join(dst_data_dir,"logs","log_downloaded_swi.txt")
-dst_log_file3 = join(dst_data_dir,"logs","log_to_download_swi_v3.txt")
+dst_log_file = join(dst_data_dir,"log_general_swi_included_not_found.txt")
+dst_log_file2 = join(dst_data_dir,"log_downloaded_swi_included_not_found.txt")
+dst_log_file3 = join(dst_data_dir,"log_to_download_swi_included_not_found.txt")
 
 # make destination directories if they dont exist
 if (not os.path.exists(dcm_dst_data_dir)): os.makedirs(dcm_dst_data_dir)
 if (not os.path.exists(nii_included_dst_data_dir)): os.makedirs(nii_included_dst_data_dir)
 
 #from sif
-sif_dir = "Y:"
+sif_dir = "X:"
 
 #%% EXTRACT SCANS INFO + DIRECTORY IN SIF 
 df_ids_to_download = pd.read_csv(input_file)
-
-# do not include already downloaded files
 df_ids_downloaded = pd.read_csv(dst_log_file2)
 df_ids_to_download = df_ids_to_download[ ~df_ids_to_download['PatientID'].isin(df_ids_downloaded['PatientID']) ]
-# do not include already failed files
-df_ids_failed = pd.read_csv(dst_log_file3)
-df_ids_to_download = df_ids_to_download[ ~df_ids_to_download['PatientID'].isin(df_ids_failed['PatientID']) ]
-
 df_scan_info = pd.read_csv(join(table_dir,'swi_all.csv'))
 df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 
 df_info_to_download = df_ids_to_download.merge(df_scan_info,how='inner',left_on='PatientID',right_on='PatientID',validate='one_to_one')
-
-#REMOVE THIS LINE LATER!!!!!!!!!!!!!!!!!!1
-df_info_to_download = df_scan_info[ df_scan_info['PatientID'].isin(['7bce8ea2368fa5e12b6232d05a38fd2a','87f22c0ca1ae8340a2bc0b49bfaa43ff','5afaae6275e85f49afc5803a664e108c'])]
+df_info_to_download = df_info_to_download[ df_info_to_download['PatientID']=='cde2bcc96d2698880d7ca536522db733']
 #open log files
 log_file = open(dst_log_file,'a') #general logfile
 
@@ -73,8 +65,6 @@ else:
     log_file3 = open(dst_log_file3,'w')
     log_file3.write('PatientID\n')
 
-
-print(f"{df_info_to_download.shape[0]} DICOM files to download.")
 
 
 for idx,row in df_info_to_download.iterrows():
@@ -94,7 +84,7 @@ for idx,row in df_info_to_download.iterrows():
             _log(f"Patient {row['PatientID']} DICOM downloaded",log_file)
 
         #check if it is converted
-        origin_nii_file_path = join(dst_data_dir,scan_dir) #find out
+        origin_nii_file_path = join(dst_data_dir,'nii',scan_dir) #find out
         if (included): dst_nii_file_path = join(nii_included_dst_data_dir,scan_dir) #find out     
         else:   dst_nii_file_path = join(nii_excluded_dst_data_dir,scan_dir) 
 
@@ -113,7 +103,7 @@ for idx,row in df_info_to_download.iterrows():
                         _log(f"Patient {row['PatientID']}: conversion from disk success",log_file)
                         done = True
                     else:
-                        if check_if_philips(dst_dcm_file_path)==0:
+                        if check_if_philips(dst_dcm_file_path):
                             if fix_dcm_incomplete_vols.fix_incomplete_vols(dst_dcm_file_path)==0:
                                 #now we have to adjust the src dir
                                 dst_dcm_file_path = join(dst_dcm_file_path, 'corrected_dcm')
@@ -135,10 +125,7 @@ for idx,row in df_info_to_download.iterrows():
                             remove_file(rm_file)
                 
                 else:
-                    #download again
-                    shutil.copytree(origin_dcm_file_path,dst_dcm_file_path)
-                    _log(f"Patient {row['PatientID']} DICOM downloaded",log_file)
-                    done = False
+                    done = True
                 # continue
             # conversion succeed write in log
             else:
@@ -146,16 +133,10 @@ for idx,row in df_info_to_download.iterrows():
 
         log_file2.write(row['PatientID']+'\n')
         _log('||||||||||||||||||||\n',log_file)
-    
-    except KeyboardInterrupt:
-        print('KeyBoard interrrupt')
-        break    
+        
     except:
         pid = row['PatientID']
         print(f'Patient {pid} raised an error.')
         log_file3.write(pid+'\n')
 
 
-log_file.close()
-log_file2.close()
-log_file3.close()
