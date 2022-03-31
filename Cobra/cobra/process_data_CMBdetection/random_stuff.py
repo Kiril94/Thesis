@@ -283,3 +283,17 @@ mask,_ = load_nifti_img(path_pred_v0)
 
 nib.save(nib.Nifti1Image(orig_vol,np.eye(4)),f"/media/neus/USB DISK/cmb-3dcnn-data/17_noAffine.nii.gz")
 nib.save(nib.Nifti1Image(mask,np.eye(4)),f"/media/neus/USB DISK/cmb-3dcnn-data/17_mask_noAffine.nii.gz")
+
+#%%
+#%%
+path_v0 = f"/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/process_data_CMBdetection/prova2.nii.gz"
+path_pred_v0 =  f"/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/process_data_CMBdetection/prova2_mask.nii.gz"
+
+
+orig_vol,_ = load_nifti_img(path_v0)
+mask,_ = load_nifti_img(path_pred_v0)
+
+nib.save(nib.Nifti1Image(orig_vol,np.eye(4)),f"/media/neus/USB DISK/prova2_noAffine.nii.gz")
+nib.save(nib.Nifti1Image(mask,np.eye(4)),f"/media/neus/USB DISK/prova2_mask_noAffine.nii.gz")
+
+#%%
