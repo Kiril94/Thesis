@@ -21,8 +21,8 @@ def _log(msg,file=None):
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parents[1]  #cobra directory
 table_dir = join(base_dir, 'tables')
-input_file = join(table_dir,'ids_swi_included_v3.csv')
-included = True
+input_file = join(table_dir,"SWIMatching",'rest_excluded.csv')
+included = False
 
 #from hdd
 disk_dir = "F:" #hdd
@@ -30,9 +30,10 @@ dst_data_dir = join(disk_dir,"CoBra","Data")
 dcm_dst_data_dir = join(dst_data_dir,"dcm")
 nii_excluded_dst_data_dir = join(dst_data_dir,"swi_nii")
 nii_included_dst_data_dir =  join(nii_excluded_dst_data_dir,"cmb_study")
-dst_log_file = join(dst_data_dir,"logs","log_general_swi_v3.txt")
-dst_log_file2 = join(dst_data_dir,"logs","log_downloaded_swi.txt")
-dst_log_file3 = join(dst_data_dir,"logs","log_to_download_swi_v3.txt")
+dst_log_file = join(dst_data_dir,"logs","log_general_swi_annotate.txt")
+dst_log_file2 = join(dst_data_dir,"logs","log_downloaded_swi_annotate.txt")
+dst_log_file3 = join(dst_data_dir,"logs","log_to_download_swi_annotate.txt")
+dst_log_file4 = join(dst_data_dir,"logs","log_already_down_swi_annotate.txt")
 
 # make destination directories if they dont exist
 if (not os.path.exists(dcm_dst_data_dir)): os.makedirs(dcm_dst_data_dir)
@@ -43,7 +44,7 @@ sif_dir = "Y:"
 
 #%% EXTRACT SCANS INFO + DIRECTORY IN SIF 
 
-# df_ids_to_download = pd.read_csv(input_file)
+df_ids_to_download = pd.read_csv(input_file)
 
 # # do not include already downloaded files
 # df_ids_downloaded = pd.read_csv(dst_log_file2)
@@ -52,16 +53,11 @@ sif_dir = "Y:"
 # df_ids_failed = pd.read_csv(dst_log_file3)
 # df_ids_to_download = df_ids_to_download[ ~df_ids_to_download['PatientID'].isin(df_ids_failed['PatientID']) ]
 
-df_ids_to_download = pd.DataFrame({'PatientID': ['7f01474ed0460f8f9c1ce78b348b9728']
-                                  })
-
 df_scan_info = pd.read_csv(join(table_dir,'swi_all.csv'))
 df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 
 df_info_to_download = df_ids_to_download.merge(df_scan_info,how='inner',left_on='PatientID',right_on='PatientID',validate='one_to_one')
 
-#REMOVE THIS LINE LATER!!!!!!!!!!!!!!!!!!1
-df_info_to_download = df_scan_info[ df_scan_info['PatientID'].isin(['7bce8ea2368fa5e12b6232d05a38fd2a','87f22c0ca1ae8340a2bc0b49bfaa43ff','5afaae6275e85f49afc5803a664e108c'])]
 #open log files
 log_file = open(dst_log_file,'a') #general logfile
 
@@ -77,6 +73,11 @@ else:
     log_file3 = open(dst_log_file3,'w')
     log_file3.write('PatientID\n')
 
+if (os.path.isfile(dst_log_file4)): #logfile with failures
+    log_file4 = open(dst_log_file4,'a') 
+else: 
+    log_file4 = open(dst_log_file4,'w')
+    log_file4.write('PatientID\n')
 
 print(f"{df_info_to_download.shape[0]} DICOM files to download.")
 
@@ -118,6 +119,10 @@ for idx,row in df_info_to_download.iterrows():
             #move to swi folder 
             shutil.copytree(origin_nii_file_path,dst_nii_file_path)
             _log(f"Patient {row['PatientID']} nifti moved to swi folder.",log_file)
+        elif (os.path.exists(dst_nii_file_path) & len(next(os.walk(dst_nii_file_path))[2])>0):
+            #file already downloaded
+            _log(f"Patient {row['PatientID']} already downloaded.",log_file)
+            log_file4.write(row['PatientID']+'\n')
         else: 
             done = False
             while (not done):

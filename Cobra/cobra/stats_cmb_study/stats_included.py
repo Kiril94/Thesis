@@ -32,10 +32,23 @@ excluded_info.sort_values(by='p_cmb',inplace=True,ascending=False)
 #%%
 #count how many are converted
 converted = pd.read_csv(join("F:","CoBra","Data","swi_nii","converted_excluded.csv"))
-high_excl = excluded_info.head(50)
-high_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"25_high_excluded.csv",index=False)
+high_excl = excluded_info.head(26)
+
+#%%
+high_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"26_high_excluded.csv",index=False)
 conv_high_excl = high_excl[ high_excl['PatientID'].isin(converted['PatientID'])]
-¡
+
+converted = pd.read_csv(join("F:","CoBra","Data","swi_nii","converted_excluded.csv"))
+high_excl = excluded_info.iloc[26:46]
+
+high_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"50_high_excluded.csv",index=False)
+conv_high_excl = high_excl[ high_excl['PatientID'].isin(converted['PatientID'])]
+
+rest_excl = excluded_info.iloc[46:]
+
+rest_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"rest_excluded.csv",index=False)
+
+
 #%%
 #box plots for dimensions
 
@@ -92,15 +105,24 @@ fig.savefig(f'{figs_path}/excluded_boxplot_dimensions.png')
 
 #%% 
 #inc manufacturers
-
+#included
 manufacturer_models_name = included_info['ManufacturerModelName'].unique()
 
 groups_manufacturer = included_info.groupby('ManufacturerModelName')
 fig,ax = plt.subplots()
 ax = groups_manufacturer.size().plot.bar()
 fig.savefig(f"{figs_path}/included_manufacturers.png")
+#%%#inc manufacturers
+#included
+manufacturer_models_name = included_info['Manufacturer'].unique()
+
+groups_manufacturer = included_info.groupby('Manufacturer')
+fig,ax = plt.subplots()
+ax = groups_manufacturer.size().plot.bar()
+fig.savefig(f"{figs_path}/included_manufacturers.png")
 
 #%% excl manu
+#excluded
 manufacturer_models_name = excluded_info['ManufacturerModelName'].unique()
 
 groups_manufacturer = excluded_info.groupby('ManufacturerModelName')
@@ -132,8 +154,13 @@ fig.suptitle("Scans excluded (25 with highest P-cmb) in CMB study")
 
 
 
-groups_manufacturer = high_exc.groupby('ManufacturerModelName')
+groups_manufacturer = high_exc.groupby('Manufacturer')
 fig,ax = plt.subplots()
 ax = groups_manufacturer.size().plot.bar()
+
+groups_manufacturer = high_exc.groupby('Manufacturer')
+fig,ax = plt.subplots()
+ax = groups_manufacturer.size().plot.bar()
+
 fig.suptitle("Scans excluded (25 with highest P-cmb) in CMB study")
 #fig.savefig(f'{figs_path}/excluded_boxplot_dimensions.png')
