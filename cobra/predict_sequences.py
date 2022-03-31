@@ -9,6 +9,7 @@ import xgboost as xgb
 import os
 from pathlib import Path
 import pandas as pd
+from stats_tools.colors import Color_palette
 from utilities import utils, basic, mri_stats
 from utilities import classification as clss
 from stats_tools import vis as svis
@@ -191,13 +192,61 @@ fig.savefig(f"{fig_dir}/sequence_pred/X_distr.png")
 #%%
 # In[Produce Pairplot]
 # fig, ax = plt.subplots()
-sns.pairplot(df_all, 
+mpl.rcParams['figure.dpi'] = 300
+from IPython.display import Image
+#[df_all.Sequence!='none_nid']
+#
+markers_dic = dict(zip(['t1', 't2','t2s','flair', 'dwi','swi', 'other', 'none_nid'], 
+    ["d", "d", "d", 'd','d','d', 'd', '.']))
+#
+sns_plot = sns.pairplot(df_all, 
     vars=['EchoTime', 'RepetitionTime','FlipAngle','InversionTime','EchoTrainLength'],
-     hue="Sequence", diag_kind="hist")
-# fig.tight_layout()
-# fig.savefig(f"{fig_dir}/sequence_pred/X_pairplot.png")
-#print(df_all[columns_list].head())
+      diag_kind="hist", hue='Sequence', 
+     hue_order=['t1', 't2','t2s','flair', 'dwi','swi', 'other', 'none_nid'],
+    plot_kws={"s": 13, 'alpha': 1},
+     markers=markers_dic, palette='Set1')
+sns_plot._legend.set_title('Class')
 
+labels_dic = {'EchoTime':'Echo Time [ms]', 'RepetitionTime':'Repetition Time [ms]',
+        'InversionTime':'Inversion Time [ms]', 'FlipAngle':'Flip Angle [°]',
+        'EchoTrainLength':'Echo Train Length', '':''}
+for i, ax in enumerate(sns_plot.axes.flatten()):
+    ax.set_xlabel(labels_dic[ax.get_xlabel()], fontsize=17)
+    ax.set_ylabel(labels_dic[ax.get_ylabel()], fontsize=17)
+    if i<5:
+        ax.set_ylim(-10,500)
+    if i%5==0:
+        ax.set_xlim(-10,400)
+    if i>19:
+        ax.set_ylim(-10,300)
+    if (i-1)%5==0:
+        ax.set_xlim(-400,12500)
+    if (i+1)%5==0:
+        ax.set_xlim(-10,250)
+
+# tit = sns_plot._legend.get_title()
+# tit.set_fontsize(16)
+# for t, l in zip(sns_plot._legend.texts, new_labels):
+    # t.set_text(l)
+    # t.set_fontsize(16)
+#sns_plot.fig.tight_layout()
+# sns_plot._legend.set_bbox_to_anchor((1.09, 0.5))
+#sns_plot.fig.set_size_inches(9, 9)
+handles = sns_plot._legend_data.values()
+labels = sns_plot._legend_data.keys()
+new_labels = ['T1', 'T2', 'T2*','FLAIR', 'DWI','SWI', 'OIS','Unknown']
+lgd_labels_dic = dict(zip(['t1','t2','t2s','flair','dwi','swi','other','none_nid'],
+    new_labels))
+sns_plot._legend.remove()
+plt.legend(handles=handles, labels=[lgd_labels_dic[l] for l in labels], 
+    loc=(-4.8,5.34), ncol=8, fontsize=16)
+#sns_plot.fig.legend(handles=handles, labels=labels, loc=(.1,.98), ncol=8)
+#sns_plot.fig.set_size_inches(10, 11)
+#sns_plot.fig.subplots_adjust()
+# sns_plot._legend.remove()
+sns_plot.savefig(f"{fig_dir}/sequence_pred/X_pairplot.png")
+plt.clf() # Clean parirplot figure from sns 
+Image(filename=f"{fig_dir}/sequence_pred/X_pairplot.png")
 #%%
 # In[Fraction of missing values in each column]
 print("Number of missing values")
