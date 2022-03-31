@@ -41,7 +41,9 @@ os.makedirs(nii_included_dst_data_dir)
 sif_dir = "X:"
 
 #%% EXTRACT SCANS INFO + DIRECTORY IN SIF 
-df_ids_to_download = pd.read_csv(input_file)
+#df_ids_to_download = pd.read_csv(input_file)
+df_ids_to_download = pd.DataFrame({'PatientID': ['7f01474ed0460f8f9c1ce78b348b9728']
+                                  })
 df_scan_info = pd.read_csv(join(table_dir,'swi_all.csv'))
 df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 
@@ -79,6 +81,17 @@ try:
             shutil.copytree(origin_dcm_file_path,dst_dcm_file_path)
             _log(f"Patient {row['PatientID']} DICOM downloaded",log_file)
 
+        #check if all files were downloaded
+        else:
+            files_in_origin = next(os.walk(origin_dcm_file_path))[2]
+            files_in_dst = next(os.walk(dst_dcm_file_path))[2]
+            
+            if (len(files_in_origin)>len(files_in_dst)):
+                
+                missing_files = filter(lambda x: x not in files_in_dst, files_in_origin)
+                for file in missing_files:
+                    shutil.copyfile(join(origin_dcm_file_path,file),join(dst_dcm_file_path,file))
+                    
         #check if it is converted
         origin_nii_file_path = join(dst_data_dir,scan_dir) #find out
         if (included): dst_nii_file_path = join(nii_included_dst_data_dir,) #find out     

@@ -9,6 +9,7 @@ from pathlib import Path
 import pandas as pd 
 import seaborn as sns
 import matplotlib.pyplot as plt
+from os.path import join
 
 main_path = Path(__file__).parent.parent
 tables_path = main_path / "tables"
@@ -16,15 +17,25 @@ figs_path = main_path / "figs" / "cmb_stats" / "matching_v3"
 included_swi_file = tables_path / "SWIMatching" / "ids_swi_included_v3.csv"
 excluded_swi_file = tables_path / "SWIMatching" / "ids_swi_excluded_v3.csv"
 all_swi_file = tables_path / "swi_all.csv"
+probs_swi = tables_path / "SWIMatching" / "ids_swi_excluded_pcmb_v3.csv"
 
 
 included_ids = pd.read_csv(included_swi_file)
 excluded_ids = pd.read_csv(excluded_swi_file)
 info_df = pd.read_csv(all_swi_file)
+probs_exc = pd.read_csv(probs_swi)
 
 included_info = included_ids.merge(info_df,how='inner',on='PatientID',validate='one_to_one')
 excluded_info = excluded_ids.merge(info_df,how='inner',on='PatientID',validate='one_to_one')
-
+excluded_info = excluded_info.merge(probs_exc,how='inner',on='PatientID',validate='one_to_one')
+excluded_info.sort_values(by='p_cmb',inplace=True,ascending=False)
+#%%
+#count how many are converted
+converted = pd.read_csv(join("F:","CoBra","Data","swi_nii","converted_excluded.csv"))
+high_excl = excluded_info.head(50)
+high_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"25_high_excluded.csv",index=False)
+conv_high_excl = high_excl[ high_excl['PatientID'].isin(converted['PatientID'])]
+¡
 #%%
 #box plots for dimensions
 
