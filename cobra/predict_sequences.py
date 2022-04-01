@@ -213,8 +213,7 @@ for i, ax in enumerate(sns_plot.axes.flatten()):
     if i%5==0:
         ax.set_xlim(-10,400)
     if i>19:
-        ax
-        .set_ylim(-10,300)
+        ax.set_ylim(-10,300)
     if (i-1)%5==0:
         ax.set_xlim(-400,12500)
     if (i+1)%5==0:
@@ -236,7 +235,7 @@ Image(filename=f"{fig_dir}/sequence_pred/X_pairplot.png")
 print("Number of missing values")
 print(df_all.isna().sum(axis=0))
 #%%
-# In[Lets set missing inversion times to 0]
+# In[Lets set missing inversion times 0]
 df_all[TI_k] = np.where((df_all[TI_k].isna()), 0, df_all[TI_k])
 df_all[FA_k] = np.where((df_all[FA_k].isna()), 0, df_all[FA_k])
 df_all[TE_k] = np.where((df_all[TE_k].isna()), 0, df_all[TE_k])

@@ -46,15 +46,41 @@ SO_k = 'ScanOptions'
 ETL_k = 'EchoTrainLength'
 DT_k = 'DateTime'
 ICD_k = 'InstanceCreationDate'
+SN_k = 'SequenceName'
+PSN_k = 'PulseSequenceName'
+SO_l = 'ScanOptions' # List of values like FS, PFP ,...
 #%%
 # In[load all csv]
-rel_cols = [SID_k, SD_k, TE_k, TR_k, FA_k, TI_k,
-            ETL_k, SS_k, SV_k, PID_k, DT_k, ICD_k,'Positive' ]
 table_all_dir = f"{table_dir}/neg_pos.csv"
-df_all = utils.load_scan_csv(table_all_dir)[rel_cols]
-print("Fraction of missing values for every column")
-print(df_all.isna().mean(axis=0))
+df_init = utils.load_scan_csv(table_all_dir)
+#%%
+# In[Missing values]
+df_all = df_init.dropna(axis=1, 
+        thresh=int(0.5*df_init.shape[0] + 1)) #keep columns with less than 50% missing
+print('Remaining columns after dropping those with more than 50% missing')
+print(df_all.keys())
+#%%
+# Take only relevant columns
+rel_numeric_feat_ls = ['dBdt', 'EchoTime', 'EchoTrainLength', 
+                'EchoNumbers','FlipAngle', 'ImagingFrequency', 'RepetitionTime']
+rel_cat_feat_ls = ['ImageType','ScanningSequence', 'SequenceVariant', 'ScanOptions']
+other_rel_cols_ls = ['SeriesInstanceUID', 'StudyInstanceUID','PatientID',
+                        'Positive']
+df_all = df_all[other_rel_cols_ls + rel_numeric_feat_ls + rel_cat_feat_ls]
 
+#%% 
+#In [Pulse Sequence Name, unique str, as next step create one
+#   hot encoded features for every one of these columns]
+psn_strings = ['tse', 'fl',  'tir', 'swi', 'ep', 'se', 'tfl', 're', 'spc', 'pc',
+               'SE','FSE','FIR','GE', 'h2', 'me', 'qD', 'ci', 'fm','de','B1']
+mask = df_all.SequenceName.str.startswith('*'+psn_strings[0])
+mask = mask | df_all.SequenceName.str.startswith(psn_strings[0])
+mask = mask | df_all.SequenceName.str.startswith('*q'+psn_strings[0])
+for psn_string in psn_strings[1:]:
+    mask = mask | df_all.SequenceName.str.startswith('*'+psn_string)
+    mask = mask | df_all.SequenceName.str.startswith(psn_string)
+    mask = mask | df_all.SequenceName.str.startswith('*q'+psn_string)
+print(df_all[~mask].SequenceName.unique())
 #%%
 # In[Select only relevant columns]
 print(f"all elements {len(df_all)}")
