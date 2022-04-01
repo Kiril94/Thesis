@@ -9,7 +9,7 @@ import xgboost as xgb
 import os
 from pathlib import Path
 import pandas as pd
-from utilities import utils, basic, mri_stats
+from utilities import basic, mri_stats
 from utilities import classification as clss
 from stats_tools import vis as svis
 import seaborn as sns
@@ -51,8 +51,6 @@ PSN_k = 'PulseSequenceName'
 SO_l = 'ScanOptions' # List of values like FS, PFP ,...
 #%%
 # In[load all csv]
-table_all_dir = f"{table_dir}/neg_pos.csv"
-#df_init = utils.load_scan_csv(table_all_dir)
 df_init = pd.read_pickle(f"{table_dir}/scan_final.pkl")
 #%%
 # In[Missing values]
