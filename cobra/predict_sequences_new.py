@@ -52,7 +52,8 @@ SO_l = 'ScanOptions' # List of values like FS, PFP ,...
 #%%
 # In[load all csv]
 table_all_dir = f"{table_dir}/neg_pos.csv"
-df_init = utils.load_scan_csv(table_all_dir)
+#df_init = utils.load_scan_csv(table_all_dir)
+df_init = pd.read_pickle(f"{table_dir}/scan_final.pkl")
 #%%
 # In[Missing values]
 df_all = df_init.dropna(axis=1, 
