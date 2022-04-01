@@ -21,7 +21,7 @@ def get_masks_dict(df, return_tags=True):
     tag_dict['flair'] = ['FLAIR', 'flair', 'Flair']
     tag_dict['t2'] = ['T2', 't2']
     #tag_dict['fse'] = ['FSE', 'fse', 'TSE', 'tse']
-    tag_dict['t2s'] = ['T2\*', 't2\*', 'T 2']
+    tag_dict['t2s'] = ['T2\*', 't2\*']
     tag_dict['gre']  = ['GRE', 'gre', 'FGRE'] # can be t2*, t1 or pd
     tag_dict['dti'] = ['DTI', 'dti']
     tag_dict['pwi'] = ['Perfusion_Weighted']
@@ -80,15 +80,14 @@ def get_masks_dict(df, return_tags=True):
         mask_dict.gd, mask_dict.t2gd)  # no t2
     mask_dict['gd'] = stats.only_first_true(
         mask_dict.gd, mask_dict.t1gd)  # no t1
-
+    
     mask_identified = mask_dict.t1
     for mask in mask_dict.values():
         mask_identified = mask_identified | mask
     mask_dict.identified = mask_identified
 
     mask_dict.relevant = mask_dict.t1 | mask_dict.flair | mask_dict.t2 \
-        | mask_dict.t2s | mask_dict.dwi | mask_dict.swi \
-        | mask_dict.angio | mask_dict.adc
+        | mask_dict.dwi | mask_dict.swi \
 
     mask_dict.none = df['SeriesDescription'].isnull()
     # either non or not identified

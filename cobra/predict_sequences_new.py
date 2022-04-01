@@ -64,78 +64,78 @@ rel_numeric_feat_ls = ['dBdt', 'EchoTime', 'EchoTrainLength',
                 'EchoNumbers','FlipAngle', 'ImagingFrequency', 'RepetitionTime']
 rel_cat_feat_ls = ['ImageType','ScanningSequence', 'SequenceVariant', 'ScanOptions']
 other_rel_cols_ls = ['SeriesInstanceUID', 'StudyInstanceUID','PatientID',
-                        'Positive']
+                    'SeriesDescription','Positive']
+print('Select only relevant columns')
 df_all = df_all[other_rel_cols_ls + rel_numeric_feat_ls + rel_cat_feat_ls]
 
-#%% 
-#In [Pulse Sequence Name, unique str, as next step create one
-#   hot encoded features for every one of these columns]
-psn_strings = ['tse', 'fl',  'tir', 'swi', 'ep', 'se', 'tfl', 're', 'spc', 'pc',
-               'SE','FSE','FIR','GE', 'h2', 'me', 'qD', 'ci', 'fm','de','B1']
-mask = df_all.SequenceName.str.startswith('*'+psn_strings[0])
-mask = mask | df_all.SequenceName.str.startswith(psn_strings[0])
-mask = mask | df_all.SequenceName.str.startswith('*q'+psn_strings[0])
-for psn_string in psn_strings[1:]:
-    mask = mask | df_all.SequenceName.str.startswith('*'+psn_string)
-    mask = mask | df_all.SequenceName.str.startswith(psn_string)
-    mask = mask | df_all.SequenceName.str.startswith('*q'+psn_string)
-print(df_all[~mask].SequenceName.unique())
 #%%
 # In[Select only relevant columns]
 print(f"all elements {len(df_all)}")
-df_all = df_all[rel_cols].dropna(subset=[SID_k])
-df_all[SS_k][df_all[SS_k].isna()] = ['No_SS',]
-df_all[SV_k][df_all[SV_k].isna()] = ['No_SV',]
-print(f"after dropping nans in Sequence id: {len(df_all)}")
+df_all[SS_k].fillna(str(['No_SS',]), inplace=True)
+df_all[SV_k].fillna(str(['No_SV',]), inplace=True)
 print("Number of missing values for every column")
 print(df_all.isna().sum(axis=0))
 print(df_all[SS_k].astype(str).unique())
 print(df_all[SV_k].astype(str).unique())
+#%%
 # In[Get masks for the different series descriptions]
 mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
-
 #%% 
-print(df_all.PatientID.nunique())
+# In[Examine masks]
+mask_dict.t1spgr.sum()
+(mask_dict.t2 & mask_dict.flair).sum()
+print((mask_dict.swi&mask_dict.dwi).sum())
+import importlib
+importlib.reload(mri_stats)
 #%%
 # In[Add sequence column and set it to one of the relevant values]
 sq = 'Sequence'
-rel_keys = ['t1', 't1gd', 't2', 't2gd', 't2s', 'swi', 'flair', 'none_nid',
-            'gd', 'dwi']
-rel_masks = [mask_dict[key] for key in rel_keys]
-df_all[sq] = "other"
-for mask, key in zip(rel_masks, rel_keys):
+rel_seqs_keys = ['t1', 't2', 'swi', 'flair','dwi']
+rel_masks = [mask_dict[key] for key in rel_seqs_keys]
+df_all[sq] = "none_nid" #By default the sequence is unknown
+# first add relevant sequences
+for mask, key in zip(rel_masks, rel_seqs_keys):
     df_all[sq] = np.where((mask), key, df_all[sq])
+#if t2 with combination with flair, choose flair
 df_all[sq] = np.where((mask_dict.t1gd), "t1", df_all[sq])
 df_all[sq] = np.where((mask_dict.t2gd), "t2", df_all[sq])
-df_all[sq] = np.where((mask_dict.gd), "none_nid", df_all[sq])
-print(df_all[sq])
-print(mask_dict.gre.sum())
+df_all[sq] = np.where(
+    (mask_dict.other & (~(mask_dict.t1|mask_dict.t1gd|mask_dict.t2|mask_dict.t2gd|
+       mask_dict.swi|mask_dict.dwi|mask_dict.flair ))), 
+    "other", df_all[sq])
+# Intersections
+df_all[sq] = np.where((mask_dict.t1&mask_dict.t2), "none_nid", df_all[sq])
+df_all[sq] = np.where((mask_dict.t1&mask_dict.flair), "none_nid", df_all[sq])
+
+print(df_all.Sequence)
+df_all.Sequence.value_counts().plot(kind='barh')
+
 
 #%% 
 # print some numbers of scans
-rel_seq = [ 't2', 't2s', 'swi', 'flair', 'dwi']
+rel_seq = [ 't2', 'swi', 'flair', 'dwi']
 for name, mask in mask_dict.items():    
     if name in rel_seq:
         print(name, ':',mask.sum())
 print('other',(mask_dict.more|mask_dict.mip| mask_dict.bold| mask_dict.loc|mask_dict.b1calib|
     mask_dict.autosave|mask_dict.screensave|mask_dict.pd| mask_dict.angio|mask_dict.survey|
     mask_dict.cest|mask_dict.asl|mask_dict.tracew|mask_dict.stir|mask_dict.adc|
-    mask_dict.pwi|mask_dict.dti).sum())
-print('t1:',(mask_dict.t1gd|mask_dict.t1).sum())
+    mask_dict.pwi|mask_dict.dti|mask_dict.t2s).sum())
+print('t1:',(mask_dict.t1gd | mask_dict.t1).sum())
 #print("There are not enough dti sequences")
 #%%
 # In[Count number of volumes for every sequence]
 seq_count = df_all[sq].value_counts()
 print(seq_count)
-print(np.sum(seq_count.values), len(df_all),'no intersections left')
 #%%
 # In[Plot sequence counts]
+# We need this later
 mpl.rcParams['figure.dpi'] = 400
 plt.style.use('ggplot')
-labels = ['Not \nidentified', 'other', 'T1', 'T2', 'DWI', 'FLAIR', 'SWI', 'T2*']
+#labels = ['Not \nidentified', 'other', 'T1', 'T2', 'DWI', 'FLAIR', 'SWI', 'T2*']
 g = sns.countplot(x="Sequence", hue="Positive", data=df_all, hue_order=[1,0],
     order = df_all['Sequence'].value_counts().index)
-g.set(xlabel=('Sequence Type'), ylabel=('Volume Count'), xticklabels=labels)
+#g.set(xlabel=('Sequence Type'), ylabel=('Volume Count'), xticklabels=labels)
 fig = g.get_figure()
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
@@ -150,10 +150,10 @@ mpl.rcParams.update({'font.size': 1})
 print(plt.rcParams['axes.prop_cycle'].by_key()['color'])
 plt.style.use('ggplot')
 fig, ax = plt.subplots()
-labels = ['Unlabeled', 'OIS', 'T1', 'T2', 'DWI', 'FLAIR', 'SWI', 'T2*']
+labels = ['Unlabeled',  'T1', 'T2', 'DWI','OIS', 'FLAIR', 'SWI']
 g2 = sns.countplot(x="Sequence", data=df_all, 
     order = df_all['Sequence'].value_counts().index, color='#8EBA42',ax=ax)
-# g2.set(xlabel=, ylabel=('# Scans'), xticklabels=labels,)
+#g2.set(xlabel=, ylabel=('# Scans'), xticklabels=labels,)
 ax.set_xlabel('Class', fontsize=15)
 ax.set_ylabel('# Scans', fontsize=15)
 ax.set_xticklabels(labels)
@@ -161,15 +161,16 @@ ax.set_xticklabels(labels)
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
 print(df_all.Sequence.value_counts())
+print(np.sum(df_all.Sequence.value_counts())-df_all.Sequence.value_counts()['none_nid'])
 #%%
 # In[plot sequence counts grouped by patients]
-
+# we might need this later
 pos_mask = df_all.Positive==1
 pos_pat_count_seq = df_all[pos_mask].groupby(by='Sequence')\
     .PatientID.nunique().sort_values(ascending=False)
 neg_pat_count_seq = df_all[~pos_mask].groupby(by='Sequence')\
     .PatientID.nunique().sort_values(ascending=False)
-n_labels = ['Other', 'Flair', 'T2', 'Not\n identified', 'DWI', 'T1', 'SWI', 'T2*']
+n_labels = ['Other', 'Flair', 'T2', 'Unknown', 'DWI', 'T1', 'SWI', ]
 fig, ax = svis.bar(n_labels, neg_pat_count_seq.values, 
                    label='neg', color=svis.Color_palette(0)[1])
 
@@ -199,6 +200,20 @@ df_all = df_all[columns_list].join(pd.crosstab(s.index, s))
 print("Unique Sequence Variants:")
 print(set(df_all.columns)-set(columns_list))
 del s, columns_list
+
+#%% 
+#In [Pulse Sequence Name, unique str, as next step create one
+#   hot encoded features for every one of these columns]
+psn_strings = ['tse', 'fl',  'tir', 'swi', 'ep', 'se', 'tfl', 're', 'spc', 'pc',
+               'SE','FSE','FIR','GE', 'h2', 'me', 'qD', 'ci', 'fm','de','B1']
+mask = df_all.SequenceName.str.startswith('*'+psn_strings[0])
+mask = mask | df_all.SequenceName.str.startswith(psn_strings[0])
+mask = mask | df_all.SequenceName.str.startswith('*q'+psn_strings[0])
+for psn_string in psn_strings[1:]:
+    mask = mask | df_all.SequenceName.str.startswith('*'+psn_string)
+    mask = mask | df_all.SequenceName.str.startswith(psn_string)
+    mask = mask | df_all.SequenceName.str.startswith('*q'+psn_string)
+print(df_all[~mask].SequenceName.unique())
 #%% 
 # In[plot distribution of the values that we want to predict]
 columns_list = list(df_all.columns)
