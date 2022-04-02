@@ -23,8 +23,7 @@ import scikitplot as skplot
 from sklearn.manifold import TSNE
 from numpy.random import default_rng
 from sklearn.decomposition import PCA
-from os.path import join
-from ast import literal_eval
+
 #%%
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
@@ -39,23 +38,25 @@ TE_k = 'EchoTime'
 TR_k = 'RepetitionTime'
 TI_k = 'InversionTime'
 FA_k = 'FlipAngle'
+EN_k = 'EchoNumbers'
+IF_k = 'ImagingFrequency'
 SD_k = 'SeriesDescription'
 PID_k = 'PatientID'
 SID_k = 'SeriesInstanceUID'
 SS_k = 'ScanningSequence'
 SV_k = 'SequenceVariant'
-SO_k = 'ScanOptions'
+SO_k = 'ScanOptions' # List of values like FS, PFP ,...
 ETL_k = 'EchoTrainLength'
 DT_k = 'DateTime'
 ICD_k = 'InstanceCreationDate'
 SN_k = 'SequenceName'
 PSN_k = 'PulseSequenceName'
-SO_l = 'ScanOptions' # List of values like FS, PFP ,...
+IT_k = 'ImageType'
 #%%
 # In[load all csv]
-# df_init = pd.read_pickle(f"{table_dir}/scan_final.pkl")
-df_init = pd.read_csv(
-    join(table_dir, 'neg_pos_clean.csv'), nrows=80000)
+df_init = pd.read_pickle(f"{table_dir}/scan_final.pkl")
+# df_init = pd.read_csv(
+    # join(table_dir, 'neg_pos_clean.csv'), nrows=80000)
 #%%
 # In[Missing values]
 df_all = df_init.dropna(axis=1, 
@@ -66,24 +67,25 @@ print(df_all.keys())
 # Take only relevant columns
 rel_numeric_feat_ls = ['dBdt', 'EchoTime', 'EchoTrainLength', 
                 'EchoNumbers','FlipAngle', 'ImagingFrequency', 'RepetitionTime']
-rel_cat_feat_ls = ['ImageType','ScanningSequence', 'SequenceVariant', 'ScanOptions']
+rel_cont_feat_ls = ['ImageType','ScanningSequence', 'SequenceVariant', 'ScanOptions']
 other_rel_cols_ls = ['SeriesInstanceUID', 'StudyInstanceUID','PatientID',
                     'SeriesDescription','Positive']
 print('Select only relevant columns')
-df_all = df_all[other_rel_cols_ls + rel_numeric_feat_ls + rel_cat_feat_ls]
+df_all = df_all[other_rel_cols_ls + rel_numeric_feat_ls + rel_cont_feat_ls]
 
 
 #%%
 # In[Handle nans in list columns and turn strings into lists]
 print(f"all elements {len(df_all)}")
-df_all[SS_k].fillna(str(['No_SS',]), inplace=True)
-df_all[SV_k].fillna(str(['No_SV',]), inplace=True)
-df_all[SO_k].fillna(str(['No_SO',]), inplace=True)
+df_all[SS_k].fillna('missing_SS', inplace=True)
+df_all[SV_k].fillna('missing_SV', inplace=True)
+df_all[SO_k].fillna('missing_SO', inplace=True)
+df_all[IT_k].fillna('missing_IT', inplace=True)
 print("Number of missing values for every column")
 print(df_all.isna().sum(axis=0))
-df_all[SS_k] = df_all[SS_k].map(lambda x: literal_eval(x))
-df_all[SV_k] = df_all[SV_k].map(lambda x: literal_eval(x))
-df_all[SO_k] = df_all[SO_k].map(lambda x: literal_eval(x))
+# df_all[SS_k] = df_all[SS_k].map(lambda x: literal_eval(x))
+# df_all[SV_k] = df_all[SV_k].map(lambda x: literal_eval(x))
+# df_all[SO_k] = df_all[SO_k].map(lambda x: literal_eval(x))
 #%%
 # In[Get masks for the different series descriptions]
 mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
@@ -181,32 +183,93 @@ svis.bar(n_labels,pos_pat_count_seq.values, fig=fig, ax=ax,
          kwargs={'lgd':True, 'xlabel':'Sequence Type','title':'All Patients',
                  'ylabel':'Patient Count'},
          save=True, 
-         figname=f"{fig_dir}/sequence_pred/seq_patient_count.png")
+         figname=f"{fig_dir}/sequence_pred_new/seq_patient_count.png")
+#%%
+# In[mask]
+train_mask = df_all.Sequence!='none_nid'
+
+#%%
+print(df_all.keys())
+print('Remove binary feature if it is present in less than 1% of training samples')
+min_pos = int(train_mask.sum()*0.01)
+print(min_pos)
 #%%
 # In[Turn ScanningSequence into multi-hot encoded]
+# Drop features with less than 1000 entries
 s = df_all[SS_k].explode()
 columns_list = list(df_all.columns)
 columns_list.remove(SS_k)
-df_all = df_all[columns_list].join(pd.crosstab(s.index, s))
+ct = pd.crosstab(s.index, s)
+ct_sum = ct[train_mask].sum(axis=0)
+keep_cols = ct_sum.loc[(ct_sum>min_pos)].keys().tolist()
+df_all = df_all.join(ct[keep_cols])
 print("Unique Scanning Sequences:")
 print(set(df_all.columns)-set(columns_list))
-del s
 #%%
 # In[Turn SequenceVariant into multi-hot encoded]
 s = df_all[SV_k].explode()
 columns_list = list(df_all.columns)
 columns_list.remove(SV_k)
-df_all = df_all[columns_list].join(pd.crosstab(s.index, s))
+ct = pd.crosstab(s.index, s)
+ct_sum = ct[train_mask].sum(axis=0)
+keep_cols = ct_sum.loc[(ct_sum>min_pos)].keys().tolist()
+df_all = df_all.join(ct[keep_cols])
 print("Unique Sequence Variants:")
 print(set(df_all.columns)-set(columns_list))
-del s
+
+#%%
+# In[Turn ScanOptions into multi-hot encoded]
+# Scan options that are equivalent to 
+# scanning sequence of sequence variants are combined with or
+s = df_all[SO_k].explode()
+columns_list = list(df_all.columns)
+columns_list.remove(SO_k)
+ct = pd.crosstab(s.index, s)
+ct_sum = ct[train_mask].sum(axis=0)
+keep_cols = ct_sum.loc[(ct_sum>min_pos)].keys().tolist()
+ct = ct[keep_cols]
+df_all = df_all.join(ct, rsuffix='_SO')
+print("Unique Sequence Variants:")
+print(set(df_all.columns)-set(columns_list))
+
+#%%
+# In[Solve issue with multiple occurence of columns]
+print(df_all.keys())
+#%%
+# In[Image type to one hot]
+s = df_all.ImageType.explode()
+columns_list = list(df_all.columns)
+columns_list.remove('ImageType')
+ct = pd.crosstab(s.index, s)
+ct_sum = ct[train_mask].sum(axis=0)
+keep_cols = ct_sum.loc[(ct_sum>min_pos)].keys().tolist()
+ct = ct[keep_cols]
+df_all = df_all.join(ct, rsuffix='_IT')
+print("Unique Sequence Variants:")
+print(set(df_all.columns)-set(columns_list))
+del s, ct
+
+#%%
+# In[Examine results]
+df_all.keys()
+
+#%% Combine duplicate columns and remove unnecessary columns
+df_all.drop(columns=[SS_k, SV_k, SO_k, 'ImageType'], inplace=True, axis=1) #drop org cols
+df_all.SP = (df_all.SP | df_all['SP_SO'].astype(int)).astype(int)
+df_all.SE = (df_all.SE | df_all['SE_IT'].astype(int)).astype(int)
+df_all.IR = (df_all.IR | df_all['IR_SO'].astype(int)\
+    | df_all['IR_IT'].astype(int)).astype(int)
+df_all.drop(columns=['SP_SO','IR_SO','SE_IT' ,'IR_IT',''], axis=1, inplace=True)
 #%%
 # In[Check new columns]
 df_all.keys()
 
+#%%
+# In[check scan options]
+df_all.isna().sum()
 #%% 
-#In [Pulse Sequence Name, unique str, as next step create one
-#   hot encoded features for every one of these columns]
+#In [Currently not needed, too many missing values]
+"""
 print('Maybe not needed, first check number of missing columns in real dataframe')
 psn_strings = ['tse', 'fl',  'tir', 'swi', 'ep', 'tfl', 're', 'spc', 'pc',
                'FSE','FIR','GE', 'h2', 'me', 'qD', 'ci', 'fm','de','B1']
@@ -229,50 +292,72 @@ print(mask.sum())
 #    mask = mask | df_all.SequenceName.str.startswith(psn_string)
  #   mask = mask | df_all.SequenceName.str.startswith('*q'+psn_string)
 print(df_all[~mask].SequenceName.unique())
+"""
 #%% 
-# In[plot distribution of the values that we want to predict]
+# In[spevify columns]
 columns_list = list(df_all.columns)
-sparse_columns = ['EP', 'GR', 'IR', 'RM', 'SE', 'DE', 'MP', 'MTC',
-                  'OSP', 'SK', 'SP', 'SS', 'TOF', 'No_SV', 'No_SS']
-rmv_list = [SID_k, PID_k] + sparse_columns #+ ['DateTime', 'Positive','InstanceCreationDate','SeriesDescription'] 
-
-for itm in rmv_list:
-    columns_list.remove(itm)
-fig, ax = plt.subplots(figsize=(10, 10))
-ax = df_all.hist(column=columns_list, figsize=(10, 10), ax=ax, log=False)
-fig.tight_layout()
-#fig.savefig(f"{fig_dir}/sequence_pred/X_distr.png")
-
-#%%
-# In[]
+sparse_columns = ['EP', 'GR', 'IR', 'No_SS', 'RM', 'SE', 'MP',
+       'No_SV', 'OSP', 'SK', 'SP', 'SS', 'TOF', 'ACC_GEMS', 'EDR_GEMS',
+       'EPI_GEMS', 'FAST_GEMS', 'FC', 'FC_FREQ_AX_GEMS', 'FC_SLICE_AX_GEMS',
+       'FILTERED_GEMS', 'FS', 'FSA_GEMS', 'FSI_GEMS', 'FSS_GEMS', 'IR_SO',
+       'NPW', 'No_SO', 'OTHER', 'PFF', 'PFP', 'PROP_GEMS', 'SAT1', 'SAT_GEMS',
+       'SEQ_GEMS', 'SP_SO', 'SS_GEMS', 'TRF_GEMS']
+cont_columns = ['dBdt','EchoTime', 'RepetitionTime','FlipAngle',
+    'EchoTrainLength', 'EchoNumbers','ImagingFrequency',]
 df_all.keys()
 #%%
+print(df_all[train_mask].EchoNumbers.value_counts())
+
+#%%
 # In[Produce Pairplot]
+
 mpl.rcParams['figure.dpi'] = 300
 from IPython.display import Image
 markers_dic = dict(
     zip(['t1', 't2','flair', 'dwi','swi', 'other', 'none_nid'], 
     ["d",  "d", 'd','d','d', 'd', '.']))
 plot_vars = ['dBdt','EchoTime', 'RepetitionTime','FlipAngle',
-    'EchoTrainLength', 'EchoNumbers', 'ImagingFrequency']
-sns_plot = sns.pairplot(df_all.sample(2000), 
+    'EchoTrainLength','ImagingFrequency' ]
+print('remove outliers')
+
+Q1 = df_all[plot_vars].quantile(0.25)
+Q3 = df_all[plot_vars].quantile(0.75)
+IQR = Q3 - Q1
+df_temp = df_all[~((df_all[plot_vars] < (Q1 - 1.5 * IQR)) |(df_all[plot_vars] > (Q3 + 1.5 * IQR))).any(axis=1)]
+
+#%%
+sns_plot = sns.pairplot(df_temp, 
     vars=plot_vars,
-      diag_kind="hist", hue='Sequence', 
+      diag_kind="kde", hue='Sequence', 
      hue_order=['t1', 't2', 'flair', 'dwi','swi', 'other', 'none_nid'],
     plot_kws={"s": 13, 'alpha': 1},
-     markers=markers_dic, palette='Set1', corner=True)
+     markers=markers_dic, palette='Set1', corner=True,
+    )
+# diag_kws={'log':False}
 sns_plot._legend.set_title('Class')
 
-labels_dic = {'EchoTime':'Echo Time [ms]', 'RepetitionTime':'Repetition Time [ms]',
-        'InversionTime':'Inversion Time [ms]', 'FlipAngle':'Flip Angle [°]',
-        'EchoTrainLength':'Echo Train Length', '':''}
+labels_dic = {'EchoTime':r'$t_\mathrm{echo}\,[\mathrm{ms}]$', 
+    'RepetitionTime':r'$t_\mathrm{rep}\,[\mathrm{ms}]$',
+    'InversionTime':'Inversion Time [ms]', 'FlipAngle':r'$\alpha_{\mathrm{flip}} \,[°]$',
+    'EchoTrainLength':'ETL', '':'',
+    'ImagingFrequency':r'$f_\mathrm{Im}\,[\mathrm{MHz}]$',
+    'dBdt':r'$\frac{dB}{dt}\,[\mathrm{T}/\mathrm{s}]$'}
 
 print('Limits have to be adjusted, and axis numbers too')
-# for i, ax in enumerate(sns_plot.axes.flatten()):
-    # ax.set_xlabel(labels_dic[ax.get_xlabel()], fontsize=17)
-    # ax.set_ylabel(labels_dic[ax.get_ylabel()], fontsize=17)
-    # if i<5:
-        # ax.set_ylim(-10,500)
+num_plot_vars = len(plot_vars)
+ax_mat = np.tril(np.reshape(np.arange(num_plot_vars**2), (num_plot_vars, num_plot_vars)))
+ax_mat = ax_mat[ax_mat!=0]
+for i, ax in enumerate(sns_plot.axes.flatten()):
+    if i in ax_mat:
+        ax.set_xlabel(labels_dic[ax.get_xlabel()], fontsize=20)
+        ax.set_ylabel(labels_dic[ax.get_ylabel()], fontsize=20)
+        ax.tick_params(labelsize=15)
+    # if i==6:
+        # ax.set_ylim(-10,450)
+    # if i in ax_mat[[1,3,6,10, 15]]:
+        # ax.set_xlim(-10,510)
+    # if i in ax_mat[[9,10,11,12, 13]]:
+        # ax.set_xlim(-10,320)
     # if i%5==0:
         # ax.set_xlim(-10,400)
     # if i>19:
@@ -286,50 +371,123 @@ labels = sns_plot._legend_data.keys()
 new_labels = ['T1', 'T2', 'FLAIR', 'DWI','SWI', 'OIS','Unknown']
 lgd_labels_dic = dict(zip(['t1','t2','flair','dwi','swi','other','none_nid'],
     new_labels))
-#sns_plot._legend.remove()
-#plt.legend(handles=handles, labels=[lgd_labels_dic[l] for l in labels], 
-#    loc=(-4.8,5.34), ncol=8, fontsize=16)
-sns_plot.savefig(f"{fig_dir}/sequence_pred/X_pairplot.png")
+sns_plot._legend.remove()
+plt.legend(handles=handles, labels=[lgd_labels_dic[l] for l in labels], 
+    loc=(-.5,3.95), ncol=1, fontsize=20)
+sns_plot.savefig(f"{fig_dir}/sequence_pred_new/X_pairplot.png")
 plt.clf() # Clean parirplot figure from sns 
-Image(filename=f"{fig_dir}/sequence_pred/X_pairplot.png")
+Image(filename=f"{fig_dir}/sequence_pred_new/X_pairplot.png")
+
+
+#%%
+# pairgrid
+def my_hist(x, label, color):
+    ax0 = plt.gca()
+    ax = ax0.twinx()
+    
+    sns.despine(ax=ax, left=True, top=True, right=False)
+    ax.yaxis.tick_right()
+    ax.set_ylabel('Counts')
+    
+    ax.hist(x, label=label, color=color)
+
+sns_plot = sns.PairGrid(data=df_temp.sample(1000), 
+    vars=plot_vars,
+    hue='Sequence', 
+    hue_order=['t1', 't2', 'flair', 'dwi','swi', 'other', 'none_nid'],
+    hue_kws={'markers':markers_dic}, palette='Set1', corner=True,
+     )
+sns_plot.map_diag(my_hist)
+sns_plot.map_lower(sns.scatterplot)
+# sns_plot._legend.set_title('Class')
+
+labels_dic = {'EchoTime':r'$t_\mathrm{echo}\,[\mathrm{ms}]$', 
+    'RepetitionTime':r'$t_\mathrm{rep}\,[\mathrm{ms}]$',
+    'InversionTime':'Inversion Time [ms]', 'FlipAngle':r'$\alpha_{\mathrm{flip}} \,[°]$',
+    'EchoTrainLength':'ETL', '':'',
+    'ImagingFrequency':r'$f_\mathrm{Im}\,[\mathrm{MHz}]$',
+    'dBdt':r'$\frac{dB}{dt}\,[\mathrm{T}/\mathrm{s}]$'}
+
+print('Limits have to be adjusted, and axis numbers too')
+num_plot_vars = len(plot_vars)
+ax_mat = np.tril(np.reshape(np.arange(num_plot_vars**2), (num_plot_vars, num_plot_vars)))
+ax_mat = ax_mat[ax_mat!=0]
+for i, ax in enumerate(sns_plot.axes.flatten()):
+    if i in ax_mat:
+        ax.set_xlabel(labels_dic[ax.get_xlabel()], fontsize=20)
+        ax.set_ylabel(labels_dic[ax.get_ylabel()], fontsize=20)
+        ax.tick_params(labelsize=15)
+    
+# handles = sns_plot._legend_data.values()
+# labels = sns_plot._legend_data.keys()
+# new_labels = ['T1', 'T2', 'FLAIR', 'DWI','SWI', 'OIS','Unknown']
+# lgd_labels_dic = dict(zip(['t1','t2','flair','dwi','swi','other','none_nid'],
+    # new_labels))
+# sns_plot._legend.remove()
+# plt.legend(handles=handles, labels=[lgd_labels_dic[l] for l in labels], 
+    # loc=(-.5,3.95), ncol=1, fontsize=20)
+sns_plot.savefig(f"{fig_dir}/sequence_pred_new/X_pairplot_alt.png")
+plt.clf() # Clean parirplot figure from sns 
+Image(filename=f"{fig_dir}/sequence_pred_new/X_pairplot_alt.png")
 
 #%%
 # In[Fraction of missing values in each column]
 print("Number of missing values")
-print(df_all.isna().sum(axis=0))
+print(df_all[cont_columns].isna().sum(axis=0))
 #%%
-# In[Lets set missing inversion times to 0]
-df_all[TI_k] = np.where((df_all[TI_k].isna()), 0, df_all[TI_k])
-df_all[FA_k] = np.where((df_all[FA_k].isna()), 0, df_all[FA_k])
-df_all[TE_k] = np.where((df_all[TE_k].isna()), 0, df_all[TE_k])
-#%%
-# Lets set missing TR to the median TR
-df_all[TR_k] = np.where((df_all[TR_k].isna()), df_all[TR_k].median(), df_all[TR_k])
-df_all[ETL_k] = np.where((df_all[ETL_k].isna()), 0, df_all[ETL_k])
-print("Missing values:")
-print(df_all.isna().sum(axis=0))
+# In[Lets set missing values to the median]
+# df_all[TI_k] = np.where((df_all[TI_k].isna()), df_all[TI_k].median(), df_all[TI_k])
+df_all[FA_k] = np.where(
+    (df_all[FA_k].isna()), df_all[FA_k].median(), df_all[FA_k])
+df_all['dBdt'] = np.where(
+    (df_all['dBdt'].isna()), df_all['dBdt'].median(), df_all['dBdt'])
+df_all[TE_k] = np.where(
+    (df_all[TE_k].isna()), df_all[TE_k].median(), df_all[TE_k])
+df_all[TR_k] = np.where(
+    (df_all[TR_k].isna()), df_all[TR_k].median(), df_all[TR_k])
+df_all[ETL_k] = np.where(
+    (df_all[ETL_k].isna()), df_all[ETL_k].median(), df_all[ETL_k])
+df_all[IF_k] = np.where(
+    (df_all[IF_k].isna()), df_all[IF_k].median(), df_all[ETL_k])
+# Set to one where echo number is missing, discrete, most often occ value
+df_all[EN_k] = np.where(
+    (df_all[EN_k].isna()), 1, df_all[EN_k])
 
+#%%
+# Missing values
+print("Missing values:")
+print(df_all[cont_columns].isna().sum(axis=0))
+print(df_all['missing_SV'].sum(axis=0))
+#%%
+# In[Define Columns that will be used for prediction]
+print(df_all.keys())
+other_cols = ['SeriesInstanceUID', 'StudyInstanceUID', 'PatientID',
+       'SeriesDescription', 'Positive','Sequence']
+numeric_cols = ['dBdt','EchoTime', 'RepetitionTime','FlipAngle',
+    'EchoTrainLength', 'EchoNumbers','ImagingFrequency',]
+binary_cols = set(df_all.keys()).difference(set(other_cols))\
+    .difference(set(numeric_cols))
+print(binary_cols)
+print(len(binary_cols),'binary cols')
+print(len(numeric_cols),'binary cols')
+df_all[IF_k].hist()
 #%%
 # In[Show the binary columns]
 bin_counts = df_all[sparse_columns].sum(axis=0)
 svis.bar(bin_counts.keys(), bin_counts.values,
               figsize=(15, 6), kwargs={'logscale':True},
-              figname=f"{fig_dir}/sequence_pred/X_distr_bin.png")
-#%%
-# In[We can drop the TOF, EP, DE and MTC columns]
-try:
-    df_all = df_all.drop(['TOF', 'DE', 'MTC'], axis=1)
-except:
-    print("those columns are not present")
+              figname=f"{fig_dir}/sequence_pred_new/X_distr_bin.png")
+
 #%%
 # In[Before encoding we have to split up the sequences we want to predict (test set)]
 df_test = df_all[df_all.Sequence == 'none_nid']
 df_train = df_all[df_all.Sequence != 'none_nid']
-del df_all
+del df_all, df_temp
 
 
 #%%
 # In[Integer encode labels]
+print('Encode Labels as integers')
 target_labels = df_train.Sequence.unique()
 target_ids = np.arange(len(target_labels))
 target_dict = dict(zip(target_labels, target_ids))
@@ -343,19 +501,19 @@ print(target_dict)
 # From now on we should not change the order or remove any values,
 # otherwise the ids wont match afterwards
 # also contains sequences
-df_train_ids = df_train[[PID_k, SID_k, sq, DT_k, ICD_k]]
-df_test_ids = df_test[[PID_k, SID_k, DT_k, ICD_k]]
-try:
-    df_train = df_train.drop(
-        [PID_k, SID_k, 'Sequence', SD_k, DT_k, ICD_k], axis=1)
-    df_test = df_test.drop(
-        [PID_k, SID_k, 'Sequence', SD_k, DT_k, ICD_k], axis=1)
-except:
-    print("those columns are not present")
-
+df_train_ids = df_train[[PID_k, SID_k, sq,]]
+df_test_ids = df_test[[PID_k, SID_k,]]
+df_train = df_train[list(numeric_cols)+list(binary_cols)]
+df_test = df_test[list(numeric_cols)+list(binary_cols)]
 print('Actual training columns ',df_train.keys())
 #%%
+print(len(binary_cols),'binary cols')
+print(len(numeric_cols),'binary cols')
+print(df_train.keys())
+#%%
 # In[Min max scale non bin columns]
+print("Scaling not needed for xgboost")
+"""
 num_cols = df_train.select_dtypes(include="float64").columns
 X = df_train.copy()
 X_test = df_test.copy()
@@ -364,8 +522,11 @@ for col in num_cols:
         (df_train[col].max()-df_train[col].min())
     X_test[col] = (df_test[col] - df_test[col].min()) / \
         (df_test[col].max()-df_test[col].min())
+"""
 #%%
 # In[PCA]
+X = df_train.copy()
+X_test = df_test.copy()
 print('tsne and pca both fail to visualize cluster')
 X_arr = X.to_numpy()
 y_arr = y.to_numpy()
