@@ -23,7 +23,9 @@ import scikitplot as skplot
 from sklearn.manifold import TSNE
 from numpy.random import default_rng
 from sklearn.decomposition import PCA
-
+from sklearn.preprocessing import StandardScaler
+from xgboost import cv
+from sklearn.model_selection import StratifiedKFold
 #%%
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
@@ -114,6 +116,10 @@ print(df_all.Sequence)
 df_all.Sequence.value_counts().plot(kind='barh')
 
 
+
+
+
+
 #%% 
 # print some numbers of scans
 rel_seq = [ 't2', 'swi', 'flair', 'dwi']
@@ -184,6 +190,10 @@ svis.bar(n_labels,pos_pat_count_seq.values, fig=fig, ax=ax,
                  'ylabel':'Patient Count'},
          save=True, 
          figname=f"{fig_dir}/sequence_pred_new/seq_patient_count.png")
+
+
+
+
 #%%
 # In[mask]
 train_mask = df_all.Sequence!='none_nid'
@@ -232,9 +242,7 @@ df_all = df_all.join(ct, rsuffix='_SO')
 print("Unique Sequence Variants:")
 print(set(df_all.columns)-set(columns_list))
 
-#%%
-# In[Solve issue with multiple occurence of columns]
-print(df_all.keys())
+
 #%%
 # In[Image type to one hot]
 s = df_all.ImageType.explode()
@@ -264,9 +272,6 @@ df_all.drop(columns=['SP_SO','IR_SO','SE_IT' ,'IR_IT',''], axis=1, inplace=True)
 # In[Check new columns]
 df_all.keys()
 
-#%%
-# In[check scan options]
-df_all.isna().sum()
 #%% 
 #In [Currently not needed, too many missing values]
 """
@@ -293,20 +298,9 @@ print(mask.sum())
  #   mask = mask | df_all.SequenceName.str.startswith('*q'+psn_string)
 print(df_all[~mask].SequenceName.unique())
 """
-#%% 
-# In[spevify columns]
-columns_list = list(df_all.columns)
-sparse_columns = ['EP', 'GR', 'IR', 'No_SS', 'RM', 'SE', 'MP',
-       'No_SV', 'OSP', 'SK', 'SP', 'SS', 'TOF', 'ACC_GEMS', 'EDR_GEMS',
-       'EPI_GEMS', 'FAST_GEMS', 'FC', 'FC_FREQ_AX_GEMS', 'FC_SLICE_AX_GEMS',
-       'FILTERED_GEMS', 'FS', 'FSA_GEMS', 'FSI_GEMS', 'FSS_GEMS', 'IR_SO',
-       'NPW', 'No_SO', 'OTHER', 'PFF', 'PFP', 'PROP_GEMS', 'SAT1', 'SAT_GEMS',
-       'SEQ_GEMS', 'SP_SO', 'SS_GEMS', 'TRF_GEMS']
-cont_columns = ['dBdt','EchoTime', 'RepetitionTime','FlipAngle',
-    'EchoTrainLength', 'EchoNumbers','ImagingFrequency',]
-df_all.keys()
-#%%
-print(df_all[train_mask].EchoNumbers.value_counts())
+
+
+
 
 #%%
 # In[Produce Pairplot]
@@ -318,8 +312,7 @@ markers_dic = dict(
     ["d",  "d", 'd','d','d', 'd', '.']))
 plot_vars = ['dBdt','EchoTime', 'RepetitionTime','FlipAngle',
     'EchoTrainLength','ImagingFrequency' ]
-print('remove outliers')
-
+print('remove outliers before plotting')
 Q1 = df_all[plot_vars].quantile(0.25)
 Q3 = df_all[plot_vars].quantile(0.75)
 IQR = Q3 - Q1
@@ -377,8 +370,6 @@ plt.legend(handles=handles, labels=[lgd_labels_dic[l] for l in labels],
 sns_plot.savefig(f"{fig_dir}/sequence_pred_new/X_pairplot.png")
 plt.clf() # Clean parirplot figure from sns 
 Image(filename=f"{fig_dir}/sequence_pred_new/X_pairplot.png")
-
-
 #%%
 # pairgrid
 def my_hist(x, label, color):
@@ -400,7 +391,6 @@ sns_plot = sns.PairGrid(data=df_temp.sample(1000),
 sns_plot.map_diag(my_hist)
 sns_plot.map_lower(sns.scatterplot)
 # sns_plot._legend.set_title('Class')
-
 labels_dic = {'EchoTime':r'$t_\mathrm{echo}\,[\mathrm{ms}]$', 
     'RepetitionTime':r'$t_\mathrm{rep}\,[\mathrm{ms}]$',
     'InversionTime':'Inversion Time [ms]', 'FlipAngle':r'$\alpha_{\mathrm{flip}} \,[°]$',
@@ -417,38 +407,24 @@ for i, ax in enumerate(sns_plot.axes.flatten()):
         ax.set_xlabel(labels_dic[ax.get_xlabel()], fontsize=20)
         ax.set_ylabel(labels_dic[ax.get_ylabel()], fontsize=20)
         ax.tick_params(labelsize=15)
-    
-# handles = sns_plot._legend_data.values()
-# labels = sns_plot._legend_data.keys()
-# new_labels = ['T1', 'T2', 'FLAIR', 'DWI','SWI', 'OIS','Unknown']
-# lgd_labels_dic = dict(zip(['t1','t2','flair','dwi','swi','other','none_nid'],
-    # new_labels))
-# sns_plot._legend.remove()
-# plt.legend(handles=handles, labels=[lgd_labels_dic[l] for l in labels], 
-    # loc=(-.5,3.95), ncol=1, fontsize=20)
+
 sns_plot.savefig(f"{fig_dir}/sequence_pred_new/X_pairplot_alt.png")
 plt.clf() # Clean parirplot figure from sns 
 Image(filename=f"{fig_dir}/sequence_pred_new/X_pairplot_alt.png")
 
-#%%
-# In[Fraction of missing values in each column]
-print("Number of missing values")
-print(df_all[cont_columns].isna().sum(axis=0))
+
+
+
 #%%
 # In[Lets set missing values to the median]
 # df_all[TI_k] = np.where((df_all[TI_k].isna()), df_all[TI_k].median(), df_all[TI_k])
-df_all[FA_k] = np.where(
-    (df_all[FA_k].isna()), df_all[FA_k].median(), df_all[FA_k])
-df_all['dBdt'] = np.where(
-    (df_all['dBdt'].isna()), df_all['dBdt'].median(), df_all['dBdt'])
-df_all[TE_k] = np.where(
-    (df_all[TE_k].isna()), df_all[TE_k].median(), df_all[TE_k])
-df_all[TR_k] = np.where(
-    (df_all[TR_k].isna()), df_all[TR_k].median(), df_all[TR_k])
-df_all[ETL_k] = np.where(
-    (df_all[ETL_k].isna()), df_all[ETL_k].median(), df_all[ETL_k])
-df_all[IF_k] = np.where(
-    (df_all[IF_k].isna()), df_all[IF_k].median(), df_all[ETL_k])
+numeric_cols = ['dBdt','EchoTime', 'RepetitionTime','FlipAngle',
+    'EchoTrainLength', 'EchoNumbers','ImagingFrequency',]
+for num_col in numeric_cols:
+    if num_col!=EN_k:
+        df_all[num_col] = np.where(
+            (df_all[num_col].isna()), df_all[num_col].median(), 
+            df_all[num_col])
 # Set to one where echo number is missing, discrete, most often occ value
 df_all[EN_k] = np.where(
     (df_all[EN_k].isna()), 1, df_all[EN_k])
@@ -456,25 +432,22 @@ df_all[EN_k] = np.where(
 #%%
 # Missing values
 print("Missing values:")
-print(df_all[cont_columns].isna().sum(axis=0))
-print(df_all['missing_SV'].sum(axis=0))
+print(df_all[numeric_cols].isna().sum(axis=0))
 #%%
 # In[Define Columns that will be used for prediction]
 print(df_all.keys())
 other_cols = ['SeriesInstanceUID', 'StudyInstanceUID', 'PatientID',
        'SeriesDescription', 'Positive','Sequence']
-numeric_cols = ['dBdt','EchoTime', 'RepetitionTime','FlipAngle',
-    'EchoTrainLength', 'EchoNumbers','ImagingFrequency',]
 binary_cols = set(df_all.keys()).difference(set(other_cols))\
     .difference(set(numeric_cols))
 print(binary_cols)
 print(len(binary_cols),'binary cols')
-print(len(numeric_cols),'binary cols')
-df_all[IF_k].hist()
+print(len(numeric_cols),'numeric cols')
 #%%
 # In[Show the binary columns]
-bin_counts = df_all[sparse_columns].sum(axis=0)
-svis.bar(bin_counts.keys(), bin_counts.values,
+print('Later show countplot of binary columns, separated by axis')
+bin_counts = df_all[binary_cols].sum(axis=0)
+svis.bar(bin_counts.keys(), bin_counts.values,orient='horizontal',
               figsize=(15, 6), kwargs={'logscale':True},
               figname=f"{fig_dir}/sequence_pred_new/X_distr_bin.png")
 
@@ -482,7 +455,7 @@ svis.bar(bin_counts.keys(), bin_counts.values,
 # In[Before encoding we have to split up the sequences we want to predict (test set)]
 df_test = df_all[df_all.Sequence == 'none_nid']
 df_train = df_all[df_all.Sequence != 'none_nid']
-del df_all, df_temp
+del df_all
 
 
 #%%
@@ -507,10 +480,6 @@ df_train = df_train[list(numeric_cols)+list(binary_cols)]
 df_test = df_test[list(numeric_cols)+list(binary_cols)]
 print('Actual training columns ',df_train.keys())
 #%%
-print(len(binary_cols),'binary cols')
-print(len(numeric_cols),'binary cols')
-print(df_train.keys())
-#%%
 # In[Min max scale non bin columns]
 print("Scaling not needed for xgboost")
 """
@@ -524,46 +493,102 @@ for col in num_cols:
         (df_test[col].max()-df_test[col].min())
 """
 #%%
-# In[PCA]
+# In[Define X and X_test]
 X = df_train.copy()
 X_test = df_test.copy()
+#%%
+# In[PCA]
 print('tsne and pca both fail to visualize cluster')
 X_arr = X.to_numpy()
 y_arr = y.to_numpy()
+
 y_pca = np.expand_dims(y_arr, axis=0).T
-X_pca = PCA(n_components=2).fit_transform(X_arr[:2000])
+vis_n = 40000
+X_pca = PCA(n_components=2).fit_transform(X_arr[:vis_n])
 #%%
 # In[Vis PCA]
-df_pca = pd.DataFrame(data=np.concatenate((X_pca,y_pca[:2000]), axis=1), 
+print('Nice, some clusters can be seen, work on this')
+df_pca = pd.DataFrame(data=np.concatenate((X_pca,y_pca[:vis_n]), axis=1), 
     columns=['PC 1', 'PC 2', 'Class'])
-sns_plot = sns.scatterplot(data=df_pca, x='PC 1', y='PC 2', hue='Class',palette='Set1',s=5)
+sns_plot = sns.scatterplot(data=df_pca, x='PC 1', y='PC 2', 
+    hue='Class',palette='Set1',s=5)
+
 
 #handles = sns_plot._legend_data.values()
 #labels = sns_plot._legend_data.keys()
 #sns_plot._legend.remove()
 #plt.legend(handles=handles, labels=labels, 
 #    loc=(-4.8,5.34), ncol=7, fontsize=16)
+
 #%%
 # In[tsne embedding]
-
-n_samples = 100
+# Apply PCA first to reduce number of features to 30
+print('Reduce number of dimensions to 30')
+X_pca30 = PCA(n_components=5).fit_transform(X_arr)
+print('Scale data')
+X_arr_s = StandardScaler().fit_transform(X_pca30)
+n_samples = 1000
 rng = default_rng()
 inds = rng.choice(len(X), size=n_samples, replace=False)
-X_tsne = TSNE(n_components=2,perplexity=100, learning_rate='auto',
-                   init='random').fit_transform(X_arr[inds])
-#%%
-# In[tsne visualization]
+print('tsne embed')
+X_tsne = TSNE(n_components=2, perplexity=20, learning_rate='auto',
+                   init='random').fit_transform(X_arr_s[inds])
 fig, ax = plt.subplots()
 y_tsne = np.expand_dims(y_arr[:n_samples], axis=0).T
 df_tsne = pd.DataFrame(data=np.concatenate((X_tsne,y_tsne), axis=1), 
     columns=['Dim 1', 'Dim 2', 'Class'])
 sns.scatterplot(data=df_tsne, x='Dim 1', y='Dim 2', hue='Class',palette='Set1')
+print('Cannot get tsne to work')
+
+
+
+
+
+
+
+
+#%%
+# In[5 fold cross validation to find best params]
+dmatrix = xgb.DMatrix(X.to_numpy(), label=y.to_numpy())
+# A parameter grid for XGBoost
+params = {
+        'min_child_weight': [1, 5, 10],
+        'gamma': [0.5, 1, 1.5, 2, 5],
+        'subsample': [0.6, 0.8, 1.0],
+        'colsample_bytree': [0.6, 0.8, 1.0],
+        'max_depth': [3, 4, 5]
+        }
+xgb = xgb.XGBClassifier(
+    learning_rate=0.02, n_estimators=600, objective='multi:softmax',
+    silent=True, nthread=1)
+folds = 3
+param_comb = 5
+skf = StratifiedKFold(n_splits=folds, shuffle = True, random_state = 1001)
+
+#%%
+
+#%%
+
+params = {"objective":"multi:softmax",'colsample_bytree': 0.3,
+        'learning_rate': 0.1,'max_depth': 5, 'alpha': 10, 
+        'num_class':6}
+
+xgb_cv = cv(dtrain=dmatrix, params=params, nfold=5,
+            num_boost_round=50, early_stopping_rounds=100, 
+            metrics="mlogloss", as_pandas=True, seed=123)
+xgb_cv.head()
+#%%
+#%%
+# In[Visualize training]
+xgb_cv['test-mlogloss-mean'].plot()
+
+
 #%%
 print("Dont forget 5 fold cross validation")
 # In[Split train and val]
-
 X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.1, random_state=42)
+
 print('X_train shape', X_train.shape)
 print('X_val shape', X_val.shape)
 #%%
