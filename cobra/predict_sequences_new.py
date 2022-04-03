@@ -7,6 +7,7 @@ Created on Mon Sep 13 15:50:50 2021
 #%%
 import xgboost as xgb
 import os
+import json
 from pathlib import Path
 import pandas as pd
 from utilities import basic, mri_stats
@@ -24,8 +25,7 @@ from sklearn.manifold import TSNE
 from numpy.random import default_rng
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from xgboost import cv
-from sklearn.model_selection import StratifiedKFold
+from utilities import bayesian_opt
 #%%
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
@@ -195,10 +195,8 @@ svis.bar(n_labels,pos_pat_count_seq.values, fig=fig, ax=ax,
 
 
 #%%
-# In[mask]
+# In[mask and minimum number of present entries]
 train_mask = df_all.Sequence!='none_nid'
-
-#%%
 print(df_all.keys())
 print('Remove binary feature if it is present in less than 1% of training samples')
 min_pos = int(train_mask.sum()*0.01)
@@ -492,16 +490,16 @@ for col in num_cols:
     X_test[col] = (df_test[col] - df_test[col].min()) / \
         (df_test[col].max()-df_test[col].min())
 """
+print(df_test.keys())
 #%%
 # In[Define X and X_test]
 X = df_train.copy()
 X_test = df_test.copy()
+X_arr = X.to_numpy()
+y_arr = y.to_numpy()
 #%%
 # In[PCA]
 print('tsne and pca both fail to visualize cluster')
-X_arr = X.to_numpy()
-y_arr = y.to_numpy()
-
 y_pca = np.expand_dims(y_arr, axis=0).T
 vis_n = 40000
 X_pca = PCA(n_components=2).fit_transform(X_arr[:vis_n])
@@ -529,7 +527,7 @@ print('Scale data')
 X_arr_s = StandardScaler().fit_transform(X_pca30)
 n_samples = 1000
 rng = default_rng()
-inds = rng.choice(len(X), size=n_samples, replace=False)
+inds = rng.choice(len(X_arr), size=n_samples, replace=False)
 print('tsne embed')
 X_tsne = TSNE(n_components=2, perplexity=20, learning_rate='auto',
                    init='random').fit_transform(X_arr_s[inds])
@@ -545,65 +543,40 @@ print('Cannot get tsne to work')
 
 
 
-
-
 #%%
-# In[5 fold cross validation to find best params]
-dmatrix = xgb.DMatrix(X.to_numpy(), label=y.to_numpy())
-# A parameter grid for XGBoost
-params = {
-        'min_child_weight': [1, 5, 10],
-        'gamma': [0.5, 1, 1.5, 2, 5],
-        'subsample': [0.6, 0.8, 1.0],
-        'colsample_bytree': [0.6, 0.8, 1.0],
-        'max_depth': [3, 4, 5]
-        }
-xgb = xgb.XGBClassifier(
-    learning_rate=0.02, n_estimators=600, objective='multi:softmax',
-    silent=True, nthread=1)
-folds = 3
-param_comb = 5
-skf = StratifiedKFold(n_splits=folds, shuffle = True, random_state = 1001)
-
-#%%
-
-#%%
-
-params = {"objective":"multi:softmax",'colsample_bytree': 0.3,
-        'learning_rate': 0.1,'max_depth': 5, 'alpha': 10, 
-        'num_class':6}
-
-xgb_cv = cv(dtrain=dmatrix, params=params, nfold=5,
-            num_boost_round=50, early_stopping_rounds=100, 
-            metrics="mlogloss", as_pandas=True, seed=123)
-xgb_cv.head()
-#%%
-#%%
-# In[Visualize training]
-xgb_cv['test-mlogloss-mean'].plot()
-
-
-#%%
-print("Dont forget 5 fold cross validation")
 # In[Split train and val]
 X_train, X_val, y_train, y_val = train_test_split(
     X, y, test_size=0.1, random_state=42)
-
 print('X_train shape', X_train.shape)
 print('X_val shape', X_val.shape)
 #%%
+# In[Run bayesian optimization in 5 fold cross validation]
+import importlib
+importlib.reload(bayesian_opt)
+bp = bayesian_opt.find_best_params(X_train.to_numpy()[:100], y_train.to_numpy()[:100], n_iter=3)
+print('Best Parameters:')
+print(bp)
+with open('xgboost/best_params.txt', 'w') as f:
+    json.dump(bp, f)
+
+#%%
 # In[Initialize and train]
-xgb_cl = xgb.XGBClassifier(tree_method='gpu_hist')
-xgb_cl.fit(X_train, y_train)
+xgb_cl = xgb.XGBClassifier(objective='multi:softprob',
+                          tree_method='hist',
+                          eval_metric='mlogloss',
+                          use_label_encoder=False,
+                          **bp)
+xgb_cl.fit(df_train, y_train)
+xgb_cl.save_model("xgboost/categorical-model.json")
+
+
 #%%
 # In[Plot feature importance]
-xgb.plot_importance(xgb_cl, importance_type = 'gain') # other options available
+xgb.plot_importance(xgb_cl, importance_type = 'gain',max_num_features=10) # other options available
 plt.show()
 #%%
 # In[Predict]
 pred_prob_val = xgb_cl.predict_proba(X_val)
-#%%
-# In[Plot roc curve]
 svis.plot_decorator(skplot.metrics.plot_roc_curve, 
                     plot_func_args=[y_val, pred_prob_val, ],
                     plot_func_kwargs={'figsize': (9, 8), 'text_fontsize': 14.5,
