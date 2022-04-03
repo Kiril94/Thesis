@@ -21,7 +21,7 @@ def timeit(func):
             elif (end_>60*1000) and (end_<=60*1000*60):
                 print(f"Total execution time: {round(end_/1000/60,2)} min")    
             elif end_>60*1000*60:
-                print(f"Total execution time: {round(end_/1000/60/60,2)} min")    
+                print(f"Total execution time: {round(end_/1000/60/60,2)} h")    
             else:
                 print(f"Total execution time: {end_ if end_ > 0 else 0} ms")
     return _time_it

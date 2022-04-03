@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
 import seaborn as sns
 import scikitplot as skplot
 from sklearn.manifold import TSNE
@@ -435,17 +434,18 @@ print(df_all[numeric_cols].isna().sum(axis=0))
 # In[Define Columns that will be used for prediction]
 print(df_all.keys())
 other_cols = ['SeriesInstanceUID', 'StudyInstanceUID', 'PatientID',
-       'SeriesDescription', 'Positive','Sequence']
+       'SeriesDescription', 'Positive','Sequence',]
 binary_cols = set(df_all.keys()).difference(set(other_cols))\
     .difference(set(numeric_cols))
 print(binary_cols)
+print(numeric_cols)
 print(len(binary_cols),'binary cols')
 print(len(numeric_cols),'numeric cols')
 #%%
 # In[Show the binary columns]
 print('Later show countplot of binary columns, separated by axis')
 bin_counts = df_all[binary_cols].sum(axis=0)
-svis.bar(bin_counts.keys(), bin_counts.values,orient='horizontal',
+svis.bar(bin_counts.keys(), bin_counts.values,
               figsize=(15, 6), kwargs={'logscale':True},
               figname=f"{fig_dir}/sequence_pred_new/X_distr_bin.png")
 
@@ -554,7 +554,7 @@ print('X_val shape', X_val.shape)
 import importlib
 importlib.reload(bayesian_opt)
 bp = bayesian_opt.find_best_params(X_train.to_numpy(), y_train.to_numpy(),
-                                 n_iter=2, nfold=5, n_jobs=10, n_points=5)
+                                 n_iter=100, nfold=5, n_jobs=5)
 print('Best Parameters:')
 print(bp)
 with open('xgboost/best_params.txt', 'w') as f:
