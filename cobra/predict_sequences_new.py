@@ -7,7 +7,9 @@ Created on Mon Sep 13 15:50:50 2021
 #%%
 import xgboost as xgb
 import os
+import pickle
 import json
+from os.path import join
 from pathlib import Path
 import pandas as pd
 from utilities import basic, mri_stats
@@ -576,13 +578,17 @@ xgb_cl.save_model("xgboost/categorical-model.json")
 xgb.plot_importance(xgb_cl, importance_type = 'gain',max_num_features=10) # other options available
 plt.show()
 #%%
-# In[Predict]
+# In[ROC curves]
 pred_prob_val = xgb_cl.predict_proba(X_val)
-svis.plot_decorator(skplot.metrics.plot_roc_curve, 
-                    plot_func_args=[y_val, pred_prob_val, ],
-                    plot_func_kwargs={'figsize': (9, 8), 'text_fontsize': 14.5,
-                            'title': "Sequence Prediction - ROC Curves"},
-                    figname=f"{fig_dir}/sequence_pred/ROC_curves.png")
+
+fig, ax = plt.subplots()
+rc = skplot.metrics.plot_roc_curve(y_val, pred_prob_val, ax=ax,)
+ax.legend(labels=['FLAIR', 'T2', 'OIS','T1','SWI','DWI', 'micro-average', 'macro_average'],
+    loc='lower right', fontsize=10)
+fig.savefig(f"{fig_dir}/sequence_pred_new/ROC_curves.png")
+ax.set_xlabel('False Positive Rate', fontsize=20)
+ax.set_ylabel('True Positive Rate', fontsize=20)
+
 #%%
 
 #%%
@@ -616,25 +622,29 @@ fig.savefig(f"{fig_dir}/sequence_pred/fpr_cutoff.png", dpi=80)
 plt.rcParams['figure.dpi'] = 200
 fig, ax = plt.subplots()
 pred_val = np.argmax(pred_prob_val, axis=1)
+
 ax = skplot.metrics.plot_confusion_matrix(y_val, pred_val, normalize=True, ax=ax)
 nice_labels_dic = {'flair':'FLAIR','t2':'T2', 'other':'OIS','t1':'T1','swi':'SWI','dwi':'DWI'}
 ax.set_xticklabels([nice_labels_dic[k] for k in target_dict.keys()])
 ax.set_yticklabels([nice_labels_dic[k] for k in target_dict.keys()])
-ax.tick_params(labelsize=14)
-ax.set_xlabel('Predicted Label', fontsize=20)
-ax.set_ylabel('True Label', fontsize=20)
+ax.tick_params(labelsize=12)
+ax.set_xlabel('Predicted Label', fontsize=18)
+ax.set_ylabel('True Label', fontsize=18)
 fig.savefig(f"{fig_dir}/sequence_pred_new/confusion_matrix_val_norm.png")
 
 #%%
 # In[make prediction for the test set]
 pred_prob_test = xgb_cl.predict_proba(X_test)
-pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
-svis.bar(target_dict.keys(), np.unique(pred_test, return_counts=True)[1],
-         kwargs={'xlabel':'Sequence', 'title':'Predicted sequences',
+pred_test = np.argmax(pred_prob_test, axis=1)
+# pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
+labels = [nice_labels_dic[k] for k in target_dict.keys()]
+svis.bar(labels, np.unique(pred_test, return_counts=True)[1],
+         kwargs={'xlabel':'Sequence Type', 'title':'Predicted sequences',
                  },
-         save=True, figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
+         save=True, figname=f"{fig_dir}/sequence_pred_new/seq_dist_pred.png")
 #%%
 # In[show predicted and true]
+print('Sequence count needed for this plot')
 pred_counts = np.unique(pred_test, return_counts=True)[1]
 fig, ax = svis.bar(target_dict.keys(), seq_count.values[1:], label='true',
                    )
@@ -644,21 +654,25 @@ svis.bar(target_dict.keys(), pred_counts, fig=fig, ax=ax,
                       'color':(1,3), 'yrange':(0,126000), 
                       'title':'Volume Count - All Patients',
                       'ylabel':'Volumes Count'},
-              figname=f"{fig_dir}/sequence_pred/seq_dist_pred.png")
+              figname=f"{fig_dir}/sequence_pred_new/seq_dist_pred.png")
 
 #%%
 # In[Get labels from prediction]
 def dict_mapping(t): return basic.inv_dict(target_dict)[t]
-
 pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
+print(pred_test_labels)
+with open(join('xgboost', 'pred_test_labels.pkl'), 'wb') as f:
+    pickle.dump(pred_test_labels, f)
 #%%
 # In[Create and save dataframe with predictions]
+print("Something wrong here, maybe just rewrite!")
 df_test[sq] = pred_test_labels
 df_test = pd.concat([df_test, df_test_ids], axis=1)
 df_train = pd.concat([df_train, df_train_ids], axis=1)
 df_test['TrueSequenceType'] = 0
 df_train['TrueSequenceType'] = 1
 df_final = pd.concat([df_train, df_test])
+
 #%%
 #del df_test, df_train
 # In[Examine final df]
