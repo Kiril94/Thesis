@@ -27,7 +27,8 @@ def timeit(func):
     return _time_it
 
 @timeit
-def find_best_params(X_train, y_train, nfold=5,n_iter=100, objective='multi:softprob',
+def find_best_params(X_train, y_train, n_jobs=1,n_points=1,nfold=5, n_iter=100, 
+    objective='multi:softprob',
     eval_metric='mlogloss',
     search_space= {
         'eta':Real(0.01, 0.3, 'log-uniform'),
@@ -48,7 +49,7 @@ def find_best_params(X_train, y_train, nfold=5,n_iter=100, objective='multi:soft
         objective=objective, use_label_encoder=False)
     clf = BayesSearchCV(
         estimator=xgbc, search_spaces=search_space, n_iter=n_iter, 
-        cv=nfold, return_train_score=True, verbose=3)
+        cv=nfold, return_train_score=True, verbose=3, n_jobs=n_jobs, n_points=n_points)
     clf.fit(X_train, y_train)
     #best parameters
     print('Finished')

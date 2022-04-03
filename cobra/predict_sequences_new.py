@@ -553,8 +553,8 @@ print('X_val shape', X_val.shape)
 # In[Run bayesian optimization in 5 fold cross validation]
 import importlib
 importlib.reload(bayesian_opt)
-bp = bayesian_opt.find_best_params(X_train.to_numpy()[:2000], y_train.to_numpy()[:2000], n_iter=3,
-    nfold=2)
+bp = bayesian_opt.find_best_params(X_train.to_numpy(), y_train.to_numpy(),
+                                 n_iter=2, nfold=5, n_jobs=10, n_points=5)
 print('Best Parameters:')
 print(bp)
 with open('xgboost/best_params.txt', 'w') as f:
@@ -584,7 +584,10 @@ svis.plot_decorator(skplot.metrics.plot_roc_curve,
                             'title': "Sequence Prediction - ROC Curves"},
                     figname=f"{fig_dir}/sequence_pred/ROC_curves.png")
 #%%
-# In[Test FPR for different thresholds]
+
+#%%
+# In[Test FPR for different thresholds, Obsolete]
+"""
 thresholds = np.linspace(.5, .99, 100)
 fprs = []
 for i, th in enumerate(thresholds):
@@ -592,12 +595,11 @@ for i, th in enumerate(thresholds):
     cm = confusion_matrix(y_val, pred_val)
     fprs.append(clss.fpr_multi(cm))
 fprs = np.array(fprs)
-#%%
-# In[Plot FPR for different thresholds]
-# final_th = 0.92
+
+
 final_th = 0.92
 fig, ax = plt.subplots(figsize=(9, 5))
-for i in range(6):
+for i in y.unique():
     ax.plot(thresholds, fprs[:, 1+i], label=list(target_dict.keys())[i+1])
 ax.axvline(final_th, color='red', linestyle='--',
            label=f'final cutoff={final_th}')
@@ -608,24 +610,21 @@ ax.set_xlabel('Cutoff', fontsize=20)
 ax.set_ylabel('FPR', fontsize=20)
 fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred/fpr_cutoff.png", dpi=80)
+"""
 #%%
 # In[Plot confusion matrix]
-# np.argmax(pred_val, axis=1)
-#
-pred_val = clss.prob_to_class(pred_prob_val, final_th, 0)
-cm = confusion_matrix(y_val, pred_val)
+plt.rcParams['figure.dpi'] = 200
+fig, ax = plt.subplots()
+pred_val = np.argmax(pred_prob_val, axis=1)
+ax = skplot.metrics.plot_confusion_matrix(y_val, pred_val, normalize=True, ax=ax)
+nice_labels_dic = {'flair':'FLAIR','t2':'T2', 'other':'OIS','t1':'T1','swi':'SWI','dwi':'DWI'}
+ax.set_xticklabels([nice_labels_dic[k] for k in target_dict.keys()])
+ax.set_yticklabels([nice_labels_dic[k] for k in target_dict.keys()])
+ax.tick_params(labelsize=14)
+ax.set_xlabel('Predicted Label', fontsize=20)
+ax.set_ylabel('True Label', fontsize=20)
+fig.savefig(f"{fig_dir}/sequence_pred_new/confusion_matrix_val_norm.png")
 
-plot_func_args = [y_val, pred_val]
-plot_func_kwargs = {'normalize': False, 'text_fontsize': 16, 
-                    'title_fontsize': 18, }
-svis.plot_decorator(skplot.metrics.plot_confusion_matrix, 
-                    plot_func_args, plot_func_kwargs,
-                    kwargs={'xticks':np.arange(7), 
-                            'xtick_labels':target_dict.keys(), 
-                            'yticks':np.arange(7), 
-                            'ytick_labels':target_dict.keys()},
-                    save=True, 
-                    figname=f"{fig_dir}/sequence_pred/confusion_matrix_val_norm.png")
 #%%
 # In[make prediction for the test set]
 pred_prob_test = xgb_cl.predict_proba(X_test)
