@@ -553,7 +553,8 @@ print('X_val shape', X_val.shape)
 # In[Run bayesian optimization in 5 fold cross validation]
 import importlib
 importlib.reload(bayesian_opt)
-bp = bayesian_opt.find_best_params(X_train.to_numpy()[:100], y_train.to_numpy()[:100], n_iter=3)
+bp = bayesian_opt.find_best_params(X_train.to_numpy()[:2000], y_train.to_numpy()[:2000], n_iter=3,
+    nfold=2)
 print('Best Parameters:')
 print(bp)
 with open('xgboost/best_params.txt', 'w') as f:
@@ -562,11 +563,11 @@ with open('xgboost/best_params.txt', 'w') as f:
 #%%
 # In[Initialize and train]
 xgb_cl = xgb.XGBClassifier(objective='multi:softprob',
-                          tree_method='hist',
+                          tree_method='auto',
                           eval_metric='mlogloss',
                           use_label_encoder=False,
                           **bp)
-xgb_cl.fit(df_train, y_train)
+xgb_cl.fit(X_train, y_train)
 xgb_cl.save_model("xgboost/categorical-model.json")
 
 
