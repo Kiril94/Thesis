@@ -267,13 +267,17 @@ def save_number_of_slices(data_frame, csv_file_path, sif_path):
 
     return data_frame
 
+
 def save_number_of_slices_to_txt(data_frame, txt_file_path, 
                                 sif_path, disk_path):
     """Save number of scans to text row by row."""
     n_slices = []
+    dic = {}
     counter=0
+    script_dir = os.path.realpath(__file__)
+    cobra_dir = Path(script_dir).parent.parent
     df_pat_dirs = pd.read_csv(
-        "D:\Thesis\Cobra\cobra\data\\tables\patient_directories.csv")
+        join(cobra_dir,"data\\tables\patient_directories.csv"))
     dic_pat_dis = pd.Series(
     df_pat_dirs.Directory.values, index=df_pat_dirs.PatientID)\
         .to_dict()
@@ -288,13 +292,16 @@ def save_number_of_slices_to_txt(data_frame, txt_file_path,
             vol_path = join(disk_path, 'Cobra', 'Data', 'dcm', 
                             dic_pat_dis[patient_id], series_id)
             n_slices = len(os.listdir(vol_path))
+            dic[series_id] = n_slices
         except:
             n_slices = find_n_slices(patient_id, row['StudyInstanceUID'],
                                     series_id, sif_path)
+            dic[series_id] = n_slices
         with open(txt_file_path, mode="a+") as f:
             f.write(f"{series_id}, {n_slices}\n")
     print(f"Number of scans written to {txt_file_path}: {counter}")
-    return 0
+    return dic
+
 
 def save_missing_tags_to_txt(sids, txt_file_path, 
     key_list=['PercentSampling', 

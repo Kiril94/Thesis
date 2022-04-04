@@ -36,11 +36,11 @@ params = {'figure.dpi':300,
          'xtick.labelsize':18,
          'ytick.labelsize':18}
 pylab.rcParams.update(params)
+plt.style.use('ggplot')
 #%%
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
-fig_dir = f"{base_dir}/figs/basic_stats"
 table_dir = f"{base_dir}/data/tables"
 fig_dir = f"{base_dir}/figs"
 
@@ -64,9 +64,10 @@ ICD_k = 'InstanceCreationDate'
 SN_k = 'SequenceName'
 PSN_k = 'PulseSequenceName'
 IT_k = 'ImageType'
+sq = 'Sequence'
 #%%
 # In[load all csv]
-df_init = pd.read_pickle(f"{table_dir}/scan_csv/scan_init.pkl")
+df_init = pd.read_pickle(f"{table_dir}/scan_tables/scan_init.pkl")
 # df_init = pd.read_csv(
     # join(table_dir, 'neg_pos_clean.csv'), nrows=80000)
 #%%
@@ -104,7 +105,7 @@ mask_dict, tag_dict = mri_stats.get_masks_dict(df_all)
 
 #%%
 # In[Add sequence column and set it to one of the relevant values]
-sq = 'Sequence'
+
 rel_seqs_keys = ['t1', 't2', 'swi', 'flair','dwi']
 rel_masks = [mask_dict[key] for key in rel_seqs_keys]
 df_all[sq] = "none_nid" #By default the sequence is unknown
@@ -456,10 +457,14 @@ df_all.to_feather(join('data','xgb_sequence_pred', 'preprocessed.feather'))
 #%%
 # In[Load preprocessed dataframe]
 df_all = pd.read_feather(join('data','xgb_sequence_pred', 'preprocessed.feather'))
+seq_count = df_all[sq].value_counts()
 df_all.keys()
+df_all.isna().mean(axis=0)
 #%%
 # In[Define Columns that will be used for prediction]
 print(df_all.keys())
+numeric_cols = ['dBdt','EchoTime', 'RepetitionTime','FlipAngle',
+    'EchoTrainLength', 'EchoNumbers','ImagingFrequency',]
 other_cols = ['SeriesInstanceUID', 'StudyInstanceUID', 'PatientID',
        'SeriesDescription', 'Positive','Sequence',]
 binary_cols = set(df_all.keys()).difference(set(other_cols))\
@@ -471,7 +476,7 @@ print(len(numeric_cols),'numeric cols')
 #%%
 # In[Show the binary columns]
 df_all[binary_cols].mean(axis=0).sort_values()
-
+len(df_all[binary_cols.union(numeric_cols)].keys())
 #%%
 print('Later show countplot of binary columns, separated by axis')
 bin_counts = df_all[binary_cols].sum(axis=0)/len(df_all)
@@ -520,20 +525,6 @@ df_train = df_train[list(numeric_cols)+list(binary_cols)]
 df_test = df_test[list(numeric_cols)+list(binary_cols)]
 print('Actual training columns ',df_train.keys())
 #%%
-# In[Min max scale non bin columns]
-print("Scaling not needed for xgboost")
-"""
-num_cols = df_train.select_dtypes(include="float64").columns
-X = df_train.copy()
-X_test = df_test.copy()
-for col in num_cols:
-    X[col] = (df_train[col] - df_train[col].min()) / \
-        (df_train[col].max()-df_train[col].min())
-    X_test[col] = (df_test[col] - df_test[col].min()) / \
-        (df_test[col].max()-df_test[col].min())
-"""
-print(df_test.keys())
-#%%
 # In[Define X and X_test]
 X = df_train.copy()
 X_test = df_test.copy()
@@ -541,8 +532,6 @@ X_arr = X.to_numpy()
 y_arr = y.to_numpy()
 #%%
 # In[PCA]
-
-print('tsne fails to visualize cluster')
 y_pca = np.expand_dims(y_arr, axis=0).T
 vis_n = len(X_arr)
 X_pca = PCA(n_components=2).fit_transform(X_arr)
@@ -632,10 +621,13 @@ xgb_cl.save_model("data/xgb_sequence_pred/trained_classifier.json")
 
 #%%
 # Load existing model
+with open('data/xgb_sequence_pred/best_params.txt', 'r') as f:
+    bp = json.load(f)
 xgb_cl = xgb.XGBClassifier(objective='multi:softprob',
                           tree_method='auto',
                           eval_metric='mlogloss',
-                          use_label_encoder=False,)
+                          use_label_encoder=False,
+                          **bp)
 xgb_cl.load_model("data/xgb_sequence_pred/trained_classifier.json")
 #%%
 # In[Plot feature importance]
@@ -713,6 +705,7 @@ fig.savefig(f"{fig_dir}/sequence_pred_new/confusion_matrix_val_norm.png")
 
 #%%
 # In[make prediction for the test set]
+nice_labels_dic = {'flair':'FLAIR','t2':'T2', 'other':'OIS','t1':'T1','swi':'SWI','dwi':'DWI'}
 pred_prob_test = xgb_cl.predict_proba(X_test)
 pred_test = np.argmax(pred_prob_test, axis=1)
 # pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
@@ -740,9 +733,6 @@ plt.style.use('ggplot')
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']   
 
 
-#inds = [0,2,3,4,5,6]
-#labels = [nice_labels_dic[k] for k in seq_count.keys()[inds]]
-
 labels_pre, counts_pre = seq_count.keys(), seq_count.values
 # remove none_nid
 mask = labels_pre!='none_nid'
@@ -757,14 +747,10 @@ ids = [indexes[x].popleft() for x in labels_post]
 labels_pre, counts_pre =  labels_pre[ids], counts_pre[ids]
 labels = np.array([nice_labels_dic[k] for k in labels_pre])
 # sort lists starting with largest
-print(labels)
 sort_inds = [2,4,5, 1, 0, 3]
 labels = labels[sort_inds]
 counts_post =  counts_post[sort_inds] 
 counts_pre =  counts_pre[sort_inds] 
-
-
-
 
 fig, ax = svis.bar(labels, counts_pre, label='True',color=colors[5])
 fig, ax = svis.bar(labels, counts_post, fig=fig, ax=ax,
@@ -821,6 +807,42 @@ fig, ax = svis.bar(labels, counts_post[inds], fig=fig, ax=ax,
                       'ylabel':'# Patients',
                       },)
 fig.savefig(f"{fig_dir}/sequence_pred_new/old_and_predicted_pat_count.png")
+#%%
+
+#%%
+# In[Same but for positive patients]
+pos_pat = df_init[df_init.Positive==1].PatientID.unique()
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']   
+df_train_ids_p = df_train_ids[df_train_ids.PatientID.isin(pos_pat)]
+df_test_pred_p = df_test_pred[df_test_pred.PatientID.isin(pos_pat)]
+pat_count_pre = df_train_ids_p.groupby(sq).PatientID.nunique()
+pat_count_post = df_test_pred_p.groupby(sq).PatientID.nunique()
+labels_pre, counts_pre = pat_count_pre.keys(), pat_count_pre.values
+labels_post, counts_post = pat_count_post.keys(), pat_count_post.values
+sort_inds = np.argsort(pat_count_pre.values+pat_count_post.values)[::-1]
+labels_post, counts_post = labels_post[sort_inds], counts_post[sort_inds] 
+labels_pre, counts_pre = labels_pre[sort_inds], counts_pre[sort_inds] 
+print('old', labels_pre, 'new',labels_post)
+inds = np.arange(1,len(labels_pre))
+labels = [nice_labels_dic[k] for k in labels_pre[inds]]
+fig, ax = svis.bar(labels, counts_pre[inds], label='Initial',color=colors[5])
+fig, ax = svis.bar(labels, counts_post[inds], fig=fig, ax=ax,
+              bottom=counts_pre[inds], label='After Prediction', color=colors[3], 
+              kwargs={'save_plot':False, 'lgd':True, 'xlabel':'Class',
+                      'color':(1,3),'yrange':(0,440),  
+                      'title':'',
+                      'ylabel':'# Positive Patients',
+                      },)
+fig.savefig(f"{fig_dir}/sequence_pred_new/old_and_predicted_pospat_count.png")
+
+fig2,ax2 = plt.subplots(figsize=(8,4))
+handles, labels = ax.get_legend_handles_labels()
+fig2.legend(handles, labels, loc='center', fontsize=40)
+plt.grid(b=None)
+plt.axis('off')
+plt.show()
+fig2.tight_layout()
+fig2.savefig(f"{fig_dir}/sequence_pred_new/legend.png")
 #%%
 df_test_pred.groupby(sq).count()
 #%%
