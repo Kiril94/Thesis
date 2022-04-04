@@ -5,7 +5,7 @@ Created on Mon Sep 13 15:50:50 2021
 @author: klein
 """
 #%%
-from tkinter import N
+from collections import defaultdict, deque
 import xgboost as xgb
 import os
 import pickle
@@ -66,7 +66,7 @@ PSN_k = 'PulseSequenceName'
 IT_k = 'ImageType'
 #%%
 # In[load all csv]
-df_init = pd.read_pickle(f"{table_dir}/scan_final.pkl")
+df_init = pd.read_pickle(f"{table_dir}/scan_csv/scan_init.pkl")
 # df_init = pd.read_csv(
     # join(table_dir, 'neg_pos_clean.csv'), nrows=80000)
 #%%
@@ -724,60 +724,105 @@ svis.bar(labels, counts[inds],
          kwargs={'xlabel':'Sequence Type', 'title':'',
                  },
          save=True, figname=f"{fig_dir}/sequence_pred_new/predicted_seq_count.png")
+
+
+#%%
+# In[Get labels and save them]
+def dict_mapping(t): return basic.inv_dict(target_dict)[t]
+pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
+print(pred_test_labels)
+with open(join('data','xgb_sequence_pred', 'pred_test_labels.pkl'), 'wb') as f:
+    pickle.dump(pred_test_labels, f)
 #%%
 # In[show predicted and true]
 print('Sequence count needed for this plot')
 plt.style.use('ggplot')                                                          
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']   
 
-labels, pred_counts = np.unique(pred_test, return_counts=True)
-inds = [0,2,3,4,5,6]
-labels = [nice_labels_dic[k] for k in seq_count.keys()[inds]]
-fig, ax = svis.bar(labels, seq_count.values[inds], label='True',color=colors[5])
-fig, ax = svis.bar(labels, pred_counts, fig=fig, ax=ax,
-              bottom=seq_count.values[inds], label='Predicted', color=colors[3], 
+
+#inds = [0,2,3,4,5,6]
+#labels = [nice_labels_dic[k] for k in seq_count.keys()[inds]]
+
+labels_pre, counts_pre = seq_count.keys(), seq_count.values
+# remove none_nid
+mask = labels_pre!='none_nid'
+labels_pre, counts_pre = labels_pre[mask], counts_pre[mask] 
+labels_post, counts_post = np.unique(pred_test_labels, return_counts=True)
+
+# get both lists in same order
+indexes = defaultdict(deque)
+for i, x in enumerate(labels_pre):
+    indexes[x].append(i)
+ids = [indexes[x].popleft() for x in labels_post]
+labels_pre, counts_pre =  labels_pre[ids], counts_pre[ids]
+labels = np.array([nice_labels_dic[k] for k in labels_pre])
+# sort lists starting with largest
+print(labels)
+sort_inds = [2,4,5, 1, 0, 3]
+labels = labels[sort_inds]
+counts_post =  counts_post[sort_inds] 
+counts_pre =  counts_pre[sort_inds] 
+
+
+
+
+fig, ax = svis.bar(labels, counts_pre, label='True',color=colors[5])
+fig, ax = svis.bar(labels, counts_post, fig=fig, ax=ax,
+              bottom=counts_pre, label='Predicted', color=colors[3], 
               kwargs={'save_plot':False, 'lgd':True, 'xlabel':'Class',
-                      'color':(1,3), 'yrange':(0,110000), 
+                      'color':(1,3), 
                       'title':'',
                       'ylabel':'# Scans',
                       },)
 fig.savefig(f"{fig_dir}/sequence_pred_new/old_and_predicted_seq_count.png")
-print(seq_count)
-#%%
-# In[Get labels from prediction]
-def dict_mapping(t): return basic.inv_dict(target_dict)[t]
-pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
-print(pred_test_labels)
-with open(join('data','xgb_sequence_pred', 'pred_test_labels.pkl'), 'wb') as f:
-    pickle.dump(pred_test_labels, f)
+
+
 
 #%%
+# In[Concat and save]
 df_test_pred = df_test_ids
 df_test_pred[sq] = pred_test_labels
-df_test_pred
-df_final = pd.merge
-#%%
+#df_test_pred
+df_pred_seqs = pd.concat([df_test_pred, df_train_ids], axis=0)
+df_final = pd.merge(df_init, df_pred_seqs[[SID_k, sq]], on=SID_k, how='inner')
 
-print(df_test_ids)
+assert len(df_final)==len(df_pred_seqs)
 #%%
-# In[Create and save dataframe with predictions]
-print("Something wrong here, maybe just rewrite!")
-df_test[sq] = pred_test_labels
-df_test_final = 
-df_test_final = pd.concat([df_test, df_test_ids], axis=1)
-df_train_final = pd.concat([df_train, df_train_ids], axis=1)
-df_test['TrueSequenceType'] = 0
-df_train['TrueSequenceType'] = 1
-df_final = pd.concat([df_train, df_test])
-
-#%%
-#del df_test, df_train
-# In[Examine final df]
-df_final[[PID_k, SID_k, sq, ICD_k, 'TrueSequenceType']].to_csv(
-    f"{base_dir}/share/pred_seq.csv", index=False)
+# In[Examine and save final df]
+df_final.to_csv(
+    f"{table_dir}/scan_tables/scan_after_sq_pred.csv", index=False)
+df_final.to_pickle(
+    f"{table_dir}/scan_tables/scan_after_sq_pred.pkl")
 print(len(df_final))
-print(df_final.isna().sum())
+#%%
 
+
+#%%
+# In[show predicted and true]
+print('Patient count needed for this plot')
+                                                        
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']   
+pat_count_pre = df_train_ids.groupby(sq).PatientID.nunique()
+pat_count_post = df_test_pred.groupby(sq).PatientID.nunique()
+labels_pre, counts_pre = pat_count_pre.keys(), pat_count_pre.values
+labels_post, counts_post = pat_count_post.keys(), pat_count_post.values
+sort_inds = np.argsort(pat_count_pre.values+pat_count_post.values)[::-1]
+labels_post, counts_post = labels_post[sort_inds], counts_post[sort_inds] 
+labels_pre, counts_pre = labels_pre[sort_inds], counts_pre[sort_inds] 
+print('old', labels_pre, 'new',labels_post)
+inds = np.arange(1,len(labels_pre))
+labels = [nice_labels_dic[k] for k in labels_pre[inds]]
+fig, ax = svis.bar(labels, counts_pre[inds], label='Initial',color=colors[5])
+fig, ax = svis.bar(labels, counts_post[inds], fig=fig, ax=ax,
+              bottom=counts_pre[inds], label='After Prediction', color=colors[3], 
+              kwargs={'save_plot':False, 'lgd':True, 'xlabel':'Class',
+                      'color':(1,3),  
+                      'title':'',
+                      'ylabel':'# Patients',
+                      },)
+fig.savefig(f"{fig_dir}/sequence_pred_new/old_and_predicted_pat_count.png")
+#%%
+df_test_pred.groupby(sq).count()
 #%%
 mpl.rcParams['figure.dpi'] = 400
 labels = ['other', 'T1', 'T2', 'FLAIR', 'DWI', 'SWI', 'T2*']
