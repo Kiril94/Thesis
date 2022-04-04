@@ -13,7 +13,6 @@ from os.path import join
 from pathlib import Path
 import pandas as pd
 from utilities import basic, mri_stats
-from utilities import classification as clss
 from stats_tools import vis as svis
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -267,9 +266,12 @@ df_all.SE = (df_all.SE | df_all['SE_IT'].astype(int)).astype(int)
 df_all.IR = (df_all.IR | df_all['IR_SO'].astype(int)\
     | df_all['IR_IT'].astype(int)).astype(int)
 df_all.drop(columns=['SP_SO','IR_SO','SE_IT' ,'IR_IT',''], axis=1, inplace=True)
+
+
 #%%
 # In[Check new columns]
 df_all.keys()
+#%%
 
 #%% 
 #In [Currently not needed, too many missing values]
@@ -432,6 +434,20 @@ df_all[EN_k] = np.where(
 # Missing values
 print("Missing values:")
 print(df_all[numeric_cols].isna().sum(axis=0))
+df_all.to_feather(join('data','xgb_sequence_pred', 'preprocessed.feather'))
+
+
+
+
+
+
+
+#####################################################################################################
+
+#%%
+# In[Load preprocessed dataframe]
+df_all = pd.read_feather(join('data','xgb_sequence_pred', 'preprocessed.feather'))
+df_all.keys()
 #%%
 # In[Define Columns that will be used for prediction]
 print(df_all.keys())
@@ -445,12 +461,27 @@ print(len(binary_cols),'binary cols')
 print(len(numeric_cols),'numeric cols')
 #%%
 # In[Show the binary columns]
-print('Later show countplot of binary columns, separated by axis')
-bin_counts = df_all[binary_cols].sum(axis=0)
-svis.bar(bin_counts.keys(), bin_counts.values,
-              figsize=(15, 6), kwargs={'logscale':True},
-              figname=f"{fig_dir}/sequence_pred_new/X_distr_bin.png")
+df_all[binary_cols].mean(axis=0).sort_values()
 
+#%%
+print('Later show countplot of binary columns, separated by axis')
+bin_counts = df_all[binary_cols].sum(axis=0)/len(df_all)
+# svis.bar(bin_counts.keys(), bin_counts.values,
+            #   figsize=(15, 6), kwargs={'logscale':True},
+            #   figname=f"{fig_dir}/sequence_pred_new/X_distr_bin.png")
+plt.rcParams['figure.dpi'] = 200
+fig, ax = plt.subplots(1,2,figsize=(10,12), )
+bin_counts.sort_values()[31:].plot(kind='barh', ax=ax[0],)
+bin_counts.sort_values()[2:31].plot(kind='barh', ax=ax[1],)
+ax[0].tick_params(axis='x', labelsize=18)
+ax[1].tick_params(axis='x', labelsize=18)
+ax[0].tick_params(axis='y', labelsize=15)
+ax[1].tick_params(axis='y', labelsize=15)
+ax[0].set_xlabel(r'$n/N$', fontsize=22)
+ax[1].set_xlabel(r'$n/N$', fontsize=22)
+ax[0].set_ylabel('Feature', fontsize=22)
+fig.tight_layout()
+fig.savefig(f"{fig_dir}/sequence_pred_new/X_distr_bin.png")
 #%%
 # In[Before encoding we have to split up the sequences we want to predict (test set)]
 df_test = df_all[df_all.Sequence == 'none_nid']
@@ -501,19 +532,29 @@ X_arr = X.to_numpy()
 y_arr = y.to_numpy()
 #%%
 # In[PCA]
+
 print('tsne and pca both fail to visualize cluster')
 y_pca = np.expand_dims(y_arr, axis=0).T
-vis_n = 40000
+vis_n = 100000
 X_pca = PCA(n_components=2).fit_transform(X_arr[:vis_n])
 #%%
 # In[Vis PCA]
+plt.rcParams['figure.dpi'] = 200
+print(target_dict)
+nice_labels_dic = {'flair':'FLAIR','t2':'T2', 'other':'OIS','t1':'T1','swi':'SWI','dwi':'DWI'}
+inv_tgt_dic = {v: k for k, v in target_dict.items()}
+
 print('Nice, some clusters can be seen, work on this')
 df_pca = pd.DataFrame(data=np.concatenate((X_pca,y_pca[:vis_n]), axis=1), 
-    columns=['PC 1', 'PC 2', 'Class'])
+    columns=['PC 1', 'PC 2', 'Class'])#
+fig, ax = plt.subplots()
 sns_plot = sns.scatterplot(data=df_pca, x='PC 1', y='PC 2', 
-    hue='Class',palette='Set1',s=5)
+    hue='Class',palette='Set1',s=5, ax=ax)
 
-
+h, labels= ax.get_legend_handles_labels()
+labels = [nice_labels_dic[inv_tgt_dic[int(float(l))]] for l in labels]
+ax.legend(handles = h, labels=labels)
+#print(target_dict)
 #handles = sns_plot._legend_data.values()
 #labels = sns_plot._legend_data.keys()
 #sns_plot._legend.remove()
