@@ -86,7 +86,7 @@ def ax_decorator(fig, ax,
 # In[General plots]
 
 def plot_decorator(plot_func, plot_func_args=[], plot_func_kwargs={},
-                   figsize=(9, 9), save=False, dpi=80, figname='',
+                   figsize=(8, 5), save=False, dpi=80, figname='',
                    caption='', caption_fs=20, caption_pos=(.5, -.05),
                    plot_style='ggplot',
                    kwargs={}):

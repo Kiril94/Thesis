@@ -5,6 +5,7 @@ Created on Mon Sep 13 15:50:50 2021
 @author: klein
 """
 #%%
+from tkinter import N
 import xgboost as xgb
 import os
 import pickle
@@ -26,6 +27,15 @@ from numpy.random import default_rng
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from utilities import bayesian_opt
+import matplotlib.pylab as pylab
+params = {'figure.dpi':300,
+        'legend.fontsize': 18,#
+        'figure.figsize': [8, 5],
+         'axes.labelsize': 18,
+         'axes.titlesize':18,
+         'xtick.labelsize':18,
+         'ytick.labelsize':18}
+pylab.rcParams.update(params)
 #%%
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
@@ -151,24 +161,23 @@ fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
 #%%
 # In[PLot class counts, no pos. neg.]
 #fig, ax = plt.subplots()
-
+nice_labels_dic = {'flair':'FLAIR','t2':'T2', 'other':'OIS','t1':'T1','swi':'SWI','dwi':'DWI',
+    'none_nid':'Unknown'}
 mpl.rcParams['figure.dpi'] = 300
-mpl.rcParams['xtick.labelsize']=12
-mpl.rcParams['ytick.labelsize']=12
-mpl.rcParams.update({'font.size': 1})
 print(plt.rcParams['axes.prop_cycle'].by_key()['color'])
 plt.style.use('ggplot')
 fig, ax = plt.subplots()
-labels = ['Unlabeled',  'T1', 'T2', 'DWI','OIS', 'FLAIR', 'SWI']
+labels = [nice_labels_dic[k] for k in df_all['Sequence'].value_counts().index]
 g2 = sns.countplot(x="Sequence", data=df_all, 
     order = df_all['Sequence'].value_counts().index, color='#8EBA42',ax=ax)
 #g2.set(xlabel=, ylabel=('# Scans'), xticklabels=labels,)
-ax.set_xlabel('Class', fontsize=15)
-ax.set_ylabel('# Scans', fontsize=15)
+ax.set_xlabel('Class', fontsize=19)
+ax.set_ylabel('# Scans', fontsize=19)
 ax.set_xticklabels(labels)
+ax.set_ylim(0,81000)
 #fig2 = g2.get_figure()
 fig.tight_layout()
-fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
+fig.savefig(f"{fig_dir}/sequence_pred_new/volumes_sequence_count.png")
 print(df_all.Sequence.value_counts())
 print(np.sum(df_all.Sequence.value_counts())-df_all.Sequence.value_counts()['none_nid'])
 #%%
@@ -533,33 +542,34 @@ y_arr = y.to_numpy()
 #%%
 # In[PCA]
 
-print('tsne and pca both fail to visualize cluster')
+print('tsne fails to visualize cluster')
 y_pca = np.expand_dims(y_arr, axis=0).T
-vis_n = 100000
-X_pca = PCA(n_components=2).fit_transform(X_arr[:vis_n])
+vis_n = len(X_arr)
+X_pca = PCA(n_components=2).fit_transform(X_arr)
 #%%
 # In[Vis PCA]
-plt.rcParams['figure.dpi'] = 200
+
+#plt.rcParams['figure.dpi'] = 250
 print(target_dict)
 nice_labels_dic = {'flair':'FLAIR','t2':'T2', 'other':'OIS','t1':'T1','swi':'SWI','dwi':'DWI'}
 inv_tgt_dic = {v: k for k, v in target_dict.items()}
 
 print('Nice, some clusters can be seen, work on this')
-df_pca = pd.DataFrame(data=np.concatenate((X_pca,y_pca[:vis_n]), axis=1), 
+df_pca = pd.DataFrame(data=np.concatenate((X_pca,y_pca), axis=1), 
     columns=['PC 1', 'PC 2', 'Class'])#
 fig, ax = plt.subplots()
 sns_plot = sns.scatterplot(data=df_pca, x='PC 1', y='PC 2', 
-    hue='Class',palette='Set1',s=5, ax=ax)
+    hue='Class',palette='Set1',s=3, ax=ax,alpha=.4)
 
 h, labels= ax.get_legend_handles_labels()
 labels = [nice_labels_dic[inv_tgt_dic[int(float(l))]] for l in labels]
 ax.legend(handles = h, labels=labels)
-#print(target_dict)
-#handles = sns_plot._legend_data.values()
-#labels = sns_plot._legend_data.keys()
-#sns_plot._legend.remove()
-#plt.legend(handles=handles, labels=labels, 
-#    loc=(-4.8,5.34), ncol=7, fontsize=16)
+ax.set_xlim(-3500,10500)
+ax.set_ylim(-150,430)
+# ax.tick_params(axis='both', labelsize=18)
+
+fig.tight_layout()
+fig.savefig(f"{fig_dir}/sequence_pred_new/PCA.png")
 
 #%%
 # In[tsne embedding]
@@ -605,19 +615,41 @@ with open('xgboost/best_params.txt', 'w') as f:
 
 #%%
 # In[Initialize and train]
+with open('data/xgb_sequence_pred/best_params.txt', 'r') as f:
+    bp = json.load(f)
+
 xgb_cl = xgb.XGBClassifier(objective='multi:softprob',
                           tree_method='auto',
                           eval_metric='mlogloss',
                           use_label_encoder=False,
                           **bp)
+
 xgb_cl.fit(X_train, y_train)
-xgb_cl.save_model("xgboost/categorical-model.json")
+xgb_cl.save_model("data/xgb_sequence_pred/trained_classifier.json")
+
+
 
 
 #%%
+# Load existing model
+xgb_cl = xgb.XGBClassifier(objective='multi:softprob',
+                          tree_method='auto',
+                          eval_metric='mlogloss',
+                          use_label_encoder=False,)
+xgb_cl.load_model("data/xgb_sequence_pred/trained_classifier.json")
+#%%
 # In[Plot feature importance]
-xgb.plot_importance(xgb_cl, importance_type = 'gain',max_num_features=10) # other options available
-plt.show()
+# Get the importance dictionary (by gain) from the booster
+importance = xgb_cl.get_booster().get_fscore()
+# make your changes
+for key in importance.keys():
+    importance[key] = round(importance[key],4)
+fig, ax = plt.subplots(figsize=(8,5))
+# provide the importance dictionary to the plotting function
+ax = xgb.plot_importance(importance, max_num_features=10, show_values=True,ax=ax)
+# xgb.plot_importance(xgb_cl, importance_type = 'gain',max_num_features=10,) # other options available
+fig.tight_layout()
+fig.savefig(f"{fig_dir}/sequence_pred_new/feature_importance.png")
 #%%
 # In[ROC curves]
 pred_prob_val = xgb_cl.predict_proba(X_val)
@@ -625,10 +657,14 @@ pred_prob_val = xgb_cl.predict_proba(X_val)
 fig, ax = plt.subplots()
 rc = skplot.metrics.plot_roc_curve(y_val, pred_prob_val, ax=ax,)
 ax.legend(labels=['FLAIR', 'T2', 'OIS','T1','SWI','DWI', 'micro-average', 'macro_average'],
-    loc='lower right', fontsize=10)
+    loc='lower right', fontsize=15, ncol=2)
+ax.set_xlabel('False Positive Rate', fontsize=18)
+ax.set_ylabel('True Positive Rate', fontsize=18)
+ax.set_title('')
+ax.tick_params(labelsize=14)
+fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred_new/ROC_curves.png")
-ax.set_xlabel('False Positive Rate', fontsize=20)
-ax.set_ylabel('True Positive Rate', fontsize=20)
+
 
 #%%
 
@@ -671,6 +707,8 @@ ax.set_yticklabels([nice_labels_dic[k] for k in target_dict.keys()])
 ax.tick_params(labelsize=12)
 ax.set_xlabel('Predicted Label', fontsize=18)
 ax.set_ylabel('True Label', fontsize=18)
+ax.set_title('')
+fig.tight_layout()
 fig.savefig(f"{fig_dir}/sequence_pred_new/confusion_matrix_val_norm.png")
 
 #%%
@@ -678,38 +716,56 @@ fig.savefig(f"{fig_dir}/sequence_pred_new/confusion_matrix_val_norm.png")
 pred_prob_test = xgb_cl.predict_proba(X_test)
 pred_test = np.argmax(pred_prob_test, axis=1)
 # pred_test = clss.prob_to_class(pred_prob_test, final_th, 0)
-labels = [nice_labels_dic[k] for k in target_dict.keys()]
-svis.bar(labels, np.unique(pred_test, return_counts=True)[1],
-         kwargs={'xlabel':'Sequence Type', 'title':'Predicted sequences',
+(labels, counts) = np.unique(pred_test, return_counts=True)
+
+inds = np.argsort(counts)[::-1]
+labels = [nice_labels_dic[inv_tgt_dic[k]] for k in labels[inds]]
+svis.bar(labels, counts[inds],
+         kwargs={'xlabel':'Sequence Type', 'title':'',
                  },
-         save=True, figname=f"{fig_dir}/sequence_pred_new/seq_dist_pred.png")
+         save=True, figname=f"{fig_dir}/sequence_pred_new/predicted_seq_count.png")
 #%%
 # In[show predicted and true]
 print('Sequence count needed for this plot')
-pred_counts = np.unique(pred_test, return_counts=True)[1]
-fig, ax = svis.bar(target_dict.keys(), seq_count.values[1:], label='true',
-                   )
-svis.bar(target_dict.keys(), pred_counts, fig=fig, ax=ax,
-              bottom=seq_count.values[1:], label='pred', color=(0,1), 
-              kwargs={'save_plot':True, 'lgd':True, 'xlabel':'Sequence Type',
-                      'color':(1,3), 'yrange':(0,126000), 
-                      'title':'Volume Count - All Patients',
-                      'ylabel':'Volumes Count'},
-              figname=f"{fig_dir}/sequence_pred_new/seq_dist_pred.png")
+plt.style.use('ggplot')                                                          
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']   
 
+labels, pred_counts = np.unique(pred_test, return_counts=True)
+inds = [0,2,3,4,5,6]
+labels = [nice_labels_dic[k] for k in seq_count.keys()[inds]]
+fig, ax = svis.bar(labels, seq_count.values[inds], label='True',color=colors[5])
+fig, ax = svis.bar(labels, pred_counts, fig=fig, ax=ax,
+              bottom=seq_count.values[inds], label='Predicted', color=colors[3], 
+              kwargs={'save_plot':False, 'lgd':True, 'xlabel':'Class',
+                      'color':(1,3), 'yrange':(0,110000), 
+                      'title':'',
+                      'ylabel':'# Scans',
+                      },)
+fig.savefig(f"{fig_dir}/sequence_pred_new/old_and_predicted_seq_count.png")
+print(seq_count)
 #%%
 # In[Get labels from prediction]
 def dict_mapping(t): return basic.inv_dict(target_dict)[t]
 pred_test_labels = np.array([dict_mapping(xi) for xi in pred_test])
 print(pred_test_labels)
-with open(join('xgboost', 'pred_test_labels.pkl'), 'wb') as f:
+with open(join('data','xgb_sequence_pred', 'pred_test_labels.pkl'), 'wb') as f:
     pickle.dump(pred_test_labels, f)
+
+#%%
+df_test_pred = df_test_ids
+df_test_pred[sq] = pred_test_labels
+df_test_pred
+df_final = pd.merge
+#%%
+
+print(df_test_ids)
 #%%
 # In[Create and save dataframe with predictions]
 print("Something wrong here, maybe just rewrite!")
 df_test[sq] = pred_test_labels
-df_test = pd.concat([df_test, df_test_ids], axis=1)
-df_train = pd.concat([df_train, df_train_ids], axis=1)
+df_test_final = 
+df_test_final = pd.concat([df_test, df_test_ids], axis=1)
+df_train_final = pd.concat([df_train, df_train_ids], axis=1)
 df_test['TrueSequenceType'] = 0
 df_train['TrueSequenceType'] = 1
 df_final = pd.concat([df_train, df_test])
