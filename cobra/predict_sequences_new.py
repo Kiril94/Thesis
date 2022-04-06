@@ -745,16 +745,18 @@ for i, x in enumerate(labels_pre):
     indexes[x].append(i)
 ids = [indexes[x].popleft() for x in labels_post]
 labels_pre, counts_pre =  labels_pre[ids], counts_pre[ids]
+
 labels = np.array([nice_labels_dic[k] for k in labels_pre])
 # sort lists starting with largest
-sort_inds = [2,4,5, 1, 0, 3]
+sort_inds = [2,4,5, 1, 3, 0]
 labels = labels[sort_inds]
+
 counts_post =  counts_post[sort_inds] 
 counts_pre =  counts_pre[sort_inds] 
 
-fig, ax = svis.bar(labels, counts_pre, label='True',color=colors[5])
+fig, ax = svis.bar(labels, counts_pre, label='',color=colors[5])
 fig, ax = svis.bar(labels, counts_post, fig=fig, ax=ax,
-              bottom=counts_pre, label='Predicted', color=colors[3], 
+              bottom=counts_pre, label='', color=colors[3], 
               kwargs={'save_plot':False, 'lgd':True, 'xlabel':'Class',
                       'color':(1,3), 
                       'title':'',
@@ -762,7 +764,10 @@ fig, ax = svis.bar(labels, counts_post, fig=fig, ax=ax,
                       },)
 fig.savefig(f"{fig_dir}/sequence_pred_new/old_and_predicted_seq_count.png")
 
-
+#%%
+fig, ax = plt.subplots()
+fig, ax = svis.bar(np.arange(2), [10,20], ax=ax, fig=fig)
+svis.bar(np.arange(2), [2,5], ax=ax, fig=fig, color='k', bottom=[10,20])
 
 #%%
 # In[Concat and save]
@@ -795,21 +800,23 @@ pat_count_pre = df_train_ids.groupby(sq).PatientID.nunique()
 pat_count_post = df_final.groupby(sq).PatientID.nunique()
 labels_pre, counts_pre = pat_count_pre.keys(), pat_count_pre.values
 labels_post, counts_post = pat_count_post.keys(), pat_count_post.values
-sort_inds = np.argsort(pat_count_pre.values+pat_count_post.values)[::-1]
+sort_inds = sort_inds = [2,4,5,1,3,0]#np.argsort(pat_count_pre.values+pat_count_post.values)[::-1]
 labels_post, counts_post = labels_post[sort_inds], counts_post[sort_inds] 
 labels_pre, counts_pre = labels_pre[sort_inds], counts_pre[sort_inds] 
 print('old', labels_pre, 'new',labels_post)
 inds = np.arange(1,len(labels_pre))
 labels = [nice_labels_dic[k] for k in labels_pre[inds]]
-fig, ax = svis.bar(labels, counts_pre[inds], label='Initial',color=colors[5])
+fig, ax = svis.bar(labels, counts_pre[inds], label='',color=colors[5])
 fig, ax = svis.bar(labels, counts_post[inds]-counts_pre[inds], fig=fig, ax=ax,
-              bottom=counts_pre[inds], label='After Prediction', color=colors[3], 
+              bottom=counts_pre[inds], label='', color=colors[3], 
               kwargs={'save_plot':False, 'lgd':True, 'xlabel':'Class',
                       'color':(1,3),  
                       'title':'',
                       'ylabel':'# Patients',
                       },)
 fig.savefig(f"{fig_dir}/sequence_pred_new/old_and_predicted_pat_count.png")
+#%%
+df_final[df_final.Sequence=='t1'].PatientID.nunique()
 #%%
 
 #%%
@@ -822,17 +829,23 @@ pat_count_pre = df_train_ids_p.groupby(sq).PatientID.nunique()
 pat_count_post = df_test_pred_p.groupby(sq).PatientID.nunique()
 labels_pre, counts_pre = pat_count_pre.keys(), pat_count_pre.values
 labels_post, counts_post = pat_count_post.keys(), pat_count_post.values
-sort_inds = np.argsort(pat_count_pre.values+pat_count_post.values)[::-1]
+sort_inds = [2,4,5,1,3,0]
 labels_post, counts_post = labels_post[sort_inds], counts_post[sort_inds] 
 labels_pre, counts_pre = labels_pre[sort_inds], counts_pre[sort_inds] 
 print('old', labels_pre, 'new',labels_post)
 inds = np.arange(1,len(labels_pre))
 labels = [nice_labels_dic[k] for k in labels_pre[inds]]
-fig, ax = svis.bar(labels, counts_pre[inds], label='Initial',color=colors[5])
+save_legend = False
+if save_legend:
+    label0 = 'Initial'
+    label1 = 'After Prediction'
+else:
+    label0=label1 =''
+fig, ax = svis.bar(labels, counts_pre[inds], label=label0,color=colors[5])
 fig, ax = svis.bar(labels, counts_post[inds]-counts_pre[inds], fig=fig, ax=ax,
-              bottom=counts_pre[inds], label='After Prediction', color=colors[3], 
+              bottom=counts_pre[inds], label=label1, color=colors[3], 
               kwargs={'save_plot':False, 'lgd':True, 'xlabel':'Class',
-                      'color':(1,3),'yrange':(0,440),  
+                      'color':(1,3),'yrange':(0,330),  
                       'title':'',
                       'ylabel':'# Positive Patients',
                       },)
@@ -845,7 +858,8 @@ plt.grid(b=None)
 plt.axis('off')
 plt.show()
 fig2.tight_layout()
-fig2.savefig(f"{fig_dir}/sequence_pred_new/legend.png")
+if save_legend:
+    fig2.savefig(f"{fig_dir}/sequence_pred_new/legend.png")
 #%%
 df_test_pred.groupby(sq).count()
 #%%

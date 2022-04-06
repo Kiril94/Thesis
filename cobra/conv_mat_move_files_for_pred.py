@@ -24,6 +24,7 @@ excl_files_dir = [join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_f
     join(disk_data_dir, 'volume_cross_nii', 'temp', 'spm_conv_error','corrupted'),]
 data_dir = join(base_dir, 'data')
 data_cross_dir = join(data_dir, 't1_cross')
+data_long_dir = join(data_dir, 't1_longitudinal')
 # matlab engine
 eng = matlab.engine.start_matlab()
 eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\functions', nargout=0)
@@ -32,14 +33,13 @@ eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\spm12
 # load necessary files
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
-with open(join(data_cross_dir, "3dt1_sids.pkl"), 'rb') as f:
+with open(join(data_long_dir, "long_sids_download_new.pkl"), 'rb') as f:
     sids_ls = pickle.load(f)
 with open(join(tables_dir, "disk_series_directories.json"), 'rb') as f:
     dir_dic = json.load(f)
 downloaded_sids = np.loadtxt(join(disk_data_dir,'dcm', 'volume_log.txt'), dtype=str).tolist()
 
-# sids_ls = list(set(sids_ls).intersection(set(downloaded_sids)))
-
+sids_ls = list(set(sids_ls).intersection(set(downloaded_sids)))
 
 
 # define functions
@@ -51,7 +51,9 @@ def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
     returns: list of missing files sids
     """
     inv_map = {v: k for k, v in newid_dic.items()}
-    conv_files_ids = [file[:-7] for file in os.listdir(nii_dir)]
+    print(nii_dir)
+    conv_files_ids = [file[:-7] for file in os.listdir(nii_dir) if file!='segmented']
+    print(conv_files_ids)
     conv_files_sids = [inv_map[id] for id in conv_files_ids]
     if not isinstance(excl_nii_dir, type(None)):
         print('exclude files in', excl_nii_dir)
@@ -116,4 +118,4 @@ def dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir=None, tes
         dcm2nii_mat(src_dir, tgt_path, tmp_dir)
     
 if __name__ == '__main__':
-    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=False)
+    dcm2nii_mat_main(sids_ls, id_dic, tmp_dir, tgt_dir, excl_files_dir, test=True)

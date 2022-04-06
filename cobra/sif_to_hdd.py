@@ -20,7 +20,7 @@ disk_dir = "F:"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
-update_downloaded_files = False
+update_downloaded_files = True
 
 
 #%% 
