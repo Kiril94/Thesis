@@ -52,7 +52,7 @@ def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
     """
     inv_map = {v: k for k, v in newid_dic.items()}
     print(nii_dir)
-    conv_files_ids = [file[:-7] for file in os.listdir(nii_dir) if file!='segmented']
+    conv_files_ids = [file[:-7] for file in os.listdir(nii_dir) if file.endswith('.nii.gz')]
     print(conv_files_ids)
     conv_files_sids = [inv_map[id] for id in conv_files_ids]
     if not isinstance(excl_nii_dir, type(None)):
@@ -60,11 +60,11 @@ def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
         if isinstance(excl_nii_dir, list):
             excl_files_sids = []
             for dir_ in excl_nii_dir:
-                excl_files_ids = [file[:-7] for file in os.listdir(dir_)]
+                excl_files_ids = [file[:-7] for file in os.listdir(dir_) if file.endswith('.nii.gz')]
                 excl_files_sids_temp = [inv_map[id] for id in excl_files_ids]
                 excl_files_sids = excl_files_sids + excl_files_sids_temp
         else:
-            excl_files_ids = [file[:-7] for file in os.listdir(excl_nii_dir)]
+            excl_files_ids = [file[:-7] for file in os.listdir(excl_nii_dir) if file.endswith('.nii.gz')]
             excl_files_sids = [inv_map[id] for id in excl_files_ids]
     missing_files = (set(sids_to_conv).difference(set(conv_files_sids))).difference(set(excl_files_sids))
     return list(missing_files)
