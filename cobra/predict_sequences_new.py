@@ -782,14 +782,17 @@ df_final.to_pickle(
 print(len(df_final))
 #%%
 
-
+#%%
+# sns.countplot(df_final.Sequence)
+#print(df_final[df_final.Sequence=='swi'].PatientID.nunique())
+df_test_pred[df_test_pred.Sequence=='swi'].PatientID.nunique()
 #%%
 # In[show predicted and true]
 print('Patient count needed for this plot')
                                                         
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']   
 pat_count_pre = df_train_ids.groupby(sq).PatientID.nunique()
-pat_count_post = df_test_pred.groupby(sq).PatientID.nunique()
+pat_count_post = df_final.groupby(sq).PatientID.nunique()
 labels_pre, counts_pre = pat_count_pre.keys(), pat_count_pre.values
 labels_post, counts_post = pat_count_post.keys(), pat_count_post.values
 sort_inds = np.argsort(pat_count_pre.values+pat_count_post.values)[::-1]
@@ -799,7 +802,7 @@ print('old', labels_pre, 'new',labels_post)
 inds = np.arange(1,len(labels_pre))
 labels = [nice_labels_dic[k] for k in labels_pre[inds]]
 fig, ax = svis.bar(labels, counts_pre[inds], label='Initial',color=colors[5])
-fig, ax = svis.bar(labels, counts_post[inds], fig=fig, ax=ax,
+fig, ax = svis.bar(labels, counts_post[inds]-counts_pre[inds], fig=fig, ax=ax,
               bottom=counts_pre[inds], label='After Prediction', color=colors[3], 
               kwargs={'save_plot':False, 'lgd':True, 'xlabel':'Class',
                       'color':(1,3),  
@@ -814,7 +817,7 @@ fig.savefig(f"{fig_dir}/sequence_pred_new/old_and_predicted_pat_count.png")
 pos_pat = df_init[df_init.Positive==1].PatientID.unique()
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']   
 df_train_ids_p = df_train_ids[df_train_ids.PatientID.isin(pos_pat)]
-df_test_pred_p = df_test_pred[df_test_pred.PatientID.isin(pos_pat)]
+df_test_pred_p = df_final[df_final.PatientID.isin(pos_pat)]
 pat_count_pre = df_train_ids_p.groupby(sq).PatientID.nunique()
 pat_count_post = df_test_pred_p.groupby(sq).PatientID.nunique()
 labels_pre, counts_pre = pat_count_pre.keys(), pat_count_pre.values
@@ -826,7 +829,7 @@ print('old', labels_pre, 'new',labels_post)
 inds = np.arange(1,len(labels_pre))
 labels = [nice_labels_dic[k] for k in labels_pre[inds]]
 fig, ax = svis.bar(labels, counts_pre[inds], label='Initial',color=colors[5])
-fig, ax = svis.bar(labels, counts_post[inds], fig=fig, ax=ax,
+fig, ax = svis.bar(labels, counts_post[inds]-counts_pre[inds], fig=fig, ax=ax,
               bottom=counts_pre[inds], label='After Prediction', color=colors[3], 
               kwargs={'save_plot':False, 'lgd':True, 'xlabel':'Class',
                       'color':(1,3),'yrange':(0,440),  

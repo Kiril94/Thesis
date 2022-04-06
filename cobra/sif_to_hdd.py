@@ -28,15 +28,16 @@ update_downloaded_files = False
 print("Load dataframes")
 df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 df_patient_dir = pd.read_csv(join(table_dir, 'patient_directories.csv'))
-df_all = pd.read_csv(join(table_dir, "neg_pos_clean.csv"))
+df_all = pd.read_csv(join(table_dir, 'scan_tables',"scan_after_sq_pred.csv"))
 print("Load dataframes finished")
 
 
-sids_file_name = "3dt1_sids"
+sids_file_name = "long_sids_download_new"
 sids_3d_t1_path = join(data_dir, 't1_longitudinal', f'{sids_file_name}.pkl')
 print("Using sids from the file: ", sids_3d_t1_path )
 with open(sids_3d_t1_path, 'rb') as f:
     sids_3d_t1_ls = pickle.load(f)
+
 #%%
 # In[Get relevant patients and volumes]
 # This batch is not finished yet, however we will first take 
@@ -62,12 +63,14 @@ print('interesection', len(set(group_list).intersection(set(downloaded_ls))))
 group_list = list(set(group_list).difference(set(downloaded_ls)))
 #print('Download 3dt1 scans that occur in pairs')
 print("Volumes still to download: ", len(group_list))
+
 use_batches = True
+# 5 batches are needed
 if use_batches:
-    batch = 13
+    batch = 3
     print("batch:", batch)
     start = 0
-    batch_size = 1000
+    batch_size = 600
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+batch*batch_size:start+batch_size*(batch+1)])]
 else:
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]

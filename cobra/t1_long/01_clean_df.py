@@ -16,7 +16,7 @@ import numpy as np
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent.parent
 table_dir = f"{base_dir}/data/tables/scan_tables"
-# dfc = pd.read_feather(join(base_dir,'data','tables', 'neg_pos_clean'))
+dfc = pd.read_feather(join(base_dir,'data','tables', 'neg_pos_clean'))
 with open(join(table_dir, 'scan_after_sq_pred.pkl'), 'rb') as f:
     df = pickle.load(f)
 df1 = df[df.Sequence=='t1']

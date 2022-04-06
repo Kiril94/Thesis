@@ -1,3 +1,4 @@
+"""Nii conversion with matlab, currently preferred version."""
 #%%
 import shutil
 import os
@@ -36,7 +37,8 @@ with open(join(data_cross_dir, "3dt1_sids.pkl"), 'rb') as f:
 with open(join(tables_dir, "disk_series_directories.json"), 'rb') as f:
     dir_dic = json.load(f)
 downloaded_sids = np.loadtxt(join(disk_data_dir,'dcm', 'volume_log.txt'), dtype=str).tolist()
-sids_ls = list(set(sids_ls).intersection(set(downloaded_sids)))
+
+# sids_ls = list(set(sids_ls).intersection(set(downloaded_sids)))
 
 
 
