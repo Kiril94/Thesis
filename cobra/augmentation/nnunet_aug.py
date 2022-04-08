@@ -4,7 +4,7 @@ Created on Thu Mar 10 16:37:05 2022
 
 @author: Sebastian
 """
-from nnunet.utilities.to_torch import maybe_to_torch
+# from nnunet.utilities.to_torch import maybe_to_torch
 from batchgenerators.transforms.abstract_transforms import AbstractTransform
 from skimage import exposure
 # from nnunet.training.data_augmentation.python_transforms.pythontransforms import additiveNoise, biasField, \

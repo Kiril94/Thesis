@@ -67,7 +67,7 @@ print("Volumes still to download: ", len(group_list))
 use_batches = True
 # 5 batches are needed
 if use_batches:
-    batch = 2
+    batch = 0
     print("batch:", batch)
     start = 0
     batch_size = 600
