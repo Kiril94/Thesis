@@ -67,10 +67,10 @@ print("Volumes still to download: ", len(group_list))
 use_batches = True
 # 5 batches are needed
 if use_batches:
-    batch = 0
+    batch = 9
     print("batch:", batch)
     start = 0
-    batch_size = 600
+    batch_size = 300
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+batch*batch_size:start+batch_size*(batch+1)])]
 else:
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]
