@@ -32,7 +32,7 @@ df_all = pd.read_csv(join(table_dir, 'scan_tables',"scan_after_sq_pred.csv"))
 print("Load dataframes finished")
 
 
-sids_file_name = "long_sids_download_new"
+sids_file_name = "sids_3dt1_temp"
 sids_3d_t1_path = join(data_dir, 't1_longitudinal', f'{sids_file_name}.pkl')
 print("Using sids from the file: ", sids_3d_t1_path )
 with open(sids_3d_t1_path, 'rb') as f:
@@ -67,10 +67,10 @@ print("Volumes still to download: ", len(group_list))
 use_batches = True
 # 5 batches are needed
 if use_batches:
-    batch = 9
+    batch = 2
     print("batch:", batch)
     start = 0
-    batch_size = 300
+    batch_size = 1000
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+batch*batch_size:start+batch_size*(batch+1)])]
 else:
     df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]

@@ -76,3 +76,4 @@ for tr_lbl_path in basic.list_subdir(lbl_dir):
 # eng.bias_field()
 # nib.save(tst_img, join(imga_dir, 'test.nii.gz'))
 
+# %%
