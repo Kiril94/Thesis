@@ -106,7 +106,7 @@ def get_studies_df(df_sorted, threshold=2):
         and number of volumes
     """
     df_studies = pd.DataFrame(columns=['PatientID', 'StudyNum',
-                    'DateTimeStart', 'NumVolumes'])
+                    'DateTimeStart', 'Positive','NumVolumes', ])
     
     patient_ids = df_sorted['PatientID'].unique()
     for patient in patient_ids:
@@ -114,10 +114,12 @@ def get_studies_df(df_sorted, threshold=2):
         study_num = 0
         patient_mask = df_sorted['PatientID'] == patient
         date_times = df_sorted[patient_mask]['DateTime']
+        positive = df_sorted[patient_mask].positive_scan.mode().values()[0]
         date_time0 = date_times[0]
         df_studies = df_studies.append({'PatientID':patient, 
                                         'StudyNum':study_num,
-                                            'DateTimeStart':date_time0}, 
+                                        'DateTimeStart':date_time0, 
+                                        'Positive':positive},
                                         ignore_index=True)
         num_volumes = 1
         for date_time in date_times[1:]:
