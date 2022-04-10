@@ -41,17 +41,6 @@ mask = (df1_0.InstanceCreationDate.isna()) & (df1_0['2019']==1)
 df1_0['InstanceCreationDate'] = np.where(
     mask, datetime.datetime(2018, 1, 1), df1_0['InstanceCreationDate'])
 
-
-#%%
-# In[Get number of slices if missing]
-print("We need the number of slices for scans that have as MRAcquisitionType either nan or 3D")
-import importlib
-importlib.reload(utils)
-df1_3dnone = df1_0[(df1_0.MRAcquisitionType=='3D') | (df1_0.MRAcquisitionType.isna())]
-df1_3dnone_nos_miss = df1_3dnone[df1_3dnone.NumberOfSlices.isna()]
-print(len(df1_3dnone_nos_miss))
-# n_slices_dic = utils.save_number_of_slices_to_txt(df1_3dnone_nos_miss, 'nos.txt', 
-                            # sif_path='Y://', disk_path='F:')
 #%%
 # In[Save dict]
 # with open('nos.pkl', 'wb') as f:
