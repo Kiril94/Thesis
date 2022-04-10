@@ -107,14 +107,14 @@ def get_studies_df(df_sorted, threshold=2):
     """
     df_studies = pd.DataFrame(columns=['PatientID', 'StudyNum',
                     'DateTimeStart', 'Positive','NumVolumes', ])
-    
     patient_ids = df_sorted['PatientID'].unique()
-    for patient in patient_ids:
-        print('|', end='')
+    for i, patient in enumerate(patient_ids):
+        if i%10==0:
+            print('|', end='')
         study_num = 0
         patient_mask = df_sorted['PatientID'] == patient
-        date_times = df_sorted[patient_mask]['DateTime']
-        positive = df_sorted[patient_mask].positive_scan.mode().values()[0]
+        date_times = df_sorted['DateTime'][patient_mask]
+        positive = df_sorted[patient_mask].positive_scan.mode().values[0]
         date_time0 = date_times[0]
         df_studies = df_studies.append({'PatientID':patient, 
                                         'StudyNum':study_num,

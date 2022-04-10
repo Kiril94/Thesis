@@ -1,25 +1,16 @@
 import sys, os
 from os.path import split, join
-base_dir = split(os.getcwd())[0]
+base_dir = os.getcwd()
+print(base_dir)
 if base_dir not in sys.path:
     sys.path.append(base_dir)
 from os.path import join
-import pandas as pd
-from utilities import basic, utils, mri_stats, stats
-from stats_tools import vis as svis
-import numpy as np
+from utilities import mri_stats
 import pickle
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from access_sif_data import load_data_tools as ld
-import seaborn as sns
-import matplotlib.pyplot as plt
-import matplotlib as mpl
 from datetime import datetime as dt
-import datetime
 
 fig_dir = join(base_dir, 'figs')
 table_dir = join(base_dir, 'data/tables')
-# dfc = utils.load_scan_csv(join(table_dir, 'scan_tables','scan_after_sq_pred_dst.csv'))
 with open(join(table_dir, 'scan_tables','scan_after_sq_pred_dst_nos_date.pkl'), 'rb') as f:
     dfc = pickle.load(f)
 dfc['positive_scan'] = 0
