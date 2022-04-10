@@ -288,7 +288,7 @@ df_all.keys()
 """
 print('Maybe not needed, first check number of missing columns in real dataframe')
 psn_strings = ['tse', 'fl',  'tir', 'swi', 'ep', 'tfl', 're', 'spc', 'pc',
-               'FSE','FIR','GE', 'h2', 'me', 'qD', 'ci', 'fm','de','B1']
+                 'FSE','FIR','GE', 'h2', 'me', 'qD', 'ci', 'fm','de','B1']
 add_psn_str = ['se', 'SE']
 for psn_string in psn_strings:
     mask = df_all.SequenceName.str.startswith('*'+psn_strings[0])

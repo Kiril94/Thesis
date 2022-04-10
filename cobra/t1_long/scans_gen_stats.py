@@ -22,14 +22,17 @@ import importlib
 import pickle, gzip
 import matplotlib as mpl
 import matplotlib.lines as mlines
+from ast import literal_eval
+
 params = {'figure.dpi':350,
-        'legend.fontsize': 18,#
+        'legend.fontsize': 18,
         'figure.figsize': [8, 5],
          'axes.labelsize': 20,
          'axes.titlesize':20,
          'xtick.labelsize':20,
          'ytick.labelsize':20}
 mpl.rcParams.update(params) 
+plt.style.use('ggplot')
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 
 # %%
@@ -40,6 +43,8 @@ with gzip.open(join(table_dir, 'scan_3dt1_clean.gz'), 'rb') as f:
     df = pickle.load(f)
 df['positive_scan'] = 0
 df.loc[df.days_since_test>=-3, 'positive_scan'] = 1
+df.PixelSpacing = df.PixelSpacing.map(lambda x: x.strip("[]").split(" "))
+
 # %%
 # In[how many have scanner manufacturer, scanner type, b0 field strength]
 TE_k = 'EchoTime'
@@ -72,169 +77,112 @@ neg_value_counts = sort_dict(
 pos_value_counts = sort_dict(
     df[MFS_k][pos_mask].value_counts())
 #%%
+# In[B0]
 fig, ax = plt.subplots()
 cmap = plt.get_cmap("Greys")
-pcolor = cmap(np.array([0,50,200]))
-print(pcolor)
+pcolor = cmap(np.array([0,50,150]))
+
 labels_dic = {1.0:'1.0 T', 1.5:'1.5 T', 3.0:'3.0 T',}
 new_labels = [labels_dic[l] for l in neg_value_counts.keys()]
 
-
+def my_autopct(pct):
+    return (f'{pct:.2f}%') if pct > 10 else ''
 neg_data = list(neg_value_counts.values())
-wn, tn = ax.pie(neg_data, radius=1, labels=new_labels,
-    wedgeprops=dict(width=.3, edgecolor=colors[1],linewidth=2), colors=pcolor, )
-
-bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=.9)
-kw = dict(arrowprops=dict(arrowstyle="-"),
-          bbox=bbox_props, zorder=0, va="center")
-xyadd = [(.8,0),(+.5,+.2),(+.6,-.2)]
-
-for i, p in enumerate(wn):
-    ang = (p.theta2 - p.theta1)/2. + p.theta1
-    y = np.sin(np.deg2rad(ang))
-    x = np.cos(np.deg2rad(ang))
-    horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
-    connectionstyle = "angle,angleA=0,angleB={}".format(ang)
-    kw["arrowprops"].update({"connectionstyle": connectionstyle})
-    xn = x+xyadd[i][0]
-    yn = y + xyadd[i][1]
-    ax.annotate(neg_data[i], xy=(x, y), xytext=(xn, yn),
-                horizontalalignment=horizontalalignment, **kw)
-
-
-
+ts = ax.pie(neg_data, radius=1.1, labels=new_labels,
+    wedgeprops=dict(width=.4, edgecolor=colors[1],linewidth=2), colors=pcolor,
+    autopct=my_autopct, pctdistance=.85, labeldistance=1.1,
+    textprops={'fontsize': 15})
+for t in ts[1]:
+    t.set_fontsize(22)
 pos_data = list(pos_value_counts.values())
-wp, tp = ax.pie(pos_data,labels=['']*3, radius=1-.4,
+ax.pie(pos_data,labels=['']*3, radius=1-.5,
         wedgeprops=dict(width=.3, edgecolor=colors[0], linewidth=2), 
-        colors=pcolor)
-
-bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=.9)
-kw = dict(
-          bbox=bbox_props, zorder=0, va="center")
-xyadd = [(-.4,0),(+.5,+.2),(+.6,-.2)]
-for i, p in enumerate(wp):
-    ang = (p.theta2 - p.theta1)/2. + p.theta1
-    y = np.sin(np.deg2rad(ang))
-    x = np.cos(np.deg2rad(ang))
-    xn = x+xyadd[i][0]
-    yn = y + xyadd[i][1]
-    ax.annotate(pos_data[i], xy=(x, y), xytext=(xn, yn),
-                **kw)
+        colors=pcolor,autopct=my_autopct, pctdistance=.6, labeldistance=1.2,
+        textprops={'fontsize': 15})
 
 ax.set(aspect="equal")
 
 pos_line = mlines.Line2D([], [], color=colors[0],  linestyle='-',
                           markersize=10, label='positive')
 neg_line = mlines.Line2D([], [], color=colors[1],  linestyle='-',
-                          markersize=10, label='positive')                          
-ax.legend(handles=[pos_line, neg_line], loc=(.8,.8))
-# %%
-# In[Plot distribution of Rows and Columns]
-fig, g = svis.plot_decorator(sns.jointplot, plot_func_kwargs={
-    'data':df_all[df_all.Rows<3000],
-    'x':"Rows", 'y':"Columns", 'hue':"Positive"},
-    )
-g.figure.savefig(f"{fig_dir}/basic_stats/scan_sizes.png", dpi=80)
+                          markersize=10, label='negative')                          
+ax.legend(handles=[pos_line, neg_line], loc=(.8,.9))
+fig.tight_layout()
+fig.savefig(join(fig_dir, 't1','B0.png'),dpi=350)
 #%%
-g = sns.scatterplot(data=df_all[df_all.Rows<3000], x='Rows', y='Columns', hue='Positive')
-g.figure.savefig(f"{fig_dir}/basic_stats/scan_sizes_scatter.png", dpi=400)
+df = df.dropna(subset=['PixelSpacing','SpacingBetweenSlices'],
+    axis=0)
+df['RowSpacing'] = df.PixelSpacing.map(lambda x: float(x[0]))
+df['ColumnSpacing'] = df.PixelSpacing.map(lambda x: float(x[1]))
 
-# %%
-#sns.displot(df_all, x="Rows", y="Columns", hue="Pos", alpha=1)
+#%%
+# In[Rowspacing, Columnspacing, DBS]
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+dft = df.dropna(
+    subset=['RowSpacing','ColumnSpacing','SpacingBetweenSlices'],axis=0)
+ax.scatter(dft.RowSpacing, dft.ColumnSpacing, dft.SpacingBetweenSlices,
+    s=1, )
+ax.view_init(elev=30., azim=130)
+ax.set_zlim(0,4)
+ax.set_xlim(0,1.5)
+ax.set_xlim(0,1)
+ax.set_xlabel('RowSpacing')
+ax.set_ylabel('ColumnSpacing')
+ax.set_zlabel('SpacingBetweenSlices')
 
-# In[Write Patient IDs to text]
-neg_pat_ids = list(df_n[PID_k].unique())
-with open(f'{base_dir}/results/neg_ids.txt', 'w') as filehandle:
-    for listitem in neg_pat_ids:
-        filehandle.write('%s\n' % listitem)
 
-# In[Count the number of studies]
-num_studies_all = stats.count_number_of_studies(df_all)
-print(f"The number of studies is {num_studies_all}")
-# In[Convert time and date to datetime for efficient access]
-df_all = stats.add_datetime(df_all)
-#df_p.to_csv(pos_tab_dir, index = False, header = True)
-
-# In[]
-p(f"first study {df_p.DateTime.min()}")
-p(f"last study {df_p.DateTime.max()}")
-studies_all = stats.check_tags(df_all, 'all', date_k).sum()
-print(f"Number of scans in 2021 {studies_2021}")
-# In[Sort the the scans by time and count those that are less than 2 hours apart]
-time_diff_studies_all, _ = stats.time_between_studies(df_all)
-# In[]
-print(len(time_diff_studies_all))
-# In[]
-svis.hist(np.array(time_diff_studies_all)/24, 100, ylog_scale=(True),
-                    show_plot=True, xlabel='Days between studies',
-                    save=True, title='All Patients',
-                    figname=f"{fig_dir}/time_between_studies.png")
-
-# In[Store the results]
-patient_ids = df_p['PatientID'].unique()
-ppatient_df = pd.DataFrame(
-    {'PatientId': [], 'NumStudies': []})  # storing results
-ppatient_df['PatientID'] = patient_ids
-ppatient_df['NumStudies'] = num_studies_l
-
-# In[Show distribution of the studies]
-num_studies_a = np.array(num_studies_l)
-max_studies = max(num_studies_a)
-svis.hist(num_studies_a, np.arange(.5, max_studies+.5),
-                    show_plot=True, xlabel='Number of studies',
-                    save=True, title='Positive Patients',
-                    figname=f"{fig_dir}/pos/num_studies.png")
 
 #%%
 # In[Get number of acquired volumes per patient]
-scans_per_patient = df_all.groupby('PatientID').size()
+scans_per_patient = df.groupby('PatientID').size()
 figure = svis.hist(
     scans_per_patient, np.arange(1, 110, 2),
     show=True,kwargs={'xlabel':'# volumes per patient',
     'title':'All Patients'},
-    save=True, figname=f"{fig_dir}/basic_stats/volumes_per_patient.png",
+    save=True, figname=f"{fig_dir}/volumes_per_patient.png",
     )
 
 #%%
-scans_per_patient = df_all[df_all.Positive==0].groupby('PatientID').size()
+scans_per_patient = df[df.Positive==0].groupby('PatientID').size()
 figure = svis.hist(
     scans_per_patient, np.arange(1, 110, 2),
     show=True,kwargs={'xlabel':'# volumes per patient',
     'title':'Negative Patients'},
-    save=True, figname=f"{fig_dir}/basic_stats/volumes_per_patient_neg.png",
+    save=True, figname=f"{fig_dir}/volumes_per_patient_neg.png",
     )
 
 #%%
 # In[Sort scans by manufacturer]
-manufactureres = df_all['Manufacturer'].unique()
+manufactureres = df['Manufacturer'].unique()
 p(manufactureres)
 philips_t = ['Philips Healthcare', 'Philips Medical Systems',
              'Philips']
-philips_c = stats.check_tags(df_all, philips_t, 'Manufacturer').sum()
-siemens_c = stats.mask_sequence_type(df_all, 'SIEMENS', 'Manufacturer').sum()
+philips_c = stats.check_tags(df, philips_t, 'Manufacturer').sum()
+siemens_c = stats.mask_sequence_type(df, 'SIEMENS', 'Manufacturer').sum()
 gms_c = stats.mask_sequence_type(
-    df_all, 'GE MEDICAL SYSTEMS', 'Manufacturer').sum()
-agfa_c = stats.mask_sequence_type(df_all, 'Agfa', 'Manufacturer').sum()
-none_c = df_all['Manufacturer'].isnull().sum()
+    df, 'GE MEDICAL SYSTEMS', 'Manufacturer').sum()
+agfa_c = stats.mask_sequence_type(df, 'Agfa', 'Manufacturer').sum()
+none_c = df['Manufacturer'].isnull().sum()
 #%%
 df_all.Manufacturer.unique()
 #%%
 # In[re]
 # Replace manufacturers
-df_all.Manufacturer[stats.check_tags(df_all, philips_t, 'Manufacturer')] = 'Philips'
-df_all.Manufacturer[stats.check_tags(df_all,['Siemens'], 'Manufacturer')] = 'Siemens'
+df.Manufacturer[stats.check_tags(df, philips_t, 'Manufacturer')] = 'Philips'
+df.Manufacturer[stats.check_tags(df,['Siemens'], 'Manufacturer')] = 'Siemens'
 #%%
 import matplotlib as mpl
 # In[Plot sequence counts]
 mpl.rcParams['figure.dpi'] = 400
 plt.style.use('ggplot')
 #labels = ['Siemens', 'Philips', 'GE', 'Other', 'other']
-g = sns.countplot(x="Manufacturer", hue="Positive", data=df_all, hue_order=[1,0],
-    order = df_all['Manufacturer'].value_counts().iloc[:3].index)
+g = sns.countplot(x="Manufacturer", hue="Positive", data=df, hue_order=[1,0],
+    order = df['Manufacturer'].value_counts().iloc[:3].index)
 #g.set(xlabel=('Manufacturer'), ylabel=('Volume Count'), xticklabels=labels)
 fig = g.get_figure()
 fig.tight_layout()
-fig.savefig(f"{fig_dir}/basic_stats/manufacturer.png")
+fig.savefig(f"{fig_dir}/manufacturer.png")
 #%%
 # In[visualize scanner manufacturer counts]
 fig, ax = plt.subplots(1, figsize=(10, 6))
@@ -243,19 +191,19 @@ counts = np.array([philips_c, siemens_c, gms_c])
 svis.bar(manufacturers_unq, counts, 
         kwargs={'xlabel':'Manufacturer', 'title':'All Patients'},
               save=True, 
-              figname=f"{fig_dir}/basic_stats/manufacturers_count_all.png",
+              figname=f"{fig_dir}/manufacturers_count_all.png",
               )
 
 #%%
 # In[Model Name]
-philips_m = stats.check_tags(df_p, philips_t, 'Manufacturer')
-siemens_m = stats.mask_sequence_type(df_p, 'SIEMENS', 'Manufacturer')
-gms_m = stats.mask_sequence_type(df_p, 'GE MEDICAL SYSTEMS', 'Manufacturer')
+philips_m = stats.check_tags(df, philips_t, 'Manufacturer')
+siemens_m = stats.mask_sequence_type(df, 'SIEMENS', 'Manufacturer')
+gms_m = stats.mask_sequence_type(df, 'GE MEDICAL SYSTEMS', 'Manufacturer')
 
 model_k = 'ManufacturerModelName'
-philips_models_vc = df_p[philips_m][model_k].value_counts().to_dict()
-siemens_models_vc = df_p[siemens_m][model_k].value_counts().to_dict()
-gms_models_vc = df_p[gms_m][model_k].value_counts().to_dict()
+philips_models_vc = df[philips_m][model_k].value_counts().to_dict()
+siemens_models_vc = df[siemens_m][model_k].value_counts().to_dict()
+gms_models_vc = df[gms_m][model_k].value_counts().to_dict()
 
 # In[summarize small groups]
 philips_models_vc_new = stats.group_small(philips_models_vc, 1000)
@@ -294,32 +242,26 @@ fig.suptitle('Positive Patients', fontsize=20)
 fig.tight_layout()
 plt.subplots_adjust(wspace=.5, hspace=None)
 plt.show()
-fig.savefig(f"{fig_dir}/pos/model_name_pie_chart.png")
+fig.savefig(f"{fig_dir}/model_name_pie_chart.png")
 
 # In[Keys that are relevant]
 rel_key_list = ['t1', 'gd', 't2', 't2s', 't2_flair', 'swi']
 # In[Save Patient pos IDs]
-mask_dict_p, tag_dict_p = mri_stats.get_masks_dict(df_p)
-posids_dict = DotDict({key: df_p[mask][PID_k] for key, mask
+mask_dict_p, tag_dict_p = mri_stats.get_masks_dict(df)
+posids_dict = DotDict({key: df[mask][PID_k] for key, mask
                        in mask_dict_p.items()})
-for key in rel_key_list:
-    print(key)
-    pat_ids = list(posids_dict[key])
-    print(len(pat_ids))
-    with open(f"{base_dir}/results/pos_IDs_{key}.txt", "w") as f:
-        for pat_id in pat_ids:
-            f.write("%s\n" % pat_id)
+
 
 # In[Save Patient neg IDs]
-mask_dict_n = mri_stats.get_masks_dict(df_n, return_tags=False)
-negids_dict = DotDict({key: df_n[mask][PID_k] for key, mask
+mask_dict_n = mri_stats.get_masks_dict(df, return_tags=False)
+negids_dict = DotDict({key: df[mask][PID_k] for key, mask
                        in mask_dict_n.items()})
 for key in rel_key_list:
     pat_ids = list(negids_dict[key])
     with open(f"{base_dir}/results/neg_IDs_{key}.txt", "w") as f:
         for pat_id in pat_ids:
             f.write("%s\n" % pat_id)
-
+#%%
 
 # In[Look at 'other' group] combine all the relevant masks to get others
 seq_vars = [SD_k, TE_k, TR_k, FA_k, TI_k, ETL_k, SS_k, SV_k, SN_k]
