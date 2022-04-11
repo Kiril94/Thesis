@@ -23,7 +23,14 @@ import pickle, gzip
 import matplotlib as mpl
 import matplotlib.lines as mlines
 from ast import literal_eval
+plt.style.use(join(base_dir,'utilities', 'plot_style.txt'))
+import importlib
 
+import matplotlib.dates as mdates
+from pylab import cm
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+"""
 params = {'figure.dpi':350,
         'legend.fontsize': 18,
         'figure.figsize': [8, 5],
@@ -33,6 +40,7 @@ params = {'figure.dpi':350,
          'ytick.labelsize':20}
 mpl.rcParams.update(params) 
 plt.style.use('ggplot')
+"""
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 
 # %%
@@ -106,9 +114,9 @@ pos_line = mlines.Line2D([], [], color=colors[0],  linestyle='-',
                           markersize=10, label='positive')
 neg_line = mlines.Line2D([], [], color=colors[1],  linestyle='-',
                           markersize=10, label='negative')                          
-ax.legend(handles=[pos_line, neg_line], loc=(.8,.9))
+ax.legend(handles=[pos_line, neg_line], loc=(.8,.9), fontsize=18)
 fig.tight_layout()
-fig.savefig(join(fig_dir, 't1','B0.png'),dpi=350)
+fig.savefig(join(fig_dir, '3dt1','B0.png'),dpi=350)
 #%%
 df = df.dropna(subset=['PixelSpacing','SpacingBetweenSlices'],
     axis=0)
@@ -131,8 +139,20 @@ ax.set_xlabel('RowSpacing')
 ax.set_ylabel('ColumnSpacing')
 ax.set_zlabel('SpacingBetweenSlices')
 
-
-
+#%%
+#%%
+plot_vars = ['RowSpacing','ColumnSpacing','SpacingBetweenSlices', 'SliceThickness']
+Q1 = df[plot_vars].quantile(0.25)
+Q3 = df[plot_vars].quantile(0.75)
+IQR = Q3 - Q1
+df_temp = df[~((df[plot_vars] < (Q1 - 1.5 * IQR)) |(df[plot_vars] > (Q3 + 1.5 * IQR))).any(axis=1)]
+sns_plot = sns.pairplot(df_temp, 
+    vars=plot_vars, 
+      diag_kind="kde", hue='positive_scan', 
+    plot_kws={"s": 13, 'alpha': 1}, palette='Set2', corner=True,
+    )
+sns_plot.tight_layout()
+sns_plot.savefig(f"{fig_dir}/3dt1/resolution_pairplot.png")
 #%%
 # In[Get number of acquired volumes per patient]
 scans_per_patient = df.groupby('PatientID').size()
@@ -165,7 +185,7 @@ gms_c = stats.mask_sequence_type(
 agfa_c = stats.mask_sequence_type(df, 'Agfa', 'Manufacturer').sum()
 none_c = df['Manufacturer'].isnull().sum()
 #%%
-df_all.Manufacturer.unique()
+df.Manufacturer.unique()
 #%%
 # In[re]
 # Replace manufacturers
@@ -182,7 +202,7 @@ g = sns.countplot(x="Manufacturer", hue="Positive", data=df, hue_order=[1,0],
 #g.set(xlabel=('Manufacturer'), ylabel=('Volume Count'), xticklabels=labels)
 fig = g.get_figure()
 fig.tight_layout()
-fig.savefig(f"{fig_dir}/manufacturer.png")
+fig.savefig(f"{fig_dir}/3dt1/manufacturer.png")
 #%%
 # In[visualize scanner manufacturer counts]
 fig, ax = plt.subplots(1, figsize=(10, 6))
@@ -242,25 +262,12 @@ fig.suptitle('Positive Patients', fontsize=20)
 fig.tight_layout()
 plt.subplots_adjust(wspace=.5, hspace=None)
 plt.show()
-fig.savefig(f"{fig_dir}/model_name_pie_chart.png")
+fig.savefig(f"{fig_dir}/3dt1/model_name_pie_chart.png")
 
 # In[Keys that are relevant]
 rel_key_list = ['t1', 'gd', 't2', 't2s', 't2_flair', 'swi']
-# In[Save Patient pos IDs]
-mask_dict_p, tag_dict_p = mri_stats.get_masks_dict(df)
-posids_dict = DotDict({key: df[mask][PID_k] for key, mask
-                       in mask_dict_p.items()})
 
 
-# In[Save Patient neg IDs]
-mask_dict_n = mri_stats.get_masks_dict(df, return_tags=False)
-negids_dict = DotDict({key: df[mask][PID_k] for key, mask
-                       in mask_dict_n.items()})
-for key in rel_key_list:
-    pat_ids = list(negids_dict[key])
-    with open(f"{base_dir}/results/neg_IDs_{key}.txt", "w") as f:
-        for pat_id in pat_ids:
-            f.write("%s\n" % pat_id)
 #%%
 
 # In[Look at 'other' group] combine all the relevant masks to get others
