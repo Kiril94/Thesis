@@ -15,11 +15,14 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import ticker
 import seaborn as sns
 from stats_tools.colors import Color_palette
-
-
+import os, sys
+from os.path import split, join
+base_dir = split(os.getcwd())[0]
+if base_dir not in sys.path:
+    sys.path.append(base_dir)
+plt.style.use(join(base_dir,'utilities', 'plot_style.txt'))
 def quickplot(x, kind='scatter', y=None, 
         xlabel='', ylabel='', title=''):
-    plt.style.use('ggplot')
     fig, ax = plt.subplots()
     if y is not None:
         if kind=='scatter':
@@ -51,9 +54,10 @@ def ax_decorator(fig, ax,
                  ytickparams_ls=25, ytickparams_rot=0,
                  xlogscale=False, ylogscale=False,
                  xrange=(None,None), yrange=(None,None),
-                 tight_layout=True,plot_style='ggplot',
+                 tight_layout=True,plot_style=None,
                  **kwargs):
-    plt.style.use(plot_style)
+    if not isinstance(plot_style, type(None)):
+        plt.style.use(plot_style)
     _, labels = ax.get_legend_handles_labels()
     if len(labels)>0:
         legend = ax.legend(loc=lgd_loc, fontsize=lgd_fs, facecolor='white',
@@ -88,11 +92,12 @@ def ax_decorator(fig, ax,
 def plot_decorator(plot_func, plot_func_args=[], plot_func_kwargs={},
                    figsize=(8, 5), save=False, dpi=80, figname='',
                    caption='', caption_fs=20, caption_pos=(.5, -.05),
-                   plot_style='ggplot',
+                   plot_style=None,
                    kwargs={}):
     """Takes a function plot_func which takes args, 
     kwargs and ax to produce a plot"""
-    plt.style.use(plot_style)
+    if not isinstance(plot_style, type(None)):
+        plt.style.use(plot_style)
     fig, ax = plt.subplots(figsize=figsize)
     ax = plot_func(*plot_func_args, **plot_func_kwargs, ax=ax)
     try:
@@ -116,7 +121,7 @@ def line(
         label='', figsize=(10, 5), 
         ax=None, fig=None, text_fs=14,
         dpi=80, color='skyblue',
-        plot_style='ggplot', linestyle='solid', ecolor='deepskyblue',
+        plot_style=None, linestyle='solid', ecolor='deepskyblue',
         capsize=3, capthick=0.3, err_markersize=6,  elinewidth=.9,
         alpha=1, scr_markersize=30, scr_markerstyle='o', linewidth=3,
         fill_color=None, drawstyle='default',
@@ -148,7 +153,8 @@ def line(
         ecolor = Color_palette(ecolor[0])[ecolor[1]]
     if type(fill_color) == tuple:
         fill_color = Color_palette(fill_color[0])[fill_color[1]]
-    plt.style.use(plot_style)
+    if not isinstance(plot_style, type(None)):
+        plt.style.use(plot_style)
     const_err = (type(sy) == float)
     if const_err:
         sy = np.ones(len(x))*sy
@@ -178,13 +184,14 @@ def line(
 
 def bar(labels, counts, width=.8,
         label='', figsize=(10, 6), save=False,
-        figname=None, dpi=80, plot_style='ggplot',
+        figname=None, dpi=80, plot_style=None,
         fig=None, ax=None, bottom=[], 
         caption='', caption_fs=20, caption_pos=(.5, -.05),
         color = '',
         kwargs={}):
-
-    plt.style.use(plot_style)
+    if not isinstance(plot_style, type(None)):
+        plt.style.use(plot_style)
+   
     if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
     if len(bottom) == 0:
@@ -214,7 +221,7 @@ def hist(
         ax=None, fig=None,
         dpi=80, ecolor='deepskyblue', capsize=3, capthick=0.3,
         markersize=6, elinewidth=.9, hist_alpha=.9, hist_linestyle='solid',
-        hist_linewidth=2, plot_style='ggplot', 
+        hist_linewidth=2, plot_style=None, 
         kwargs={}):
     """Produce a nice histogram.
     Returns: dictionary with x, y, sy, binwidth, fig, ax."""
@@ -238,7 +245,9 @@ def hist(
 
     if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
-    plt.style.use(plot_style)
+    if not isinstance(plot_style, type(None)):
+        plt.style.use(plot_style)
+    
 
     if plot_hist:
         ax.hist(x_all, bins=N_bins, range=(x_all.min(), x_all.max()),
@@ -268,7 +277,7 @@ def hist(
 
 def contour(
         xx, yy, z, levels=40, cmap='inferno', colors=None, figsize=(12, 6),
-        filled=True, fig=None, ax=None, plot_style='ggplot',
+        filled=True, fig=None, ax=None, plot_style=None,
         show_cbar=True, cbar_size='5%', cbar_pad=0.1, label_fs=20,
         tick_size=20, cbar_tick_labelsize=20,  cbar_orientation='vertical',
         cbar_label='', cbar_label_fs=20, cbar_num_ticks=5, clabels=None,
@@ -286,7 +295,8 @@ def contour(
     if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
 
-    plt.style.use(plot_style)
+    if not isinstance(plot_style, type(None)):
+        plt.style.use(plot_style)
     if colors != None:
         cmap = None
 
@@ -510,11 +520,12 @@ def create_1d_hist(ax, values, bins, x_range, title, histtype='stepfilled',displ
 ################################
 
 def create_boxplot(data, data_labels=None,title='',fig=None, ax=None,
-                    plot_style='ggplot', figsize=(10, 10), kwargs={},
+                    plot_style=None, figsize=(10, 10), kwargs={},
                     stripplot=False, orient='v'):
     if ax is None or fig is None:
         fig, ax = plt.subplots(figsize=figsize)
-    plt.style.use(plot_style)
+    if not isinstance(plot_style, type(None)):
+        plt.style.use(plot_style)
     if (data_labels is None):
         data_labels = [int(i+1) for i in range(len(data))]
     ax = sns.boxplot(data=data,palette='Set2', medianprops=dict(color="red"), ax=ax,

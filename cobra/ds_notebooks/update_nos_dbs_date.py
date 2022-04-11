@@ -34,8 +34,10 @@ dfc.NumberOfSlices = dfc.NumberOfSlices.fillna(dfc.SeriesInstanceUID.map(nos2))
 df3dt1 = dfc[((dfc.MRAcquisitionType=='3D') | (dfc.MRAcquisitionType.isna())) \
     & ((dfc.Sequence=='t1') & (dfc.NumberOfSlices>=64))]
 df3dt1 = df3dt1[(df3dt1['2019']==1)|(~df3dt1.InstanceCreationDate.isna())]
+df3dt1 = df3dt1[df3dt1.days_since_test.isna() |\
+      (df3dt1.days_since_test>=-3) | (df3dt1.days_since_test<=-30)]
 ls_3dt1 = df3dt1.SeriesInstanceUID.tolist()
-len(ls_3dt1)
+print(len(ls_3dt1))
 with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\sids_3dt1_temp.pkl", 'wb') as f:
     pickle.dump(ls_3dt1, f)
 #%%
