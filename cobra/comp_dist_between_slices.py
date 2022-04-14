@@ -1,6 +1,8 @@
 from datetime import datetime as dt
 from os.path import join, split
 import os
+
+from sympy import re
 from utilities.basic import list_subdir
 import numpy as np
 from pydicom import dcmread
@@ -208,8 +210,11 @@ if __name__=="__main__":
         rest_sids = sorted(get_rest_sids(
             join(base_dir, 'data/t1_cross/3dt1_sids2.pkl'),
             join(write_file_dir, 'all_distances.txt')))
-        #with open(join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'), 'rb') as f:
-        #    sids = pickle.load(f)
+        print(len(rest_sids), 'before removing non-downloaded volums')
+        print('Take only downloaded volumes')
+        with open(join(dicom_base_dir, 'volume_log.txt'), 'r') as f:
+            dwnld_sids = [line.strip() for line in f]
+        rest_sids = [sid for sid in rest_sids if sid in dwnld_sids]
         test=True
         if test:
             main(1, write_file_dir='', volume_dir_dic=volume_dir_dic, sids=rest_sids[:2], test=True)
