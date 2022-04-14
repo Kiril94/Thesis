@@ -25,6 +25,7 @@ def print_pos_neg(df):
 print('initial length:', len(df1))
 print_pos_neg(df1)
 
+
 #%%
 # Remove scans with missing dates for those who don't have 2019 tag
 df1 = df1[(df1['2019']==1)|(~df1.InstanceCreationDate.isna())]
@@ -35,9 +36,15 @@ mask3d = (df1.MRAcquisitionType.isna() | (df1.MRAcquisitionType=='3D'))\
     & (df1.NumberOfSlices>=64)
 df3d1 = df1[mask3d]
 print_pos_neg(df3d1)
+
+#%%
+df3d1[~df3d1.days_since_test.isna() | (df3d1.InstanceCreationDate>=datetime.datetime(2020,2,27))]
 #%%
 # In[Set all missing dates with 2019 tag to 2018,1,1]
-
+#%%
+sids_3dt1 = df3d1.SeriesInstanceUID.tolist()
+with open(join(base_dir, 'data', 't1_cross','3dt1_sids2.pkl'), 'wb') as f:
+    pickle.dump(sids_3dt1, f)
 #%%
 
 with gzip.open(join(table_dir, 'scan_3dt1_clean.gz'), 'wb') as f:

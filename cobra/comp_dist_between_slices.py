@@ -197,7 +197,7 @@ script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 table_dir = join(base_dir, 'data', 'tables')
 dicom_base_dir = "F:/CoBra/Data/dcm"
-write_file_dir = join(base_dir, 'data/t1_longitudinal/distance_between_slices')
+write_file_dir = join(base_dir, 'data/t1_cross/distance_between_slices')
 
 with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
     volume_dir_dic = json.load(json_file)
@@ -206,11 +206,11 @@ if __name__=="__main__":
     compute_distance = True
     if compute_distance:
         rest_sids = sorted(get_rest_sids(
-            join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'),
+            join(base_dir, 'data/t1_cross/3dt1_sids2.pkl'),
             join(write_file_dir, 'all_distances.txt')))
         #with open(join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'), 'rb') as f:
         #    sids = pickle.load(f)
-        test=False
+        test=True
         if test:
             main(1, write_file_dir='', volume_dir_dic=volume_dir_dic, sids=rest_sids[:2], test=True)
         else:

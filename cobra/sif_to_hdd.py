@@ -5,7 +5,7 @@ Created on Fri Sep 17 10:58:38 2021
 """
 #%% 
 # In[Import]
-import os
+import os, sys
 from os.path import join
 from pathlib import Path
 import pandas as pd
@@ -21,8 +21,7 @@ dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
 update_downloaded_files = False
-
-
+batch = int(sys.argv[1])
 #%% 
 # In[Load df]
 print("Load dataframes")
@@ -58,6 +57,7 @@ if update_downloaded_files:
     print("Save list of already downloaded volumes")
     num_pat, num_vol = download.save_list_downloaded_volumes_and_patients()
     print(num_pat, "Patients and", num_vol, "volumes already downloaded")
+
 downloaded_ls = download.get_downloaded_volumes_ls()
 print('interesection', len(set(group_list).intersection(set(downloaded_ls))))
 group_list = list(set(group_list).difference(set(downloaded_ls)))
@@ -67,7 +67,7 @@ print("Volumes still to download: ", len(group_list))
 use_batches = True
 # 5 batches are needed
 if use_batches:
-    batch = 2
+    #batch = 0
     print("batch:", batch)
     start = 0
     batch_size = 1000
