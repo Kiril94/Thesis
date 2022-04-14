@@ -14,6 +14,9 @@ import sys
 from pathlib import Path
 from functools import partial
 import pandas as pd
+import warnings
+
+
 
 def get_value_from_header(dcm_dir, key):
     dcm = dcmread(dcm_dir)
@@ -210,12 +213,16 @@ if __name__=="__main__":
         rest_sids = sorted(get_rest_sids(
             join(base_dir, 'data/t1_cross/3dt1_sids2.pkl'),
             join(write_file_dir, 'all_distances.txt')))
-        print(len(rest_sids), 'before removing non-downloaded volums')
+        print(len(rest_sids), 'sids before removing non-downloaded volumes')
         print('Take only downloaded volumes')
         with open(join(dicom_base_dir, 'volume_log.txt'), 'r') as f:
             dwnld_sids = [line.strip() for line in f]
-        rest_sids = [sid for sid in rest_sids if sid in dwnld_sids]
-        test=True
+        rest_sids = list(set(rest_sids).intersection(set(dwnld_sids)))
+        print(len(rest_sids), 'sids')
+        warnings.warn("Don't forget to update volume_dir_dic")
+        print('Take only sids that are in volume_dir_dic')
+        rest_sids = list(set(rest_sids).intersection(set(volume_dir_dic.keys())))
+        test=False
         if test:
             main(1, write_file_dir='', volume_dir_dic=volume_dir_dic, sids=rest_sids[:2], test=True)
         else:

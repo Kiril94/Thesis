@@ -9,6 +9,8 @@ import pickle
 from utilities.basic import list_subdir, move_compress, remove_files
 import matlab.engine
 import numpy as np
+import warnings
+
 
 # paths
 script_dir = os.path.realpath(__file__)
@@ -22,7 +24,10 @@ excl_files_dir = [join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_f
     join(disk_data_dir, 'volume_cross_nii', 'input', 'nii_files'),
     join(disk_data_dir, 'volume_cross_nii', 'temp', 'dcm2nii_conv_error','corrupted'),
     join(disk_data_dir, 'volume_cross_nii', 'temp', 'spm_conv_error','corrupted'),
-    join(disk_data_dir, 'volume_cross_nii', 'input', 'seg_failed'),]
+    join(disk_data_dir, 'volume_cross_nii', 'input', 'seg_failed'),
+    join(disk_data_dir, 'volume_cross_nii', 'input','nii_files', 'segmented'),
+    join(disk_data_dir, 'volume_longitudinal_nii', 'input', 'nii_files','segmented'),
+    ]
 data_dir = join(base_dir, 'data')
 data_cross_dir = join(data_dir, 't1_cross')
 data_long_dir = join(data_dir, 't1_longitudinal')
@@ -34,14 +39,16 @@ eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\spm12
 # load necessary files
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
-with open(join(data_long_dir, "long_sids_download_new.pkl"), 'rb') as f:
+with open(join(data_cross_dir, "3dt1_sids2.pkl"), 'rb') as f:
     sids_ls = pickle.load(f)
 with open(join(tables_dir, "disk_series_directories.json"), 'rb') as f:
     dir_dic = json.load(f)
 downloaded_sids = np.loadtxt(join(disk_data_dir,'dcm', 'volume_log.txt'), dtype=str).tolist()
 
 sids_ls = list(set(sids_ls).intersection(set(downloaded_sids)))
-
+warnings.warn("Don't forget to update volume_dir_dic")
+print('Take only sids that are in volume_dir_dic')
+sids_ls = list(set(sids_ls).intersection(set(dir_dic.keys())))
 
 # define functions
 def get_missing_files(sids_to_conv, nii_dir, newid_dic, excl_nii_dir=None):
