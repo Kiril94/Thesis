@@ -2,6 +2,7 @@
 import os, sys
 from os.path import split, join
 base_dir = split(os.getcwd())[0]
+print(base_dir)
 if base_dir not in sys.path:
     sys.path.append(base_dir)
 from pathlib import Path
@@ -24,8 +25,8 @@ data_dir = join(base_dir, 'data')
 # In[Load test image]
 img_dir = join(data_dir, "augmentations\\MICCAI\\imagesTr")
 lbl_dir = join(data_dir,"augmentations\\MICCAI\\labelsTr")
-imga_dir = join(data_dir, "augmentations\\MICCAI\\imagesTr_aug")
-lbla_dir = join(data_dir,"augmentations\\MICCAI\\labelsTr_aug")
+imga_dir = join(data_dir, "augmentations\\MICCAI\\imagesTr_aug_1")
+lbla_dir = join(data_dir,"augmentations\\MICCAI\\labelsTr_aug_1")
 tst_img = nib.load(basic.list_subdir(img_dir)[0])
 tst_lbl = nib.load(basic.list_subdir(lbl_dir)[0])
 tst_img_a = nib.load(basic.list_subdir(imga_dir)[0])
