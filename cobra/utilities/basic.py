@@ -33,9 +33,15 @@ def get_part_of_path(path, start, stop=None):
 def get_root_dir(path, n):
     return join(*os.path.normpath(path).split(os.sep)[:n])
 
-def list_subdir(dir_, ending=""):
-    return [os.path.join(dir_, x) for x in os.listdir(dir_) \
-            if x.endswith(ending)]
+def list_subdir(dir_, ending="", exclude=None):
+    if isinstance(exclude, type(None)):
+        return [os.path.join(dir_, x) for x in os.listdir(dir_) \
+                if x.endswith(ending)]
+    else:
+        return [os.path.join(dir_, x) for x in os.listdir(dir_) 
+                if x.endswith(ending) and x not in exclude]
+            
+        
 def create_dict(keys, values):
     return dict(zip(keys, values))
 
