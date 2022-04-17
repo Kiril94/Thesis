@@ -27,14 +27,16 @@ def main():#
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--batch", required=True, type=int,
         help="batch to download, starting with 0")
+    parser.add_argument("-bs", "--batch_size", required=False,default=1000, type=int,
+        help="batch size")        
     parser.add_argument("-s", "--sids", required=True, type=str,
         help="File that contains sids to download")
     parser.add_argument("-u", "--update_d_files",required=False, default=False, type=str,
         help="Update downloaded files")
     args = parser.parse_args()
-    print(args)
     update_downloaded_files = args.update_d_files
     batch = args.batch
+    batch_size = args.batch_size
     sids_file_path = args.sids
     sids_file_name = (split(sids_file_path)[1]).split('.')[0]
 
@@ -54,16 +56,12 @@ def main():#
     downloaded_ls = download.get_downloaded_volumes_ls()
     print('interesection', len(set(group_list).intersection(set(downloaded_ls))))
     group_list = list(set(group_list).difference(set(downloaded_ls)))
-    #print('Download 3dt1 scans that occur in pairs')
     print("Volumes still to download: ", len(group_list))
-
     use_batches = True
     # 5 batches are needed
     if use_batches:
-        #batch = 0
         print("batch:", batch)
         start = 0
-        batch_size = 1000
         df_group = df_all[df_all.SeriesInstanceUID.isin(group_list[start+batch*batch_size:start+batch_size*(batch+1)])]
     else:
         df_group = df_all[df_all.SeriesInstanceUID.isin(group_list)]
