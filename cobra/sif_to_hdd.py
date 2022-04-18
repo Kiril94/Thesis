@@ -31,10 +31,14 @@ def main():#
         help="batch size")        
     parser.add_argument("-s", "--sids", required=True, type=str,
         help="File that contains sids to download")
-    parser.add_argument("-u", "--update_d_files",required=False, default=False, type=str,
+    parser.add_argument("-u", "--update_d_files",required=False, default=False, type=bool,
+        help="Update downloaded files")
+    parser.add_argument("-d", "--download_files",required=False, default=True, type=bool,
         help="Update downloaded files")
     args = parser.parse_args()
     update_downloaded_files = args.update_d_files
+    download_files = args.download_files
+
     batch = args.batch
     batch_size = args.batch_size
     sids_file_path = args.sids
@@ -52,7 +56,8 @@ def main():#
         print("Save list of already downloaded volumes")
         num_pat, num_vol = download.save_list_downloaded_volumes_and_patients()
         print(num_pat, "Patients and", num_vol, "volumes already downloaded")
-
+    if not download_files:
+        assert False
     downloaded_ls = download.get_downloaded_volumes_ls()
     print('interesection', len(set(group_list).intersection(set(downloaded_ls))))
     group_list = list(set(group_list).difference(set(downloaded_ls)))
