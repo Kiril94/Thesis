@@ -28,6 +28,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from utilities import bayesian_opt
 import matplotlib.pylab as pylab
+#import proplot as pplt
 params = {'figure.dpi':300,
         'legend.fontsize': 18,#
         'figure.figsize': [8, 5],
@@ -70,10 +71,13 @@ sq = 'Sequence'
 df_init = pd.read_pickle(f"{table_dir}/scan_tables/scan_init.pkl")
 # df_init = pd.read_csv(
     # join(table_dir, 'neg_pos_clean.csv'), nrows=80000)
+df_init.Positive = 0 
+df_init.loc[df_init.days_since_test>=-4, 'Positive'] = 1
 #%%
 # In[Missing values]
 df_all = df_init.dropna(axis=1, 
         thresh=int(0.5*df_init.shape[0] + 1)) #keep columns with less than 50% missing
+
 print('Remaining columns after dropping those with more than 50% missing')
 print(df_all.keys())
 #%%
@@ -162,7 +166,7 @@ fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
 #%%
 # In[PLot class counts, no pos. neg.]
 #fig, ax = plt.subplots()
-nice_labels_dic = {'flair':'FLAIR','t2':'T2', 'other':'OIS','t1':'T1','swi':'SWI','dwi':'DWI',
+nice_labels_dic = {'flair':'FLAIR','t2':'T2', 'other':'Other','t1':'T1','swi':'SWI','dwi':'DWI',
     'none_nid':'Unknown'}
 mpl.rcParams['figure.dpi'] = 300
 print(plt.rcParams['axes.prop_cycle'].by_key()['color'])
@@ -196,7 +200,7 @@ fig, ax = svis.bar(n_labels, neg_pat_count_seq.values,
 svis.bar(n_labels,pos_pat_count_seq.values, fig=fig, ax=ax,
          bottom=neg_pat_count_seq.values, label='pos',
          color=svis.Color_palette(0)[0], 
-         kwargs={'lgd':True, 'xlabel':'Sequence Type','title':'All Patients',
+         kwargs={'lgd':True, 'xlabel':'Sequence Type','title':'',
                  'ylabel':'Patient Count'},
          save=True, 
          figname=f"{fig_dir}/sequence_pred_new/seq_patient_count.png")
