@@ -57,6 +57,7 @@ def create_vol_dic(nii_file, brain_regions_dic, inv_id_map):
     volume_dic = {'newID':newid, 'SeriesInstanceUID':sid}
     for region, intensity in brain_regions_dic.items():
         volume_dic[region] = np.sum(arr==intensity)
+        #FIXME it's not equivalent to actual whole brain volume, should be the sum of all brain regions instead
         if region=='Background':
             volume_dic['Whole_Brain'] = np.sum(arr!=intensity)
     return volume_dic
