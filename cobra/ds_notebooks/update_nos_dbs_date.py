@@ -7,6 +7,7 @@ if base_dir not in sys.path:
 from os.path import join
 import pickle
 import numpy as np
+import pandas as pd
 import datetime
 #%%
 fig_dir = join(base_dir, 'figs')
@@ -15,9 +16,11 @@ with open(join(table_dir, 'scan_tables','scan_after_sq_pred_dst.pkl'), 'rb') as 
     dfc = pickle.load(f)
 
 #%%
+df_dbs = pd.read_csv('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\distance_between_slices\\all_distances.txt', 
+    header=None, delimiter=' ', names=['SeriesInstanceUID','DistanceBetweenSlices'])
 # df_nos = dfc[((dfc.MRAcquisitionType=='3D') | (dfc.MRAcquisitionType.isna())) \
     # & (dfc.Sequence=='t1') & (dfc.NumberOfSlices.isna())]
-
+print(df_dbs)
 # nos_dic2 = utils.save_number_of_slices_to_txt(df_nos, 'nos2.txt', 'Y:\\', 'F:\\')
 # with open("nos2.pkl", 'wb') as f:
     # pickle.dump(nos_dic2, f)

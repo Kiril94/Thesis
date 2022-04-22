@@ -211,7 +211,7 @@ if __name__=="__main__":
     compute_distance = True
     if compute_distance:
         rest_sids = sorted(get_rest_sids(
-            join(base_dir, 'data/t1_cross/3dt1_sids2.pkl'),
+            join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'),
             join(write_file_dir, 'all_distances.txt')))
         print(len(rest_sids), 'sids before removing non-downloaded volumes')
         print('Take only downloaded volumes')

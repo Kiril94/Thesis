@@ -39,7 +39,7 @@ eng.addpath('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\dcm2nii\\dcm2nii_mat\\spm12
 # load necessary files
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
-with open(join(data_cross_dir, "cs_sids_unmatched.pkl"), 'rb') as f:
+with open(join(data_long_dir, "maybe_missing_seqs.pkl"), 'rb') as f:
     sids_ls = pickle.load(f)
 with open(join(tables_dir, "disk_series_directories.json"), 'rb') as f:
     dir_dic = json.load(f)
