@@ -63,7 +63,6 @@ def main():#
     group_list = list(set(group_list).difference(set(downloaded_ls)))
     print("Volumes still to download: ", len(group_list))
     use_batches = True
-    # 5 batches are needed
     if use_batches:
         print("batch:", batch)
         start = 0
