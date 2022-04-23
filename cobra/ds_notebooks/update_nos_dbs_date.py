@@ -16,11 +16,15 @@ with open(join(table_dir, 'scan_tables','scan_after_sq_pred_dst.pkl'), 'rb') as 
     dfc = pickle.load(f)
 
 #%%
-df_dbs = pd.read_csv('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\distance_between_slices\\all_distances.txt', 
+# In[Add distance between slices]
+
+df_dbs = pd.read_csv('C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_cross\\distance_between_slices\\all_distances.txt', 
     header=None, delimiter=' ', names=['SeriesInstanceUID','DistanceBetweenSlices'])
+dfc = pd.merge(dfc.drop(columns=['DistanceBetweenSlices']), df_dbs, on='SeriesInstanceUID', how='left')
+print(dfc.keys())
 # df_nos = dfc[((dfc.MRAcquisitionType=='3D') | (dfc.MRAcquisitionType.isna())) \
     # & (dfc.Sequence=='t1') & (dfc.NumberOfSlices.isna())]
-print(df_dbs)
+#print(dfc.DistanceBetweenSlices)
 # nos_dic2 = utils.save_number_of_slices_to_txt(df_nos, 'nos2.txt', 'Y:\\', 'F:\\')
 # with open("nos2.pkl", 'wb') as f:
     # pickle.dump(nos_dic2, f)
@@ -50,4 +54,6 @@ dfc.loc[mask,'InstanceCreationDate'] = datetime.datetime(2018, 1, 1)
 with open(join(table_dir, 'scan_tables','scan_after_sq_pred_dst_nos_date.pkl'), 'wb') as f:
     pickle.dump(dfc,f)
 #%%
+dfc = dfc.drop_duplicates()
 dfc.to_csv(join(table_dir, 'scan_tables','scan_after_sq_pred_dst_nos_date.csv'), index=False)
+#%%

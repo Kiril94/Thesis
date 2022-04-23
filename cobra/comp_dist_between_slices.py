@@ -202,7 +202,8 @@ script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 table_dir = join(base_dir, 'data', 'tables')
 dicom_base_dir = "F:/CoBra/Data/dcm"
-write_file_dir = join(base_dir, 'data/t1_cross/distance_between_slices')
+print('There are two different distance between slices files (long, cross), be cautious!')
+write_file_dir = join(base_dir, 'data/t1_longitudinal/distance_between_slices')
 
 with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
     volume_dir_dic = json.load(json_file)
@@ -211,8 +212,8 @@ if __name__=="__main__":
     compute_distance = True
     if compute_distance:
         rest_sids = sorted(get_rest_sids(
-            join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'),
-            join(write_file_dir, 'all_distances.txt')))
+            sids_path=join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'),
+            all_dist_path=join(write_file_dir, 'all_distances.txt')))
         print(len(rest_sids), 'sids before removing non-downloaded volumes')
         print('Take only downloaded volumes')
         with open(join(dicom_base_dir, 'volume_log.txt'), 'r') as f:
