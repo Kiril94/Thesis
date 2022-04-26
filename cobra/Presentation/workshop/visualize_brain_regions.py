@@ -1,6 +1,7 @@
 #%%
 import pandas as pd
 import numpy as np
+import pickle
 #%%
 # In[Parahippocampal gyrus]
 dfm = pd.read_csv('DK_template.csv')
@@ -47,3 +48,54 @@ dfm.iloc[[0]].to_csv('DK_anterior_cingulate.csv', index=None)
 dfm = pd.read_csv('DK_template.csv')
 dfm.iloc[0,1:] = np.random.uniform(size=len(dfm.keys())-1)*5
 dfm.iloc[[0]].to_csv('DK_rainbow.csv', index=None)
+
+
+#%%
+#In[z-values]
+# Load dict
+def get_key_ls(keys, st):
+    return [k for k in keys if st in k]
+with open('zvalues_cov.pkl', 'rb') as f:
+    zdc = pickle.load(f)
+#print(zdc)
+print(zdc)
+dfm = pd.read_csv('DK_template.csv')
+keys = list(dfm.keys()) 
+br_dic = {'Rolandic Operculum':get_key_ls(keys, 'parsopercularis')+\
+        get_key_ls(keys, 'triangularis')+get_key_ls(keys, 'parsorbitalis')+\
+        get_key_ls(keys, 'superiortemporal'), 
+        'Orbitofrontal Cortex':get_key_ls(keys,'orbitofrontal'),
+        'Heschls Gyrus':get_key_ls(keys, 'transverse'),
+        'Cingulate Gyrus':[],
+        'Bilateral Insulas':[],
+        'Bilateral Hipocampi':get_key_ls(keys, 'Hippo'),
+        'Parahippocampal Gyrus':get_key_ls(keys, 'parahi'),
+        'Temporal Pole':get_key_ls(keys, 'temporalpole'),
+        'Anterior Cingulate Cortex':[],
+        'Supramarginal Gyrus':get_key_ls(keys, 'supramarginal'),
+        'Ventricles':get_key_ls(keys, 'Ventricle')+get_key_ls(keys, 'Lat-Vent'),
+        'Whole Brain':[]
+        }
+print(br_dic)
+#'Anterior Cingulate Cortex':get_key_ls(keys, 'anteriorcingulate'),
+#'Bilateral Insulas':get_key_ls(keys,'insula'),
+# Set z-values
+keys.remove('Image-name-unique')
+dfm[keys] = 0
+for br, z in zdc.items():
+    for br_temp in br_dic[br]:
+        dfm[br_temp] = z
+dfm.iloc[[0]].to_csv('DK_z_values_cov.csv', index=None)
+dfm.head()
+
+#%%
+#In[Color whole brain]
+dfm = pd.read_csv('DK_template.csv')
+keys = list(dfm.keys())
+keys.remove('Image-name-unique')
+dfm[keys] = zdc['Whole Brain']
+dfm.iloc[[0]].to_csv('DK_z_values_cov_wb.csv', index=None)
+#%%
+# %%
+import scipy.stats as ss
+print(ss.norm.cdf(-zdc['Whole Brain']))
