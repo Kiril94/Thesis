@@ -25,11 +25,11 @@ def main():#
     data_dir = join(base_dir, 'data')
     table_dir = join(data_dir, 'tables')
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--batch", required=True, type=int,
+    parser.add_argument("-b", "--batch", required=False, type=int,
         help="batch to download, starting with 0")
     parser.add_argument("-bs", "--batch_size", required=False,default=1000, type=int,
         help="batch size")        
-    parser.add_argument("-s", "--sids", required=True, type=str,
+    parser.add_argument("-s", "--sids", required=False, type=str,
         help="File that contains sids to download")
     parser.add_argument("-u", "--update_d_files",required=False, default=False, type=bool,
         help="Update downloaded files")
@@ -37,6 +37,10 @@ def main():#
         help="Update downloaded files")
     args = parser.parse_args()
     update_downloaded_files = args.update_d_files
+    if update_downloaded_files:
+        print("Save list of already downloaded volumes")
+        num_pat, num_vol = download.save_list_downloaded_volumes_and_patients()
+        print(num_pat, "Patients and", num_vol, "volumes already downloaded")
     download_files = args.download_files
 
     batch = args.batch
@@ -52,10 +56,6 @@ def main():#
     print("Using sids from the file: ", sids_file_path )
     with open(sids_file_path, 'rb') as f:
         group_list = pickle.load(f)
-    if update_downloaded_files:
-        print("Save list of already downloaded volumes")
-        num_pat, num_vol = download.save_list_downloaded_volumes_and_patients()
-        print(num_pat, "Patients and", num_vol, "volumes already downloaded")
     if not download_files:
         assert False
     downloaded_ls = download.get_downloaded_volumes_ls()
