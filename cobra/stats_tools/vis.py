@@ -21,7 +21,7 @@ base_dir = split(os.getcwd())[0]
 if base_dir not in sys.path:
     sys.path.append(base_dir)
 
-plt.style.use(join(base_dir, 'utilities', 'plot_style.txt'))
+#plt.style.use(join(base_dir, 'utilities', 'plot_style.txt'))
 def quickplot(x, kind='scatter', y=None, 
         xlabel='', ylabel='', title=''):
     fig, ax = plt.subplots()

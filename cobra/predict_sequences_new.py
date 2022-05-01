@@ -28,16 +28,18 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from utilities import bayesian_opt
 import matplotlib.pylab as pylab
+import proplot as pplt
 #import proplot as pplt
-params = {'figure.dpi':300,
-        'legend.fontsize': 18,#
-        'figure.figsize': [8, 5],
-         'axes.labelsize': 18,
-         'axes.titlesize':18,
-         'xtick.labelsize':18,
-         'ytick.labelsize':18}
-pylab.rcParams.update(params)
-plt.style.use('ggplot')
+# params = {'figure.dpi':300,
+        # 'legend.fontsize': 18,#
+        # 'figure.figsize': [8, 5],
+        #  'axes.labelsize': 18,
+        #  'axes.titlesize':18,
+        #  'xtick.labelsize':18,
+        #  'ytick.labelsize':18}
+#pylab.rcParams.update(params)
+pplt.rc.cycle = 'ggplot'
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 #%%
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
@@ -154,8 +156,8 @@ print(seq_count)
 #%%
 # In[Plot sequence counts]
 # We need this later
-mpl.rcParams['figure.dpi'] = 400
-plt.style.use('ggplot')
+#mpl.rcParams['figure.dpi'] = 400
+#plt.style.use('ggplot')
 #labels = ['Not \nidentified', 'other', 'T1', 'T2', 'DWI', 'FLAIR', 'SWI', 'T2*']
 g = sns.countplot(x="Sequence", hue="Positive", data=df_all, hue_order=[1,0],
     order = df_all['Sequence'].value_counts().index)
@@ -168,21 +170,22 @@ fig.savefig(f"{fig_dir}/sequence_pred/volumes_sequence_count.png")
 #fig, ax = plt.subplots()
 nice_labels_dic = {'flair':'FLAIR','t2':'T2', 'other':'Other','t1':'T1','swi':'SWI','dwi':'DWI',
     'none_nid':'Unknown'}
-mpl.rcParams['figure.dpi'] = 300
-print(plt.rcParams['axes.prop_cycle'].by_key()['color'])
-plt.style.use('ggplot')
-fig, ax = plt.subplots()
+#mpl.rcParams['figure.dpi'] = 300
+#print(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+#plt.style.use('ggplot')
+fig, ax = plt.subplots(figsize=(4,3))
 labels = [nice_labels_dic[k] for k in df_all['Sequence'].value_counts().index]
 g2 = sns.countplot(x="Sequence", data=df_all, 
     order = df_all['Sequence'].value_counts().index, color='#8EBA42',ax=ax)
 #g2.set(xlabel=, ylabel=('# Scans'), xticklabels=labels,)
-ax.set_xlabel('Class', fontsize=19)
-ax.set_ylabel('# Scans', fontsize=19)
+plt.minorticks_off()
+ax.set_xlabel('Class', )
+ax.set_ylabel('# Scans')
 ax.set_xticklabels(labels)
 ax.set_ylim(0,81000)
-#fig2 = g2.get_figure()
+
 fig.tight_layout()
-fig.savefig(f"{fig_dir}/sequence_pred_new/volumes_sequence_count.png")
+fig.savefig(f"{fig_dir}/sequence_pred_new/volumes_sequence_count.png", dpi=1000)
 print(df_all.Sequence.value_counts())
 print(np.sum(df_all.Sequence.value_counts())-df_all.Sequence.value_counts()['none_nid'])
 #%%
@@ -717,10 +720,14 @@ pred_test = np.argmax(pred_prob_test, axis=1)
 
 inds = np.argsort(counts)[::-1]
 labels = [nice_labels_dic[inv_tgt_dic[k]] for k in labels[inds]]
-svis.bar(labels, counts[inds],
-         kwargs={'xlabel':'Sequence Type', 'title':'',
-                 },
-         save=True, figname=f"{fig_dir}/sequence_pred_new/predicted_seq_count.png")
+fig, ax1 = plt.subplots()
+ax1.bar(labels, counts[inds])
+ax1.set_xlabel('Sequence Type')
+ax1.set_ylabel('# Scans')
+#svis.bar(labels, counts[inds],
+#         kwargs={'xlabel':'Sequence Type', 'title':'',
+#                 },
+#         save=True, figname=f"{fig_dir}/sequence_pred_new/predicted_seq_count.png")
 
 
 #%%
@@ -784,10 +791,10 @@ df_final = pd.merge(df_init, df_pred_seqs[[SID_k, sq]], on=SID_k, how='inner')
 assert len(df_final)==len(df_pred_seqs)
 #%%
 # In[Examine and save final df]
-df_final.to_csv(
-    f"{table_dir}/scan_tables/scan_after_sq_pred.csv", index=False)
-df_final.to_pickle(
-    f"{table_dir}/scan_tables/scan_after_sq_pred.pkl")
+#df_final.to_csv(
+#    f"{table_dir}/scan_tables/scan_after_sq_pred.csv", index=False)
+#df_final.to_pickle(
+#    f"{table_dir}/scan_tables/scan_after_sq_pred.pkl")
 print(len(df_final))
 #%%
 
@@ -864,6 +871,9 @@ plt.show()
 fig2.tight_layout()
 if save_legend:
     fig2.savefig(f"{fig_dir}/sequence_pred_new/legend.png")
+
+#%%
+df_init.days_since_test
 #%%
 df_test_pred.groupby(sq).count()
 #%%
