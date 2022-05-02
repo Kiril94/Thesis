@@ -39,14 +39,26 @@ for pid in df_pat.PatientID.unique():
     dates = df_pat[df_pat.PatientID==pid].InstanceCreationDate
     date1 = dt.strptime(dates.iloc[0], '%Y-%m-%d')
     date2 = dt.strptime(dates.iloc[1], '%Y-%m-%d')
-    for index, row in dfcp.iterrows():
+    i=0
+    for index, row in dfcp.iterrows(): 
         sid = row.SeriesInstanceUID
-        if row.InstanceCreationDate==date1:
+        try:
             src_dir = disk_dcm_dir_dic[sid]
+        except Exception as e: 
+            print(e)
+            continue
+        if i==0:
+            doc_dir = join(split(src_dir)[0], 'DOC')
+            if os.path.exists(doc_dir):
+                if not os.path.exists(join(tgt_base_dir, pid, 'DOC')):
+                    shutil.copytree(doc_dir, join(tgt_base_dir, pid, 'DOC'))
+                print('d', end='')
+            i+=1
+        if row.InstanceCreationDate==date1:
             tgt_dir = join(tgt_base_dir, pid,'study1',sid)
             if os.path.exists(tgt_dir):
                 continue
-            shutil.copytree(src_dir, tgt_dir)
+            shutil.copytree(src_dir, tgt_dir)    
             print('.', end='')
         elif row.InstanceCreationDate==date2:
             src_dir = disk_dcm_dir_dic[sid]
@@ -56,7 +68,7 @@ for pid in df_pat.PatientID.unique():
             shutil.copytree(src_dir, tgt_dir)
             print('.', end='')
         else:
-            print('Dates do not correspong')
+            print('Dates do not correspond')
     #date2 = dt(dates.iloc[1])
     #print(pat)
     #print(disk_dcm_dir_dic[group_list[0]])
