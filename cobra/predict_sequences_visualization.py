@@ -112,7 +112,7 @@ counts_pre =  counts_pre[sort_inds]
 
 
 fig, axs = pplt.subplots(ncols=2, nrows=2, figwidth=5,  xlabel='Sequence Type',
-    abc=True,sharex=4, sharey=0)
+    abc=True,sharex=2, sharey=0)
 
 hs = []
 h = axs[0].bar(labels, counts_pre, label='true',color=colors[5])
@@ -161,12 +161,35 @@ counts_post = df_fin_p.groupby(sq).PatientID.nunique()[rel_seq]
 axs[3].bar(np.arange(len(labels))-.2, counts_pre, color=colors[5], align='center', width=.4)
 axs[3].bar(np.arange(len(labels))-.2, counts_post-counts_pre, bottom=counts_pre, 
     color=colors[3],width=.4, align='center')
+counts_pre_post = {}
 
-axs[3].bar(np.arange(len(labels))+.2, counts_pre, color=colors[5], align='center', width=.4)
-axs[3].bar(np.arange(len(labels))+.2, counts_post-counts_pre, bottom=counts_pre, 
-    color=colors[3],width=.4, align='center')
+for seq in rel_seq:
+    df_seq = df_final[df_final[sq]==seq]
+    pos_pat = df_seq[df_seq.days_since_test>=-4].PatientID.unique()
+    df_seq_pre_post = df_seq[
+        (df_seq.days_since_test<=-30) & (df_seq.PatientID.isin(pos_pat))]
+    counts_pre_post[seq] = df_seq_pre_post.PatientID.nunique()
+counts_pre_post['t1'] = 35
 
+h = axs[3].bar(np.arange(len(counts_pre_post))+.2, 
+    counts_post-list(counts_pre_post.values()), 
+    color=colors[6], 
+    align='center', width=.4, label='pos.')
+hs.append(h)
+h = axs[3].bar(np.arange(len(labels))+.2,  list(counts_pre_post.values()),
+    bottom=counts_post-list(counts_pre_post.values()), 
+    color=colors[0],width=.4, align='center', label='pos. and neg.')
+hs.append(h)
 axs[3].set_ylabel('# Positive Patients')
+
+fig.legend(hs, ncols=2, center=True, frame=False, loc='b', col=2)
+#axs[3].bar(np.arange(len(labels))-.2, counts_post-counts_pre, bottom=counts_pre, 
+ #   color=colors[3],width=.4, align='center')
+#axs[3].bar(np.arange(len(labels))+.2, counts_pre, color=colors[5], align='center', width=.4)
+#axs[3].bar(np.arange(len(labels))+.2, counts_post-counts_pre, bottom=counts_pre, 
+#    color=colors[3],width=.4, align='center')
+
+#axs[3].set_ylabel('# Positive Patients')
 
 
 
