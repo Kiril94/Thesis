@@ -17,7 +17,10 @@ base_dir = Path(script_dir).parent.parent
 table_dir = f"{base_dir}/data/tables"
 with open(join(table_dir, 'scan_tables','scan_after_sq_pred_dst_nos_date.pkl'), 'rb') as f:
     dfc = pickle.load(f)
-
+dfc = dfc.drop_duplicates()
+#%%
+len(dfc)
+print(dfc.PatientID.nunique())
 #%%
 # In[Create chart]
 def print_pos_neg_scans(df):
