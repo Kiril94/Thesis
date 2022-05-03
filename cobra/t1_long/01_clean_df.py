@@ -22,6 +22,11 @@ dfc = dfc.drop_duplicates()
 len(dfc)
 print(dfc.PatientID.nunique())
 #%%
+df3dt1 = dfc[(dfc.MRAcquisitionType=='3D') & (dfc.NumberOfSlices>=64) & (dfc.Sequence=='t1')]
+sids_3dt1 = df3dt1.SeriesInstanceUID.unique()
+with open("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\data\\t1_longitudinal\\3dt1_sids.pkl", 'wb') as f:
+    pickle.dump(sids_3dt1, f)
+#%%
 # In[Create chart]
 def print_pos_neg_scans(df):
     dfp = df[df.days_since_test>=-4]
