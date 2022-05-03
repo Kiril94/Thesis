@@ -5,6 +5,7 @@ from pathlib import Path
 from os.path import join
 import pandas as pd 
 import shutil
+import numpy as np
 
 #from repository
 script_dir = os.path.realpath(__file__)
@@ -20,7 +21,7 @@ nii_included_dst_data_dir =  join(nii_excluded_dst_data_dir,"cmb_study")
 sif_dir = "Y:"
 
 
-# #%% 
+#%% 
 
 # patientsID = ['0272922a8e1331758757be7a7460571f',
 # '03e55f79b47c1c1e420c86337069e7fc',
@@ -210,7 +211,7 @@ sif_dir = "Y:"
 #%%
 # Find what exluded are converted already
 
-ids_excl = pd.read_csv(join(table_dir,"ids_swi_excluded_v3.csv"))
+ids_excl = pd.read_csv(join(table_dir,"SWIMatching","ids_swi_excluded_v3.csv"))
 info_swi_all = pd.read_csv(join(table_dir,'swi_all.csv'))
 info_excluded = info_swi_all[ info_swi_all['PatientID'].isin(ids_excl['PatientID']) ]
 
@@ -239,3 +240,180 @@ for idx,row in info_excluded.iterrows():
             log_file.write(f"{row['PatientID']},{row['SeriesInstanceUID']}\n")
             
 log_file.close()
+
+#%%
+#How many included are projections ?? 
+from pydicom.filereader import dcmread
+incl_names_table = ""
+#ids_excl = pd.read_csv(join(table_dir,"SWIMatching","ids_swi_included_v3.csv"))
+info_swi_all = pd.read_csv(join(table_dir,'swi_all.csv'))
+#info_included = info_swi_all[ info_swi_all['PatientID'].isin(ids_excl['PatientID']) ]
+
+series_directories_df = pd.read_csv(join(table_dir,'series_directories.csv'))
+info_swi_all = info_swi_all.merge(series_directories_df,on='SeriesInstanceUID',how='inner',validate='one_to_one')
+info_swi_all['ImageType2'] = None
+info_swi_all['Downloaded_on_25_4_2021'] = 0
+
+print(info_swi_all.shape)
+
+main_path = Path("F:/CoBra/Data/dcm")
+phasemip = 0
+phase = 0
+mip = 0
+for idx,scan in info_swi_all.iterrows():
+    
+    print(idx)
+    directory = scan['Directory']
+    
+    #print(main_path/directory)
+    if os.path.exists(main_path/directory):
+        info_swi_all['Downloaded_on_25_4_2021'] = 1
+        pass
+    else:
+        continue
+    
+    filenames = next(os.walk(main_path/directory))[2]
+    
+    is_only_phase = True
+    not_phase_imtype = None
+    is_only_projection = True
+    not_projection_imtype = None
+    
+    for filename in filenames:
+        
+        try:
+            dcm = dcmread(main_path/directory/filename)
+
+            image_type_list = dcm.ImageType
+            #print(image_type_list)
+            if not("SW_P" in image_type_list):
+                is_only_phase = False
+                not_phase_imtype = image_type_list
+                
+            if not("PROJECTION IMAGE" in image_type_list):
+                is_only_projection = False
+                not_projection_imtype = image_type_list
+                
+            if (not is_only_phase)&(not is_only_projection):
+                break 
+        except:
+            pass 
+        
+    # print(not_phase_imtype)
+    # print(not_projection_imtype)
+    # print("|||||||||||||||||")
+    if (is_only_phase & is_only_projection):
+        info_swi_all.at[idx,"ImageType2"] = "phase mIP"
+        phasemip += 1
+    elif (is_only_phase & (not is_only_projection)):
+        info_swi_all.at[idx,"ImageType2"] = "phase"
+        phase += 1
+    elif ( (not is_only_phase) & is_only_projection):
+        info_swi_all.at[idx,"ImageType2"] = "mIP"
+        mip +=1
+        
+        
+n_phase = info_swi_all[info_swi_all['ImageType2']=='phase'].shape[0]
+n_mip = info_swi_all[info_swi_all['ImageType2']=='mIP'].shape[0]
+
+info_swi_all.to_csv(join(table_dir,"swi_all_withType.csv"),index=False)
+# %%
+
+info_included = pd.read_csv(join(table_dir,"SWIMatching","ids_swi_included_v3.csv"))
+names = pd.read_csv(Path(nii_included_dst_data_dir)/"included_nii_v3_names.csv")
+
+info_included = info_included.merge(names, on="SeriesInstanceUID", how='inner')
+
+wrong_format = info_included[ ((info_included['ImageType']=='mIP')|(info_included['ImageType']=='phase mIP')) ]
+
+#%%
+#move wrong files
+in_path = "F:/CoBra/Data/swi_nii/cmb_study/nii"
+out_path = "F:/CoBra/Data/swi_nii/cmb_study/wrong_format_nii"
+
+for idx,row in wrong_format.iterrows():
+    name = row['new_name']
+    shutil.move(f"{in_path}/{name}", f"{out_path}/{name}")
+    
+#%%
+# Read elegible swi and generate definite names
+df_ids_elegible = pd.read_csv(join(table_dir,"SWIMatching","elegible_swi.csv"))
+df_info_all = pd.read_csv(join(table_dir,"swi_all_withType.csv"))
+df_names = pd.read_csv(Path(nii_included_dst_data_dir)/"included_nii_v3_names.csv")
+
+df_info = df_names.merge(df_info_all, on="SeriesInstanceUID", how="inner", validate='one_to_one')
+#criteria: phase + minimal projection
+df_info_to_exclude = df_info[ ~df_info['PatientID'].isin(df_ids_elegible['PatientID'])]
+
+#criteria: phases
+manually_selected_to_exclude = ["020006.nii.gz","030004.nii.gz","070021.nii.gz","200074.nii.gz","200079.nii.gz"]
+df_info_to_exclude2 = df_info[df_info['new_name'].isin(manually_selected_to_exclude)]
+
+df_info_to_exclude = pd.concat([df_info_to_exclude,df_info_to_exclude2]).drop_duplicates()
+
+input_folder = Path(nii_included_dst_data_dir) / "nii"
+output_folder = Path(nii_included_dst_data_dir) / "old_nii"
+
+for idx,row in df_info_to_exclude.iterrows():
+    try:
+        shutil.move(str(input_folder/row['new_name']), output_folder)
+    except:
+        print(row["new_name"])
+    
+df_not_excluded = df_info[ ~df_info['PatientID'].isin(df_info_to_exclude['PatientID'])]
+df_not_excluded[ ["SeriesInstanceUID","old_path","new_name","month","n_vol"] ].to_csv(Path(nii_included_dst_data_dir)/"included_nii_v4_names.csv",index=False)
+df_not_excluded['PatientID'].to_csv(join(table_dir,"SWIMatching","ids_included_v4.csv"),index=False)
+# %% 
+# Find data for style transfer and no CMB 
+
+df_ids_elegible = pd.read_csv(join(table_dir,"SWIMatching","elegible_swi.csv"))
+df_info_all = pd.read_csv(join(table_dir,"swi_all_withType.csv"))
+df_included = pd.read_csv(join(table_dir,"SWIMatching","ids_included_v4.csv"))
+df_p = pd.read_csv(join(table_dir,"SWIMatching","ids_swi_excluded_pcmb_v3.csv"))
+
+manually_selected_phases = ['40e1d96dc65bace1de8024cfe9bce247',
+       '23c07a8d268c6b13be738ab440f6ebe2',
+       '9a685e62c3d45346daf2faedb148dc31',
+       '884cb3976459057e4af3bb8d83fc5dc8',
+       '92d0ddf5407f7ece16100dfbe6a6acf0']
+df_info_excl = df_info_all.merge(df_ids_elegible, on='PatientID', how="inner", validate="one_to_one")
+df_info_excl = df_info_all.merge(df_p, on='PatientID', how="inner", validate="one_to_one")
+df_info_excl = df_info_excl[ ~df_info_excl['PatientID'].isin(df_included['PatientID'])]
+df_info_excl = df_info_excl[ ~df_info_excl['PatientID'].isin(manually_selected_phases)]
+df_info_excl = df_info_excl[ (df_info_excl['ImageType2']!="phase mIP")&(df_info_excl['ImageType2']!="mIP")&(df_info_excl['ImageType2']!="phase")]
+df_info_excl.sort_values("p_cmb",inplace=True)
+df_info_excl.reset_index(inplace=True)
+
+manuf_groups = df_info_excl.groupby("ManufacturerModelName")
+
+column_names = ["PatientID","ManufacturerModelName","p_cmb","p_cmb_label"]
+np_saved_info = np.empty(shape=(2*manuf_groups.count().shape[0],4),dtype=object)
+i = 0
+for idx,group in manuf_groups:
+    
+    low = group.head(2)
+    print(low["Downloaded_on_25_4_2021"])
+    np_saved_info[i,:] = [low['PatientID'].values[1],low['ManufacturerModelName'].values[1],low['p_cmb'].values[1],"low"]
+    
+    high = group.tail(2)
+    print(high["Downloaded_on_25_4_2021"])
+    np_saved_info[i+1,:] = [high['PatientID'].values[0],high['ManufacturerModelName'].values[0],high['p_cmb'].values[0],"high"]
+        
+    i+= 2
+    
+df_saved = pd.DataFrame(np_saved_info,columns=column_names)
+df_saved.to_csv(join(table_dir,"extracted_for_domain_adapt_v2.csv"),index=False)
+# %%
+
+disk_dir = "F:" #hdd
+dst_data_dir = join(disk_dir,"CoBra","Data")
+nii_excluded_dst_data_dir = join(dst_data_dir,"swi_nii")
+
+df_info_saved = df_info_all.merge(df_saved,on="PatientID",how="inner",validate="one_to_one")
+
+for idx,row in df_info_saved.iterrows():
+    
+    print(row['Directory'])
+    does_exist = os.path.exists(row['Directory'])
+    if (does_exist): print(os.listdir(row['Directory']))
+# %%

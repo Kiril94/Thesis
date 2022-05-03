@@ -44,8 +44,16 @@ high_excl = excluded_info.iloc[26:46]
 high_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"50_high_excluded.csv",index=False)
 conv_high_excl = high_excl[ high_excl['PatientID'].isin(converted['PatientID'])]
 
-rest_excl = excluded_info.iloc[46:]
+hig50_excluded = excluded_info.iloc[46:]
 
+#hig50_excluded['PatientID'].to_csv(tables_path/"SWIMatching"/"hig50_excludeduded.csv",index=False)
+hig50_excluded[ hig50_excluded['PatientID'].isin(converted['PatientID'])].to_csv(tables_path/"SWIMatching"/"hig50_excluded.csv",index=False)
+
+#%%
+rest_excl = excluded_info.iloc[46:]
+rest_excl = rest_excl[ rest_excl['PatientID'].isin(converted['PatientID'])]
+
+#rest_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"rest_excluded.csv",index=False)
 rest_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"rest_excluded.csv",index=False)
 
 

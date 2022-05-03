@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from os.path import join
 import pandas as pd 
+import numpy as np
 import shutil
 from cobra.dcm2nii import dcm2nii
 from cobra.download_data.basic import remove_file
@@ -22,7 +23,7 @@ def _log(msg,file=None):
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parents[1]  #cobra directory
 table_dir = join(base_dir, 'tables')
-input_file = join(table_dir,"SWIMatching",'50_high_excluded.csv')
+input_file = join(table_dir,"extracted_for_domain_adapt.csv")
 included = False
 
 #from hdd
@@ -31,10 +32,10 @@ dst_data_dir = join(disk_dir,"CoBra","Data")
 nii_excluded_dst_data_dir = join(dst_data_dir,"swi_nii")
 nii_included_dst_data_dir =  join(nii_excluded_dst_data_dir,"cmb_study")
 orig_folder = nii_excluded_dst_data_dir
-dst_folder = join(nii_excluded_dst_data_dir,"to_annotate","50_priority")
-dst_log_file = join(nii_excluded_dst_data_dir,"to_annotate","log_renamed_swi.txt")
-dst_log_file2 = join(nii_excluded_dst_data_dir,"to_annotate","log_failed_renaming_swi.txt")
-dst_log_file3 = join(nii_excluded_dst_data_dir,"to_annotate","log_not_previously_down_swi.txt")
+dst_folder = join(nii_excluded_dst_data_dir,"for_domain_adaptation")
+dst_log_file = join(nii_excluded_dst_data_dir,"for_domain_adaptation","log_renamed_swi.txt")
+dst_log_file2 = join(nii_excluded_dst_data_dir,"for_domain_adaptation","log_failed_renaming_swi.txt")
+dst_log_file3 = join(nii_excluded_dst_data_dir,"for_domain_adaptation","log_not_previously_down_swi.txt")
 # make destination directories if they dont exist
 if (not os.path.exists(dst_folder)): os.makedirs(dst_folder)
 
@@ -68,7 +69,8 @@ df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 
 df_info_to_rename = df_ids_to_rename.merge(df_scan_info,how='inner',left_on='PatientID',right_on='PatientID',validate='one_to_one')
 df_info_to_rename = df_info_to_rename.merge(df_volume_dir,how='inner',left_on='SeriesInstanceUID',right_on='SeriesInstanceUID',validate='one_to_one')
-df_info_to_rename.sort_values(by='Directory',inplace=True)
+df_info_to_rename = df_info_to_rename[df_info_to_rename['p_cmb_label']=="high"]
+#df_info_to_rename.sort_values(by='Directory',inplace=True)
 
 
 # log_names_path = join(nii_included_dst_data_dir,"included_nii_v3_names.csv")
@@ -77,7 +79,7 @@ df_info_to_rename.sort_values(by='Directory',inplace=True)
 # df_names['n_vol'] = df_names['new_name'].map(lambda x: x[2:-7])
 
 name_prev = ''
-n_vols_from_folder = 31
+n_vols_from_folder = 0
 for idx,row in df_info_to_rename.iterrows():
     
     try:
@@ -109,7 +111,7 @@ for idx,row in df_info_to_rename.iterrows():
         #     n_vols_from_folder = prev_max+1   
         
                 # define name                  
-        name = str(n_vols_from_folder).zfill(5) + '.nii.gz'
+        name = "H"+str(n_vols_from_folder).zfill(5) + '.nii.gz'
         
         # move file 
         
@@ -164,10 +166,22 @@ for idx,row in df_info_to_rename.iterrows():
                     log_file.write(f'{suid},{dir},{name}\n')
                     n_vols_from_folder += 1
                     name_prev = name
-                
+        
         elif (len(files_in_orig_path)>2):
-            print(f'More than 2 files in SeriesInstanceUID {suid}')
-            log_file2.write(suid+'\n')
+            
+            if  ( (len(list(filter(lambda x: x.endswith("_ph.nii.gz"),files_in_orig_path)))>0) & (len(list(filter(lambda x: x.endswith("_pha.nii.gz"),files_in_orig_path)))>0) ):
+                
+                orig_phase = list(filter(lambda x: x.endswith("_ph.nii.gz"),files_in_orig_path))[0]
+                orig_magnitud = list(filter(lambda x: x.startswith(orig_phase[:32]),files_in_orig_path))[0]
+                #copy both files
+                shutil.copy(join(orig_path,orig_magnitud),dst_path)
+                shutil.copy(join(orig_path,orig_phase),join(dst_folder,'phases',name[:-7]+'_ph.nii.gz'))        
+                log_file.write(f'{suid},{dir},{name}\n')
+                n_vols_from_folder += 1   
+                
+            else:             
+                print(f'More than 2 non-identified files in SeriesInstanceUID {suid}')
+                log_file2.write(suid+'\n')
         else:
             print(f'No files found in SeriesInstanceUID {suid}')
             log_file2.write(suid+'\n')      

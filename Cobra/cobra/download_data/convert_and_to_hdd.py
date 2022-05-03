@@ -21,7 +21,9 @@ def _log(msg,file=None):
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parents[1]  #cobra directory
 table_dir = join(base_dir, 'tables')
-input_file = join(table_dir,"SWIMatching",'rest_excluded.csv')
+#input_file = join(table_dir,"SWIMatching",'rest_excluded.csv')
+#input_file = "C:/Users/neus/Desktop/check_included_scans_v2.txt"
+input_file = join(table_dir,"extracted_for_domain_adapt.csv")
 included = False
 
 #from hdd
@@ -106,6 +108,8 @@ for idx,row in df_info_to_download.iterrows():
             if (len(files_in_origin)>len(files_in_dst)):
                 
                 missing_files = filter(lambda x: x not in files_in_dst, files_in_origin)
+                
+                print("Downloading missing files")
                 for file in missing_files:
                     shutil.copyfile(join(origin_dcm_file_path,file),join(dst_dcm_file_path,file))
                     
@@ -115,22 +119,32 @@ for idx,row in df_info_to_download.iterrows():
         else:   dst_nii_file_path = join(nii_excluded_dst_data_dir,scan_dir) 
 
         #convert
+        done = False
         if (os.path.exists(origin_nii_file_path)):
-            #move to swi folder 
-            shutil.copytree(origin_nii_file_path,dst_nii_file_path)
-            _log(f"Patient {row['PatientID']} nifti moved to swi folder.",log_file)
-        elif (os.path.exists(dst_nii_file_path) & len(next(os.walk(dst_nii_file_path))[2])>0):
-            #file already downloaded
-            _log(f"Patient {row['PatientID']} already downloaded.",log_file)
-            log_file4.write(row['PatientID']+'\n')
-        else: 
-            done = False
+            origin_no_phase_files = list(filter(lambda x: not x.endswith('_ph.nii.gz'),next(os.walk(origin_nii_file_path))[2]))
+            if len(origin_no_phase_files)>0:
+                #move to swi folder 
+                shutil.copytree(origin_nii_file_path,dst_nii_file_path)
+                _log(f"Patient {row['PatientID']} nifti moved to swi folder.",log_file)
+                done = True
+                    
+        elif (os.path.exists(dst_nii_file_path)):
+            dst_no_phase_files = list(filter(lambda x: not x.endswith('_ph.nii.gz'),next(os.walk(dst_nii_file_path))[2]))     
+            if len(dst_no_phase_files)>0:
+                #file already downloaded
+                _log(f"Patient {row['PatientID']} already downloaded.",log_file)
+                log_file4.write(row['PatientID']+'\n')
+                done = True
+        if not done: 
             while (not done):
                 if check_dicoms(dst_dcm_file_path, origin_dcm_file_path)==0: # check if all the dicoms are on the disk
                     dcm2nii_out = dcm2nii_safe(dst_dcm_file_path, dst_nii_file_path, 
                                             row['PatientID'], True)
                     if dcm2nii_out==0:
                         _log(f"Patient {row['PatientID']}: conversion from disk success",log_file)
+                        print("*******************************")
+                        print(next(os.walk(dst_nii_file_path))[2])
+                        print("*******************************")
                         done = True
                     else:
                         if check_if_philips(dst_dcm_file_path)==0:
