@@ -25,7 +25,8 @@ import matplotlib.lines as mlines
 from ast import literal_eval
 plt.style.use(join(base_dir,'utilities', 'plot_style.txt'))
 import importlib
-
+plt.style.use('ggplot')
+#import proplot as pplt
 import matplotlib.dates as mdates
 from pylab import cm
 mpl.rcParams['pdf.fonttype'] = 42
@@ -41,6 +42,7 @@ params = {'figure.dpi':350,
 mpl.rcParams.update(params) 
 plt.style.use('ggplot')
 """
+#pplt.rc.cycle = 'ggplot'
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color'] 
 
 # %%
@@ -52,6 +54,7 @@ with gzip.open(join(table_dir, 'scan_3dt1_clean.gz'), 'rb') as f:
 df['positive_scan'] = 0
 df.loc[df.days_since_test>=-3, 'positive_scan'] = 1
 df.PixelSpacing = df.PixelSpacing.map(lambda x: x.strip("[]").split(" "))
+
 
 # %%
 # In[how many have scanner manufacturer, scanner type, b0 field strength]
@@ -116,7 +119,7 @@ neg_line = mlines.Line2D([], [], color=colors[1],  linestyle='-',
                           markersize=10, label='negative')                          
 ax.legend(handles=[pos_line, neg_line], loc=(.8,.9), fontsize=18)
 fig.tight_layout()
-fig.savefig(join(fig_dir, '3dt1','B0.png'),dpi=350)
+#fig.savefig(join(fig_dir, '3dt1','B0.png'),dpi=350)
 #%%
 df = df.dropna(subset=['PixelSpacing','SpacingBetweenSlices'],
     axis=0)
@@ -138,21 +141,101 @@ ax.set_xlim(0,1)
 ax.set_xlabel('RowSpacing')
 ax.set_ylabel('ColumnSpacing')
 ax.set_zlabel('SpacingBetweenSlices')
+#%%
+df.keys()
 
 #%%
-#%%
-plot_vars = ['RowSpacing','ColumnSpacing','SpacingBetweenSlices', 'SliceThickness']
+plot_vars = ['RowSpacing','ColumnSpacing','SpacingBetweenSlices', 'SliceThickness',
+                'Rows','Columns','NumberOfSlices']
 Q1 = df[plot_vars].quantile(0.25)
 Q3 = df[plot_vars].quantile(0.75)
 IQR = Q3 - Q1
 df_temp = df[~((df[plot_vars] < (Q1 - 1.5 * IQR)) |(df[plot_vars] > (Q3 + 1.5 * IQR))).any(axis=1)]
+color_dic = {0:colors[1], 1:colors[0]}
 sns_plot = sns.pairplot(df_temp, 
     vars=plot_vars, 
       diag_kind="kde", hue='positive_scan', 
-    plot_kws={"s": 13, 'alpha': 1}, palette='Set2', corner=True,
+    plot_kws={"s": 13, 'alpha': 1}, palette=color_dic, corner=True,
     )
+
+#sns_plot.savefig(f"{fig_dir}/3dt1/resolution_pairplot.png")
+labels_dic = {"SliceThickness":r"$d_\mathrm{slice}$"+ " in mm", 
+    "Rows":r'$N_\mathrm{rows}$', "Columns":r'$N_\mathrm{columns}$',
+    "NumberOfSlices":r"$N_\mathrm{slices}$",
+    'RowSpacing':r"$\Delta d_\mathrm{rows}$"+" in mm",
+    "ColumnSpacing":r"$\Delta d_\mathrm{columns}$"+" in mm",
+    "SpacingBetweenSlices":r"$\Delta d_\mathrm{slices}$"+" in mm", '':''}
+num_plot_vars = len(plot_vars)
+ax_mat = np.tril(np.reshape(np.arange(num_plot_vars**2), (num_plot_vars, num_plot_vars)))
+ax_mat = ax_mat[ax_mat!=0]
+print(ax_mat)
+# sns_plot.axes.flatten()[4].set_xlabel('asas')
+for i, ax in enumerate(sns_plot.axes.flatten()):
+    if i in ax_mat:
+        ax.set_xlabel(labels_dic[ax.get_xlabel()], fontsize=20)
+        ax.set_ylabel(labels_dic[ax.get_ylabel()], fontsize=20)
+        ax.tick_params(labelsize=15)
 sns_plot.tight_layout()
-sns_plot.savefig(f"{fig_dir}/3dt1/resolution_pairplot.png")
+#%%
+
+sns_plot = sns.pairplot(df_temp, 
+    vars=plot_vars,
+      diag_kind="kde", hue='Sequence', 
+     hue_order=['t1', 't2', 'flair', 'dwi','swi', 'other', 'none_nid'],
+    plot_kws={"s": 13, 'alpha': 1},
+     markers=markers_dic, palette='Set1', corner=True,
+    )
+# diag_kws={'log':False}
+sns_plot._legend.set_title('Class')
+
+labels_dic = {'SliceThickness':"Slice Thickness in mm", 
+    'RowSpacing':"Row Spacing in mm",'ColumnSpacing':"Column Spacing in mm",
+    "SpacingBetweenSlices":"Spacing Between Slices in mm"}
+
+print('Limits have to be adjusted, and axis numbers too')
+num_plot_vars = len(plot_vars)
+ax_mat = np.tril(np.reshape(np.arange(num_plot_vars**2), (num_plot_vars, num_plot_vars)))
+ax_mat = ax_mat[ax_mat!=0]
+for i, ax in enumerate(sns_plot.axes.flatten()):
+    if i in ax_mat:
+        ax.set_xlabel(labels_dic[ax.get_xlabel()], fontsize=20)
+        ax.set_ylabel(labels_dic[ax.get_ylabel()], fontsize=20)
+        ax.tick_params(labelsize=15)
+    # if i==6:
+        # ax.set_ylim(-10,450)
+    # if i in ax_mat[[1,3,6,10, 15]]:
+        # ax.set_xlim(-10,510)
+    # if i in ax_mat[[9,10,11,12, 13]]:
+        # ax.set_xlim(-10,320)
+    # if i%5==0:
+        # ax.set_xlim(-10,400)
+    # if i>19:
+        # ax.set_ylim(-10,300)
+    # if (i-1)%5==0:
+        # ax.set_xlim(-400,12500)
+    # if (i+1)%5==0:
+        # ax.set_xlim(-10,250)
+handles = sns_plot._legend_data.values()
+labels = sns_plot._legend_data.keys()
+new_labels = ['T1', 'T2', 'FLAIR', 'DWI','SWI', 'OIS','Unknown']
+lgd_labels_dic = dict(zip(['t1','t2','flair','dwi','swi','other','none_nid'],
+    new_labels))
+sns_plot._legend.remove()
+plt.legend(handles=handles, labels=[lgd_labels_dic[l] for l in labels], 
+    loc=(-.5,3.95), ncol=1, fontsize=20)
+sns_plot.savefig(f"{fig_dir}/sequence_pred_new/X_pairplot.png")
+plt.clf() # Clean parirplot figure from sns 
+Image(filename=f"{fig_dir}/sequence_pred_new/X_pairplot.png")
+
+
+
+
+
+
+
+
+
+
 #%%
 # In[Get number of acquired volumes per patient]
 scans_per_patient = df.groupby('PatientID').size()
