@@ -168,14 +168,23 @@ labels_dic = {"SliceThickness":r"$d_\mathrm{slice}$"+ " in mm",
 num_plot_vars = len(plot_vars)
 ax_mat = np.tril(np.reshape(np.arange(num_plot_vars**2), (num_plot_vars, num_plot_vars)))
 ax_mat = ax_mat[ax_mat!=0]
-print(ax_mat)
+#print(ax_mat)
 # sns_plot.axes.flatten()[4].set_xlabel('asas')
 for i, ax in enumerate(sns_plot.axes.flatten()):
     if i in ax_mat:
         ax.set_xlabel(labels_dic[ax.get_xlabel()], fontsize=20)
         ax.set_ylabel(labels_dic[ax.get_ylabel()], fontsize=20)
         ax.tick_params(labelsize=15)
-sns_plot.tight_layout()
+handles = sns_plot._legend_data.values()
+labels = sns_plot._legend_data.keys()
+new_labels = ['positive', 'negative']
+lgd_labels_dic = dict(zip(['1','0'],
+    new_labels))
+sns_plot._legend.remove()
+plt.legend(handles=handles, labels=[lgd_labels_dic[l] for l in labels], 
+    loc=(-.5,3.95), ncol=1, fontsize=20)
+#sns_plot.tight_layout()
+fig.savefig(join(fig_dir, '3dt1','B0.png'),dpi=1000, bbox_inches='tight')
 #%%
 
 sns_plot = sns.pairplot(df_temp, 
