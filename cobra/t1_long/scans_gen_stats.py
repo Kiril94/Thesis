@@ -52,10 +52,38 @@ table_dir = f"{base_dir}/data/tables"
 with gzip.open(join(table_dir, 'scan_3dt1_clean.gz'), 'rb') as f:
     df = pickle.load(f)
 df['positive_scan'] = 0
-df.loc[df.days_since_test>=-3, 'positive_scan'] = 1
+df.loc[df.days_since_test>=-4, 'positive_scan'] = 1
 df.PixelSpacing = df.PixelSpacing.map(lambda x: x.strip("[]").split(" "))
+df = df[df.InstanceCreationDate!=df.InstanceCreationDate.min()]
+df.InstanceCreationDate.hist()
 
+# %%
+df.SeriesInstanceUID.nunique()
+#%%
+# In[Counts]
+print(len(df), df.PatientID.nunique())
+df_pos = df[df.days_since_test>=-4]
+pos_pats = df_pos.PatientID.unique() 
+print(len(df_pos), len(pos_pats))
 
+df_long_pats_case = df[df.PatientID.isin(pos_pats) & (df.days_since_test<=-30)]
+long_cases = df_long_pats_case.PatientID.unique()
+df_long_case = df[df.PatientID.isin(long_cases) & ( (df.days_since_test<=-30) | (df.days_since_test>=-4) ) ]
+print(len(df_long_case),len(long_cases))
+df_neg = df[((df.days_since_test<=-30)|df.days_since_test.isna()) & ~df.PatientID.isin(long_cases) ]
+df_neg_gb = df_neg.groupby('PatientID').InstanceCreationDate.nunique()
+neg_long_pats = df_neg_gb[df_neg_gb>=2].index.tolist()
+df_cont_long = df[df.PatientID.isin(neg_long_pats) & ((df.days_since_test<=-30)|df.days_since_test.isna())]
+print(len(df_cont_long), df_cont_long.PatientID.nunique())
+
+df_cont_long_gb = df_cont_long.groupby('PatientID').SeriesInstanceUID.nunique()
+len(df_cont_long_gb[df_cont_long_gb>=2].index.tolist())
+#len(dfc_gb_long_pats)
+
+#%%
+# In[Cross-sec]
+df_neg = df[~df.PatientID.isin(pos_pats) & ( (df.days_since_test<=-30) | (df.days_since_test.isna()) )]
+print(len(df_neg), df_neg.PatientID.nunique())
 # %%
 # In[how many have scanner manufacturer, scanner type, b0 field strength]
 TE_k = 'EchoTime'
