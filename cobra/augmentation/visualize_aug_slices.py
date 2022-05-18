@@ -100,7 +100,7 @@ fig.savefig("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\figs\\augmentations\\augmen
 #%%
 gs = pplt.GridSpec(nrows=2, ncols=3, pad=0)
 fig = pplt.figure(span=False, refaspect=.45, wspace=('0pt','0pt',))
-
+pplt.rc['abc.size']=15
 ax = fig.subplot(gs[:, 0])
 ax.set_title('Original')
 ax.imshow(x_org[:,120,:].T, cmap='gray')
@@ -127,7 +127,8 @@ fig.format(
      yticklabels=[], xticklabels=[],
      xtickminor=False, ygridminor=False,abc=True
 )
-fig.savefig("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\figs\\augmentations\\augmentations_000_strong.png")
+fig.savefig("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\figs\\augmentations\\augmentations_000_strong.png",
+    dpi=300, bbox_inches='tight')
 #%%
 r1 = load_arr('000450', which='c')
 r2 = load_arr('000379', which='c')
@@ -138,16 +139,16 @@ r6 = load_arr('006319', which='c')
 d1 = load_arr('020131', which='c')
 d2 = load_arr('024161', which='c')
 #%%
-fig, axs = pplt.subplots(ncols=3, nrows=2, share=False,
-    wspace=('1pt','1pt',), abc=True,figsize=(9,7))
-
+fig, axs = pplt.subplots(ncols=3, nrows=1, share=False,
+    wspace=('1pt','1pt',), abc=False,figsize=(9,7))
+pplt.rc['abc.size']=18
 # Augmented
 axs[0].imshow(r1[50:-50,190,:], cmap='gray',aspect=.6)
 axs[1].imshow(r2[50:-50,160,:], cmap='gray',aspect=.6)
 axs[2].imshow(r3[30:-30,260,:], cmap='gray',aspect=.6)
-axs[3].imshow(r4[:-40,140,:], cmap='gray',aspect=.6)
-axs[4].imshow(d1[:-10,260,:], cmap='gray',aspect=.2)
-axs[5].imshow(d2[60:-60,10:-100,50].T, cmap='gray',aspect=1.2)
+#axs[3].imshow(r4[:-40,140,:], cmap='gray',aspect=.6)
+#axs[4].imshow(d1[:-10,260,:], cmap='gray',aspect=.2)
+#axs[5].imshow(d2[60:-60,10:-100,50].T, cmap='gray',aspect=1.2)
 axs.format(
     xticks=[],
     yticks=[],
@@ -155,4 +156,5 @@ axs.format(
     xticklabels=[],
     xtickminor=False, ygridminor=False,
 )
-fig.savefig("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\figs\\augmentations\\ringing_deform_examples.png")
+fig.savefig("C:\\Users\\kiril\\Thesis\\CoBra\\cobra\\figs\\augmentations\\ringing_deform_examples.png",
+    dpi=300, bbox_inches='tight')
