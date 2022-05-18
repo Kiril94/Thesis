@@ -4,6 +4,8 @@ Created on Nov 19th 2021
 
 @author: Neus Rodeja Ferrer
 """
+#%%
+
 import sys
 sys.path.insert(0, '/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/')
 
@@ -65,13 +67,49 @@ print(f'For >=50 y.o. population\n# CMBs = \t({cmbs_number_mean_50:.2f}+\-{cmbs_
 
 ###Do the power calculation 
 
-power = 0.8
-significance = 0.05
-P = 129/381
-N = 129
+power = 0.84162 #0.8
+significance = 1.64 #0.05
+
+N=76
+
+P = N/222
+#P=N/346
 std_number = 0.5
 mde_number = get_MDE(std_number,N,power,significance,P)
 std_volume = 27
 mde_volume = get_MDE(std_volume,N,power,significance,P)
 
+print(f'\n\nMDE={mde_number} #CMBs \nMDE={mde_volume} mm³')
+
+#%%
+import matplotlib.pyplot as plt
+import numpy as np
+
+#hist_gen_momeni
+size = np.array([1,7,13,19,25,31,37,43,49,55,61,67,73,80])
+d1 = np.array([37,25,15.5,8,3,6,1,0.5,1,0.5,2,0.5,0,0])
+d2 = np.array([21,34,16,7,5,4,2,3,2,3,2,0,1,0])
+h_width = 6
+
+plt.bar(np.array(size)-1,d1,2,color="green")
+plt.bar(np.array(size)+1,d2,2,color="red")
+# %%
+
+mean_d1 = np.sum(size*d1) / np.sum(d1)
+mean_d2 = np.sum(size*d2) / np.sum(d2)
+mean_all = (np.sum(size*d1)+ np.sum(size*d2))/(np.sum(d1)+np.sum(d2))
+
+std_d1 = np.sqrt(np.sum(d1*(size-mean_d1)**2)/(np.sum(d1)-1))
+std_d2 = np.sqrt(np.sum(d2*(size-mean_d2)**2)/(np.sum(d2)-1))
+std_all = np.sqrt((np.sum(d2*(size-mean_d2)**2)+np.sum(d1*(size-mean_d1)**2))/(np.sum(d1)+np.sum(d2)-1))
+
+print(f'For Synth CMB paper\nCMBs volume= \t({mean_all:.2f}+\-{std_all:.2f}) mm³')
+# %%
+
+std_number = 0.5
+mde_number = get_MDE(std_number,N,power,significance,P)
+std_volume = 15
+mde_volume = get_MDE(std_volume,N,power,significance,P)
+
+print("Using data from Synthetic CMB paper")
 print(f'\n\nMDE={mde_number} #CMBs \nMDE={mde_volume} mm³')

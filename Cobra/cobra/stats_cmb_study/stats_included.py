@@ -14,7 +14,7 @@ from os.path import join
 main_path = Path(__file__).parent.parent
 tables_path = main_path / "tables"
 figs_path = main_path / "figs" / "cmb_stats" / "matching_v3"
-included_swi_file = tables_path / "SWIMatching" / "ids_swi_included_v3.csv"
+included_swi_file = tables_path / "SWIMatching" / "ids_included_v4.csv"
 excluded_swi_file = tables_path / "SWIMatching" / "ids_swi_excluded_v3.csv"
 all_swi_file = tables_path / "swi_all.csv"
 probs_swi = tables_path / "SWIMatching" / "ids_swi_excluded_pcmb_v3.csv"
@@ -31,18 +31,17 @@ excluded_info = excluded_info.merge(probs_exc,how='inner',on='PatientID',validat
 excluded_info.sort_values(by='p_cmb',inplace=True,ascending=False)
 #%%
 #count how many are converted
-converted = pd.read_csv(join("F:","CoBra","Data","swi_nii","converted_excluded.csv"))
-high_excl = excluded_info.head(26)
+#converted = pd.read_csv(join("F:","CoBra","Data","swi_nii","converted_excluded.csv"))
+high_excl25 = excluded_info.head(26)
 
-#%%
-high_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"26_high_excluded.csv",index=False)
-conv_high_excl = high_excl[ high_excl['PatientID'].isin(converted['PatientID'])]
+high_excl25['PatientID'].to_csv(tables_path/"SWIMatching"/"26_high_excluded.csv",index=False)
+#conv_high_excl = high_excl[ high_excl['PatientID'].isin(converted['PatientID'])]
 
-converted = pd.read_csv(join("F:","CoBra","Data","swi_nii","converted_excluded.csv"))
+#converted = pd.read_csv(join("F:","CoBra","Data","swi_nii","converted_excluded.csv"))
 high_excl = excluded_info.iloc[26:46]
 
 high_excl['PatientID'].to_csv(tables_path/"SWIMatching"/"50_high_excluded.csv",index=False)
-conv_high_excl = high_excl[ high_excl['PatientID'].isin(converted['PatientID'])]
+#conv_high_excl = high_excl[ high_excl['PatientID'].isin(converted['PatientID'])]
 
 hig50_excluded = excluded_info.iloc[46:]
 
@@ -111,6 +110,50 @@ ax[1].set(ylabel='Spacing [mm]')
 fig.suptitle("Scans excluded in CMB study")
 fig.savefig(f'{figs_path}/excluded_boxplot_dimensions.png')
 
+
+#for excluded 26
+high_26 = excluded_info.head(26)
+x_dim = high_26['Rows']
+y_dim = high_26['Columns']
+z_dim = high_26['NumberOfSlices']
+px_spacing_x = high_26['RowSpacing']
+px_spacing_y = high_26['ColumnSpacing']
+spacing_values = high_26['SpacingBetweenSlices'] #.dropna()
+
+fig,ax=plt.subplots(1,2,figsize=(12,5))
+ax = ax.flatten()
+
+ax[0] = create_boxplot(ax[0],[x_dim,y_dim,z_dim],['Height','Width','Depth'],title=f'Dimensions for excluded scans')
+ax[0].set(ylabel='#Pixels')
+
+ax[1] = create_boxplot(ax[1],[px_spacing_x,px_spacing_y,spacing_values],['Pix.Spacing x', 'Pix.spacing y', 'Spacing Between Slices'],title='Spacing for SWI images')
+ax[1].set(ylabel='Spacing [mm]')
+
+fig.suptitle("Scans excluded (26 with highest P-cmb) in CMB study")
+fig.savefig(f'{figs_path}/excluded26_boxplot_dimensions.png')
+
+
+#for excluded 46
+high_46 = excluded_info.head(46)
+x_dim = high_46['Rows']
+y_dim = high_46['Columns']
+z_dim = high_46['NumberOfSlices']
+px_spacing_x = high_46['RowSpacing']
+px_spacing_y = high_46['ColumnSpacing']
+spacing_values = high_46['SpacingBetweenSlices'] #.dropna()
+
+fig,ax=plt.subplots(1,2,figsize=(12,5))
+ax = ax.flatten()
+
+ax[0] = create_boxplot(ax[0],[x_dim,y_dim,z_dim],['Height','Width','Depth'],title=f'Dimensions for excluded scans')
+ax[0].set(ylabel='#Pixels')
+
+ax[1] = create_boxplot(ax[1],[px_spacing_x,px_spacing_y,spacing_values],['Pix.Spacing x', 'Pix.spacing y', 'Spacing Between Slices'],title='Spacing for SWI images')
+ax[1].set(ylabel='Spacing [mm]')
+
+fig.suptitle("Scans excluded (46 with highest P-cmb) in CMB study")
+fig.savefig(f'{figs_path}/excluded46_boxplot_dimensions.png')
+
 #%% 
 #inc manufacturers
 #included
@@ -118,25 +161,52 @@ manufacturer_models_name = included_info['ManufacturerModelName'].unique()
 
 groups_manufacturer = included_info.groupby('ManufacturerModelName')
 fig,ax = plt.subplots()
-ax = groups_manufacturer.size().plot.bar()
-fig.savefig(f"{figs_path}/included_manufacturers.png")
-#%%#inc manufacturers
-#included
+ax = groups_manufacturer.size().transform(lambda x: x/sum(x)).plot.bar()
+ax.set(ylabel = "% scans")
+fig.savefig(f"{figs_path}/included_manufacturersmodel.png")
+
 manufacturer_models_name = included_info['Manufacturer'].unique()
 
 groups_manufacturer = included_info.groupby('Manufacturer')
 fig,ax = plt.subplots()
-ax = groups_manufacturer.size().plot.bar()
+ax = groups_manufacturer.size().transform(lambda x: x/sum(x)).plot.bar()
+ax.set(ylabel = "% scans")
 fig.savefig(f"{figs_path}/included_manufacturers.png")
 
 #%% excl manu
 #excluded
-manufacturer_models_name = excluded_info['ManufacturerModelName'].unique()
+high_46 = excluded_info.head(46)
 
-groups_manufacturer = excluded_info.groupby('ManufacturerModelName')
+manufacturer_models_name = high_46['ManufacturerModelName'].unique()
+
+groups_manufacturer = high_46.groupby('ManufacturerModelName')
 fig,ax = plt.subplots()
 ax = groups_manufacturer.size().plot.bar()
-fig.savefig(f"{figs_path}/excluded_manufacturers.png")
+fig.suptitle("Scans excluded (46 with highest P-cmb) in CMB study")
+fig.savefig(f"{figs_path}/excluded46_manufacturersmodel.png")
+
+groups_manufacturer = high_46.groupby('Manufacturer')
+fig,ax = plt.subplots()
+ax = groups_manufacturer.size().plot.bar()
+fig.suptitle("Scans excluded (46 with highest P-cmb) in CMB study")
+fig.savefig(f"{figs_path}/excluded46_manufacturers.png")
+
+high_26 = excluded_info.head(26)
+
+manufacturer_models_name = high_26['ManufacturerModelName'].unique()
+
+groups_manufacturer = high_26.groupby('ManufacturerModelName')
+fig,ax = plt.subplots()
+ax = groups_manufacturer.size().plot.bar()
+fig.suptitle("Scans excluded (26 with highest P-cmb) in CMB study")
+fig.savefig(f"{figs_path}/excluded_manufacturersmodel.png")
+
+groups_manufacturer = high_26.groupby('Manufacturer')
+fig,ax = plt.subplots()
+ax = groups_manufacturer.size().plot.bar()
+fig.suptitle("Scans excluded (26 with highest P-cmb) in CMB study")
+fig.savefig(f"{figs_path}/excluded26_manufacturers.png")
+
 
 #%%
 # for 25 higher probs

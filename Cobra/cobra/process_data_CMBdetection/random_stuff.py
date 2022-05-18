@@ -286,14 +286,38 @@ nib.save(nib.Nifti1Image(mask,np.eye(4)),f"/media/neus/USB DISK/cmb-3dcnn-data/1
 
 #%%
 #%%
-path_v0 = f"/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/process_data_CMBdetection/prova2.nii.gz"
-path_pred_v0 =  f"/home/neus/Documents/09.UCPH/MasterThesis/github/Thesis/Cobra/cobra/process_data_CMBdetection/prova2_mask.nii.gz"
+path_v0 = f"/home/neus/Documents/09.UCPH/MasterThesis/github/MultiResUNet_cmb/cmb_data/volumetric_data/reshaped/test/images/01.nii"
+path_pred_v0 =  f"/home/neus/Documents/09.UCPH/MasterThesis/github/MultiResUNet_cmb/cmb_data/volumetric_data/reshaped/test/masks/01.nii"
 
 
 orig_vol,_ = load_nifti_img(path_v0)
 mask,_ = load_nifti_img(path_pred_v0)
 
-nib.save(nib.Nifti1Image(orig_vol,np.eye(4)),f"/media/neus/USB DISK/prova2_noAffine.nii.gz")
-nib.save(nib.Nifti1Image(mask,np.eye(4)),f"/media/neus/USB DISK/prova2_mask_noAffine.nii.gz")
+nib.save(nib.Nifti1Image(orig_vol,np.eye(4)),f"/media/neus/USB DISK/01_noAffine.nii.gz")
+nib.save(nib.Nifti1Image(mask,np.eye(4)),f"/media/neus/USB DISK/01_mask_noAffine.nii.gz")
 
 #%%
+
+df = pd.read_csv("/media/neus/USB DISK/cmb-3dcnn-data/volumes_info.csv")
+
+#%%
+# join augmentation path files
+df1 = pd.read_csv("./nonaug_aug_2d_3views_3dcnn_paths.csv")
+df2 = pd.read_csv("./nonaug_aug_2d_3views_paths.csv")
+
+df = pd.concat([df1,df2])
+
+df.to_csv("./nonaug_aug_2d_3views_paths_all.csv",index=False)
+
+#%%
+#save no affines
+results_path = Path("/home/neus/Documents/09.UCPH/MasterThesis/github/MultiResUNet_cmb/cmb_data/combined_dataset")
+filename = "04_slice135.nii.gz"
+img,meta = load_nifti_img(results_path/filename)
+#gt,_ =  load_nifti_img(results_path/"ground_truth"/filename)
+#msk,_ =  load_nifti_img(results_path/"prova_mask.nii.gz")
+
+    
+nib.save(nib.Nifti1Image(img,np.eye(4)),results_path/("no_affine_" + filename))
+#nib.save(nib.Nifti1Image(gt,np.eye(4)),results_path/"ground_truth"/("no_affine_" + filename))
+#nib.save(nib.Nifti1Image(msk,np.eye(4)),results_path/("no_affine_prova_mask.nii.gz"))
