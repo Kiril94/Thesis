@@ -25,6 +25,7 @@ import matplotlib.lines as mlines
 from ast import literal_eval
 plt.style.use(join(base_dir,'utilities', 'plot_style.txt'))
 import importlib
+import string
 plt.style.use('ggplot')
 #import proplot as pplt
 import matplotlib.dates as mdates
@@ -115,9 +116,10 @@ neg_value_counts = sort_dict(
     df[MFS_k][~pos_mask].value_counts())
 pos_value_counts = sort_dict(
     df[MFS_k][pos_mask].value_counts())
-#%%
+
 # In[B0]
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(1,2, figsize=(7,14))
+ax = ax.flatten()
 cmap = plt.get_cmap("Greys")
 pcolor = cmap(np.array([0,50,150]))
 
@@ -125,29 +127,93 @@ labels_dic = {1.0:'1.0 T', 1.5:'1.5 T', 3.0:'3.0 T',}
 new_labels = [labels_dic[l] for l in neg_value_counts.keys()]
 
 def my_autopct(pct):
-    return (f'{pct:.2f}%') if pct > 10 else ''
+    return (f'{pct:.1f}%') if pct > 6 else ''
 neg_data = list(neg_value_counts.values())
-ts = ax.pie(neg_data, radius=1.1, labels=new_labels,
+ts = ax[0].pie(neg_data, radius=1.1, labels=new_labels,
     wedgeprops=dict(width=.4, edgecolor=colors[1],linewidth=2), colors=pcolor,
-    autopct=my_autopct, pctdistance=.85, labeldistance=1.1,
-    textprops={'fontsize': 15})
+    autopct=my_autopct, pctdistance=.84, labeldistance=1.14,
+    textprops={'fontsize': 10})
 for t in ts[1]:
-    t.set_fontsize(22)
+    t.set_fontsize(15)
 pos_data = list(pos_value_counts.values())
-ax.pie(pos_data,labels=['']*3, radius=1-.5,
+ax[0].pie(pos_data,labels=['']*3, radius=1-.5,
         wedgeprops=dict(width=.3, edgecolor=colors[0], linewidth=2), 
         colors=pcolor,autopct=my_autopct, pctdistance=.6, labeldistance=1.2,
-        textprops={'fontsize': 15})
+        textprops={'fontsize': 10})
 
-ax.set(aspect="equal")
+ax[0].set(aspect="equal")
 
 pos_line = mlines.Line2D([], [], color=colors[0],  linestyle='-',
                           markersize=10, label='positive')
 neg_line = mlines.Line2D([], [], color=colors[1],  linestyle='-',
                           markersize=10, label='negative')                          
-ax.legend(handles=[pos_line, neg_line], loc=(.8,.9), fontsize=18)
-fig.tight_layout()
+ax[0].legend(handles=[pos_line, neg_line], loc=(.8,.9), fontsize=14)
+#fig.tight_layout()
 #fig.savefig(join(fig_dir, '3dt1','B0.png'),dpi=350)
+
+
+# In[Plot Manufacturer]
+pos_mask = df.positive_scan==1
+neg_value_counts = sort_dict(
+    df['Manufacturer'][~pos_mask].value_counts())
+pos_value_counts = sort_dict(
+    df['Manufacturer'][pos_mask].value_counts())
+
+
+def sum_values(dic, neg=False):
+    value_counts_dic = {}
+    value_counts_dic['Siemens'] = dic['SIEMENS']
+    if neg:
+        value_counts_dic['Siemens'] = value_counts_dic['Siemens']+\
+            dic['Siemens HealthCare GmbH']+dic['Siemens Healthineers']
+
+    value_counts_dic['Philips'] = dic['Philips']+dic['Philips Healthcare']+\
+        dic['Philips Medical Systems']
+    value_counts_dic['others'] = dic['Agfa'] + dic['GE MEDICAL SYSTEMS']
+    if neg:
+        value_counts_dic['others'] = value_counts_dic['others'] + dic['Brainlab']
+    return value_counts_dic
+neg_value_counts = sum_values(neg_value_counts, neg=True)
+pos_value_counts = sum_values(pos_value_counts)
+
+print(neg_value_counts)
+
+# In[Manufacturer]
+
+#cmap = plt.get_cmap("Greys")
+#pcolor = cmap(np.array([0,50,150]))
+
+neg_data = list(neg_value_counts.values())
+ts = ax[1].pie(neg_data, radius=1.1, labels=neg_value_counts.keys(),
+    wedgeprops=dict(width=.4, edgecolor=colors[1],linewidth=2), colors=pcolor,
+    autopct=my_autopct, pctdistance=.82, labeldistance=1.1,
+    textprops={'fontsize': 10})
+for t in ts[1]:
+    t.set_fontsize(15)
+pos_data = list(pos_value_counts.values())
+ax[1].pie(pos_data, labels=['']*3, radius=1-.5,
+        wedgeprops=dict(width=.3, edgecolor=colors[0], linewidth=2), 
+        colors=pcolor, autopct=my_autopct, pctdistance=.7, labeldistance=1.2,
+        textprops={'fontsize': 10}, startangle=50)
+
+ax[1].set(aspect="equal")
+
+pos_line = mlines.Line2D([], [], color=colors[0],  linestyle='-',
+                          markersize=10, label='positive')
+neg_line = mlines.Line2D([], [], color=colors[1],  linestyle='-',
+                          markersize=10, label='negative')                 
+for n, a in enumerate(ax):
+    a.text(-0.1, 1.1, string.ascii_lowercase[n], transform=a.transAxes, 
+            size=20, weight='bold')         
+#ax[1].legend(handles=[pos_line, neg_line], loc=(.8,.9), fontsize=18)
+fig.tight_layout()
+
+
+fig.savefig(join(fig_dir, '3dt1','B0_manufacturer.png'),dpi=350, bbox_inches='tight')
+
+
+
+
 #%%
 df = df.dropna(subset=['PixelSpacing','SpacingBetweenSlices'],
     axis=0)
@@ -196,14 +262,23 @@ labels_dic = {"SliceThickness":r"$d_\mathrm{slice}$"+ " in mm",
 num_plot_vars = len(plot_vars)
 ax_mat = np.tril(np.reshape(np.arange(num_plot_vars**2), (num_plot_vars, num_plot_vars)))
 ax_mat = ax_mat[ax_mat!=0]
-print(ax_mat)
+#print(ax_mat)
 # sns_plot.axes.flatten()[4].set_xlabel('asas')
 for i, ax in enumerate(sns_plot.axes.flatten()):
     if i in ax_mat:
         ax.set_xlabel(labels_dic[ax.get_xlabel()], fontsize=20)
         ax.set_ylabel(labels_dic[ax.get_ylabel()], fontsize=20)
         ax.tick_params(labelsize=15)
-sns_plot.tight_layout()
+handles = sns_plot._legend_data.values()
+labels = sns_plot._legend_data.keys()
+new_labels = ['positive', 'negative']
+lgd_labels_dic = dict(zip(['1','0'],
+    new_labels))
+sns_plot._legend.remove()
+plt.legend(handles=handles, labels=[lgd_labels_dic[l] for l in labels], 
+    loc=(-.5,3.95), ncol=1, fontsize=20)
+#sns_plot.tight_layout()
+fig.savefig(join(fig_dir, '3dt1','B0.png'),dpi=400, bbox_inches='tight')
 #%%
 
 sns_plot = sns.pairplot(df_temp, 

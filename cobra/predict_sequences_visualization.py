@@ -193,4 +193,45 @@ fig.legend(hs, ncols=2, center=True, frame=False, loc='b', col=2)
 
 
 
-fig.savefig(f"{fig_dir}/sequence_pred_new/scan_and_pat_count.png", dpi=1000)
+#fig.savefig(f"{fig_dir}/sequence_pred_new/scan_and_pat_count.png", dpi=1000)
+
+#%%
+seq_count = df_all[sq].value_counts()
+target_labels = df_all.Sequence.unique()
+target_ids = np.arange(len(target_labels))
+target_dict = dict(zip(target_labels, target_ids))
+def dict_mapping(t): return basic.inv_dict(target_dict)[t]
+labels_pre, counts_pre = seq_count.keys(), seq_count.values
+# remove none_nid
+with open(join('data','xgb_sequence_pred', 'pred_test_labels.pkl'), 'rb') as f:
+    pred_test_labels = pickle.load(f)
+# counts all scans
+mask = labels_pre!='none_nid'
+labels_pre, counts_pre = labels_pre[mask], counts_pre[mask] 
+
+labels_post, counts_post = np.unique(pred_test_labels, return_counts=True)
+# get both lists in same order
+indexes = defaultdict(deque)
+for i, x in enumerate(labels_pre):
+    indexes[x].append(i)
+ids = [indexes[x].popleft() for x in labels_post]
+labels_pre, counts_pre =  labels_pre[ids], counts_pre[ids]
+labels = np.array([nice_labels_dic[k] for k in labels_pre])
+# sort lists starting with largest
+sort_inds = [4, 5, 1, 3, 0] #include 2 if you want to show 'other scans'
+labels = labels[sort_inds]
+
+counts_post =  counts_post[sort_inds] 
+counts_pre =  counts_pre[sort_inds] 
+
+
+
+fig, axs = pplt.subplots(ncols=2, nrows=1, figwidth=5,  xlabel='Class',
+    abc=True,sharex=2, sharey=0)
+
+hs = []
+h = axs[0].bar(labels, counts_pre, label='true',color=colors[5])
+hs.append(h)
+h = axs[0].bar(labels, counts_post, bottom=counts_pre, label='predicted', color=colors[3])
+hs.append(h)
+axs[0].set_ylabel('# Scans')
