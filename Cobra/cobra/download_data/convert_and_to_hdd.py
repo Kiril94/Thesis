@@ -23,7 +23,7 @@ base_dir = Path(script_dir).parents[1]  #cobra directory
 table_dir = join(base_dir, 'tables')
 #input_file = join(table_dir,"SWIMatching",'rest_excluded.csv')
 #input_file = "C:/Users/neus/Desktop/check_included_scans_v2.txt"
-input_file = join(table_dir,"extracted_for_domain_adapt.csv")
+input_file = join(table_dir,"extracted_for_domain_adapt_v3.csv")
 included = False
 
 #from hdd
@@ -42,7 +42,7 @@ if (not os.path.exists(dcm_dst_data_dir)): os.makedirs(dcm_dst_data_dir)
 if (not os.path.exists(nii_included_dst_data_dir)): os.makedirs(nii_included_dst_data_dir)
 
 #from sif
-sif_dir = "Y:"
+sif_dir = "X:"
 
 #%% EXTRACT SCANS INFO + DIRECTORY IN SIF 
 

@@ -143,38 +143,38 @@ log_file.close()
 #%%
 # slice volumes
 
-origin_volumes_path = dst_nii_data_dir
-dst_slices_path = join(dst_data_dir,"swi_nii","test_pipeline","slices")
+# origin_volumes_path = dst_nii_data_dir
+# dst_slices_path = join(dst_data_dir,"swi_nii","test_pipeline","slices")
 
-files = next(os.walk(origin_volumes_path))[2]
+# files = next(os.walk(origin_volumes_path))[2]
 
-def load_nifti_img(filepath, dtype=None):
-    '''
-    NIFTI Image Loader
-    :param filepath: path to the input NIFTI image
-    :param dtype: dataio type of the nifti numpy array
-    :return: return numpy array
-    '''
-    nim = nib.load(filepath)
-    out_nii_array = np.array(nim.get_data(),dtype=dtype)
-    out_nii_array = np.squeeze(out_nii_array) # drop singleton dim in case temporal dim exists
-    meta = {'affine': nim.get_affine(),
-            'dim': nim.header['dim'],
-            'pixdim': nim.header['pixdim'],
-            'name': os.path.basename(filepath)
-            }
+# def load_nifti_img(filepath, dtype=None):
+#     '''
+#     NIFTI Image Loader
+#     :param filepath: path to the input NIFTI image
+#     :param dtype: dataio type of the nifti numpy array
+#     :return: return numpy array
+#     '''
+#     nim = nib.load(filepath)
+#     out_nii_array = np.array(nim.get_data(),dtype=dtype)
+#     out_nii_array = np.squeeze(out_nii_array) # drop singleton dim in case temporal dim exists
+#     meta = {'affine': nim.get_affine(),
+#             'dim': nim.header['dim'],
+#             'pixdim': nim.header['pixdim'],
+#             'name': os.path.basename(filepath)
+#             }
 
-    return out_nii_array, meta 
+#     return out_nii_array, meta 
 
-for file in files:
+# for file in files:
     
-    volume_data, _ = load_nifti_img(join(origin_volumes_path,file))
-    n_slices = volume_data.shape[2]
+#     volume_data, _ = load_nifti_img(join(origin_volumes_path,file))
+#     n_slices = volume_data.shape[2]
     
-    for i_slice in range(n_slices):
-        slice_data = volume_data[:,:,i_slice]
-        new_name = file[:-7] + f'_slice{i_slice}' + '.nii.gz'
-        slice_path = join(dst_slices_path,new_name)
+#     for i_slice in range(n_slices):
+#         slice_data = volume_data[:,:,i_slice]
+#         new_name = file[:-7] + f'_slice{i_slice}' + '.nii.gz'
+#         slice_path = join(dst_slices_path,new_name)
         
-        nib.save(nib.Nifti1Image(slice_data,np.eye(4)),slice_path)
+#         nib.save(nib.Nifti1Image(slice_data,np.eye(4)),slice_path)
         

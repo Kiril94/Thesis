@@ -87,46 +87,34 @@ for idx_vol,vol_info in vol_groups:
     mask,_ = load_nifti_img(msk_path)
 
     #save sagittal slices
-    for x in range(img.shape[0]):
-        #slice_img = img[x-1:x+2,:,:]
-        slice_img = img[x,:,:]
+    for x in range(1,img.shape[0]-1):
+        slice_img = img[x-1:x+2,:,:]
         slice_img = np.moveaxis(slice_img,0,-1)
-
+        slice_msk = mask[x,:,:]
 
         slice_name = f'{filename[:-7]}_slice{x}.nii.gz'
         path_to_save = f"{cmb_slices_path}/{vol_info['set'].values[0]}/sagittal"
-        nib.save(nib.Nifti1Image(slice_img,np.eye(4)),f"{path_to_save}/images_1ch/{slice_name}")
-
-        if (x==0 or x==(img.shape[0]-1)):
-            slice_msk = mask[x,:,:]
-            nib.save(nib.Nifti1Image(slice_msk,np.eye(4)),f"{path_to_save}/masks/{slice_name}")
+        nib.save(nib.Nifti1Image(slice_img,np.eye(4)),f"{path_to_save}/images/{slice_name}")
+        nib.save(nib.Nifti1Image(slice_msk,np.eye(4)),f"{path_to_save}/masks/{slice_name}")
 
 
     #save coronal slices
-    for y in range(img.shape[1]):
-        #slice_img = img[:,y-1:y+2,:]
-        slice_img = img[:,y,:]
+    for y in range(1,img.shape[1]-1):
+        slice_img = img[:,y-1:y+2,:]
         slice_img = np.moveaxis(slice_img,1,-1)
         slice_msk = mask[:,y,:]
 
         slice_name = f'{filename[:-7]}_slice{y}.nii.gz'
         path_to_save = f"{cmb_slices_path}/{vol_info['set'].values[0]}/coronal"
-        nib.save(nib.Nifti1Image(slice_img,np.eye(4)),f"{path_to_save}/images_1ch/{slice_name}")
-
-        if (y==0 or y==(img.shape[1]-1)):
-            slice_msk = mask[:,y,:]
-            nib.save(nib.Nifti1Image(slice_msk,np.eye(4)),f"{path_to_save}/masks/{slice_name}")
+        nib.save(nib.Nifti1Image(slice_img,np.eye(4)),f"{path_to_save}/images/{slice_name}")
+        nib.save(nib.Nifti1Image(slice_msk,np.eye(4)),f"{path_to_save}/masks/{slice_name}")
 
     #save axial slices
-    for z in range(img.shape[2]):
-        #slice_img = img[:,:,z-1:z+2]
-        slice_img = img[:,:,z]
+    for z in range(1,img.shape[2]-1):
+        slice_img = img[:,:,z-1:z+2]
         slice_msk = mask[:,:,z]
 
         slice_name = f'{filename[:-7]}_slice{z}.nii.gz'
         path_to_save = f"{cmb_slices_path}/{vol_info['set'].values[0]}/axial"
-        nib.save(nib.Nifti1Image(slice_img,np.eye(4)),f"{path_to_save}/images_1ch/{slice_name}")
-
-        if (z==0 or z==(img.shape[2]-1)):
-            slice_msk = mask[:,:,z]
-            nib.save(nib.Nifti1Image(slice_msk,np.eye(4)),f"{path_to_save}/masks/{slice_name}")
+        nib.save(nib.Nifti1Image(slice_img,np.eye(4)),f"{path_to_save}/images/{slice_name}")
+        nib.save(nib.Nifti1Image(slice_msk,np.eye(4)),f"{path_to_save}/masks/{slice_name}")

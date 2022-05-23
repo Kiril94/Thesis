@@ -370,6 +370,10 @@ df_ids_elegible = pd.read_csv(join(table_dir,"SWIMatching","elegible_swi.csv"))
 df_info_all = pd.read_csv(join(table_dir,"swi_all_withType.csv"))
 df_included = pd.read_csv(join(table_dir,"SWIMatching","ids_included_v4.csv"))
 df_p = pd.read_csv(join(table_dir,"SWIMatching","ids_swi_excluded_pcmb_v3.csv"))
+df_annotated = pd.read_csv(join(nii_excluded_dst_data_dir,"to_annotate","log_renamed_swi.txt"))
+df_annotated['img_label'] = df_annotated["new_name"].map(lambda x: int(x[:-7]))
+df_annotated = df_annotated[df_annotated["img_label"]<51]
+
 
 manually_selected_phases = ['40e1d96dc65bace1de8024cfe9bce247',
        '23c07a8d268c6b13be738ab440f6ebe2',
@@ -378,12 +382,24 @@ manually_selected_phases = ['40e1d96dc65bace1de8024cfe9bce247',
        '92d0ddf5407f7ece16100dfbe6a6acf0']
 df_info_excl = df_info_all.merge(df_ids_elegible, on='PatientID', how="inner", validate="one_to_one")
 df_info_excl = df_info_all.merge(df_p, on='PatientID', how="inner", validate="one_to_one")
+df_info_excl = df_info_excl[ ~df_info_excl['SeriesInstanceUID'].isin(df_annotated['SeriesInstanceUID'])]
 df_info_excl = df_info_excl[ ~df_info_excl['PatientID'].isin(df_included['PatientID'])]
 df_info_excl = df_info_excl[ ~df_info_excl['PatientID'].isin(manually_selected_phases)]
 df_info_excl = df_info_excl[ (df_info_excl['ImageType2']!="phase mIP")&(df_info_excl['ImageType2']!="mIP")&(df_info_excl['ImageType2']!="phase")]
 df_info_excl.sort_values("p_cmb",inplace=True)
 df_info_excl.reset_index(inplace=True)
 
+#%% V3
+df_low = df_info_excl[df_info_excl['p_cmb']<0.01][["PatientID","ManufacturerModelName","p_cmb"]]
+df_low['p_cmb_label'] = "low"
+
+df_high = df_info_excl[df_info_excl['p_cmb']>0.3][["PatientID","ManufacturerModelName","p_cmb"]]
+df_high['p_cmb_label'] = "high"
+
+df_saved = pd.concat([df_low,df_high])
+df_saved.to_csv(join(table_dir,"extracted_for_domain_adapt_v3.csv"),index=False)
+
+#%% V2
 manuf_groups = df_info_excl.groupby("ManufacturerModelName")
 
 column_names = ["PatientID","ManufacturerModelName","p_cmb","p_cmb_label"]
@@ -416,4 +432,54 @@ for idx,row in df_info_saved.iterrows():
     print(row['Directory'])
     does_exist = os.path.exists(row['Directory'])
     if (does_exist): print(os.listdir(row['Directory']))
-# %%
+
+# %% Make pairs for cph testing
+
+df_info_all = pd.read_csv(join(table_dir,"swi_all_withType.csv"))
+df_p = pd.read_csv(join(table_dir,"extracted_for_domain_adapt_v3.csv"))
+df_low = pd.read_csv("F:/CoBra/Data/swi_nii/cph_dataset/low/log_renamed_swi_corrected.txt")
+df_high = pd.read_csv("F:/CoBra/Data/swi_nii/cph_dataset/high/log_renamed_swi_corrected.txt")
+
+df_low = df_low.merge(df_info_all,on="SeriesInstanceUID",validate="one_to_one")
+df_low = df_low.merge(df_p[["PatientID","p_cmb"]],on="PatientID",validate="one_to_one")
+df_high = df_high.merge(df_info_all,on="SeriesInstanceUID",validate="one_to_one")
+df_high = df_high.merge(df_p[["PatientID","p_cmb"]],on="PatientID",validate="one_to_one")
+
+#%%
+
+#pair from hgih with low 
+low_elegible_names = list(df_low["new_name"])
+
+pairs_columns = ["filename_low","filename_high","p_cmb_low","p_cmb_high","ManufacturerModelName","MagneticFieldStrength","SliceThickness","EchoTime"]
+pairs_info = []
+for idx,high_scan in df_high.iterrows():
+    
+    mask = ( (df_low["ManufacturerModelName"]==high_scan["ManufacturerModelName"]) 
+            & (df_low["MagneticFieldStrength"]==high_scan["MagneticFieldStrength"]) 
+            & (df_low["SliceThickness"]==high_scan["SliceThickness"]) 
+            & (df_low["EchoTime"]==high_scan["EchoTime"]) 
+            & df_low["new_name"].isin(low_elegible_names))
+    low_possible_scans = df_low[mask]
+    
+    #take random scan
+    low_pair = low_possible_scans.sample(random_state=42)
+    pairs_info.append([low_pair["new_name"].values[0],high_scan["new_name"],low_pair["p_cmb"].values[0],high_scan["p_cmb"],high_scan["ManufacturerModelName"],high_scan["MagneticFieldStrength"],high_scan["SliceThickness"],high_scan["EchoTime"]])
+    low_elegible_names.remove(low_pair["new_name"].values[0])
+    
+df_pairs = pd.DataFrame(np.array(pairs_info),columns=pairs_columns)
+df_pairs.to_csv(join(table_dir,"pairs_cph_dataset.csv"),index=False)
+
+df_pairs["filename_low"].to_csv(join(table_dir,"low_test_cph.txt"),index=False,header=False)
+#
+#%%#take low in test
+df_low.sort_values("new_name",ascending=True,inplace=True)
+df_low_test = df_low.head(40)
+
+df_high.sort_values("p_cmb",ascending=False,inplace=True)
+df_high['idx_pair'] = range(df_high.shape[0])
+df_low_test.sort_values("p_cmb",ascending=True,inplace=True)
+df_low_test['idx_pair'] = range(df_low_test.shape[0])
+
+df_pairs = df_high.merge(df_low_test,on="idx_pair",validate="one_to_one",suffixes=("_high","_low"))
+df_pairs[["new_name_high","new_name_low","p_cmb_low","p_cmb_high","Manufacturer_high","Manufacturer_low","ManufacturerModelName_high","ManufacturerModelName_low"]].to_csv(join(table_dir,"pairs_cph_dataset.csv"),index=False)
+

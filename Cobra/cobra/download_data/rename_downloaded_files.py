@@ -23,7 +23,7 @@ def _log(msg,file=None):
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parents[1]  #cobra directory
 table_dir = join(base_dir, 'tables')
-input_file = join(table_dir,"extracted_for_domain_adapt.csv")
+input_file = join(table_dir,"extracted_for_domain_adapt_v3.csv")
 included = False
 
 #from hdd
@@ -32,10 +32,10 @@ dst_data_dir = join(disk_dir,"CoBra","Data")
 nii_excluded_dst_data_dir = join(dst_data_dir,"swi_nii")
 nii_included_dst_data_dir =  join(nii_excluded_dst_data_dir,"cmb_study")
 orig_folder = nii_excluded_dst_data_dir
-dst_folder = join(nii_excluded_dst_data_dir,"for_domain_adaptation")
-dst_log_file = join(nii_excluded_dst_data_dir,"for_domain_adaptation","log_renamed_swi.txt")
-dst_log_file2 = join(nii_excluded_dst_data_dir,"for_domain_adaptation","log_failed_renaming_swi.txt")
-dst_log_file3 = join(nii_excluded_dst_data_dir,"for_domain_adaptation","log_not_previously_down_swi.txt")
+dst_folder = join(nii_excluded_dst_data_dir,"cph_dataset","low")
+dst_log_file = join(nii_excluded_dst_data_dir,"cph_dataset","low","log_renamed_swi.txt")
+dst_log_file2 = join(nii_excluded_dst_data_dir,"cph_dataset","low","log_failed_renaming_swi.txt")
+dst_log_file3 = join(nii_excluded_dst_data_dir,"cph_dataset","low","log_not_previously_down_swi.txt")
 # make destination directories if they dont exist
 if (not os.path.exists(dst_folder)): os.makedirs(dst_folder)
 
@@ -69,7 +69,7 @@ df_volume_dir = pd.read_csv(join(table_dir, 'series_directories.csv'))
 
 df_info_to_rename = df_ids_to_rename.merge(df_scan_info,how='inner',left_on='PatientID',right_on='PatientID',validate='one_to_one')
 df_info_to_rename = df_info_to_rename.merge(df_volume_dir,how='inner',left_on='SeriesInstanceUID',right_on='SeriesInstanceUID',validate='one_to_one')
-df_info_to_rename = df_info_to_rename[df_info_to_rename['p_cmb_label']=="high"]
+df_info_to_rename = df_info_to_rename[df_info_to_rename['p_cmb_label']=="low"]
 #df_info_to_rename.sort_values(by='Directory',inplace=True)
 
 
@@ -111,7 +111,7 @@ for idx,row in df_info_to_rename.iterrows():
         #     n_vols_from_folder = prev_max+1   
         
                 # define name                  
-        name = "H"+str(n_vols_from_folder).zfill(5) + '.nii.gz'
+        name = "L"+"1"+str(n_vols_from_folder).zfill(4) + '.nii.gz'
         
         # move file 
         
