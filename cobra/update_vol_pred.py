@@ -30,7 +30,8 @@ tables_dir = join(data_dir, 'tables')
 data_long_dir = join(data_dir, 't1_longitudinal')
 pred_dirs = ["F:\\CoBra\\Data\\volume_longitudinal_nii\\prediction", "F:\\CoBra\\Data\\volume_cross_nii\\prediction"] 
 brain_regions_df = pd.read_csv("F:\\CoBra\\Data\\volume_longitudinal_nii\\Brain_Regions.csv")
-brain_regions_dic = pd.Series(brain_regions_df.Intensity.values,index=brain_regions_df.Region).to_dict()
+brain_regions_dic = pd.Series(brain_regions_df.Intensity.values,
+    index=brain_regions_df.Region).to_dict()
 with open(join(tables_dir, 'newIDs_dic.pkl'), 'rb') as f:
     id_dic = pickle.load(f)
 with open(join(data_long_dir, "sids_long_new.pkl"), 'rb') as f:
