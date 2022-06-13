@@ -29,6 +29,8 @@ import string
 plt.style.use('ggplot')
 #import proplot as pplt
 import matplotlib.dates as mdates
+import scipy.stats as ss
+
 from pylab import cm
 mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
@@ -212,8 +214,53 @@ fig.tight_layout()
 fig.savefig(join(fig_dir, '3dt1','B0_manufacturer.png'),dpi=350, bbox_inches='tight')
 
 
+# %%
+# In[Same for all the differen settings in the cross sectional study]
+# for now draw random groups of patients
+dfs = []
+for i in range(4):
+    ids = np.random.choice(len(df),800*(i+1))
+    dfs.append(df.iloc[ids])
+for d in dfs:
+    print(d[d.Positive==1].Positive .sum())
 
+titles = ['all', 'severe', 'short', 'long']
+keys = neg_value_counts.keys()
+fig, axs = plt.subplots(2,2, figsize=(5,5))
+axs = axs.flatten()
+for i, ax in enumerate(axs):
+    d = dfs[i]
+    pval = ss.chi2_contingency(pd.crosstab(d[MFS_k], d.Positive))[1]
+    ax.annotate(r"$P=$"+str(round(pval,3)),(.3,1.1) )
+    pos_mask = d.positive_scan==1
+    neg_value_counts = sort_dict(
+        d[MFS_k][~pos_mask].value_counts())
+    pos_value_counts = sort_dict(
+        d[MFS_k][pos_mask].value_counts())
+    pos_data = list(pos_value_counts.values())
+    if (len(pos_data)==2) & ~(1.0 in pos_value_counts.keys()):
+        pos_data.insert(0,0)
+    neg_data = list(neg_value_counts.values())
+    ts = ax.pie(neg_data, radius=1.1, labels=['']*3,
+        wedgeprops=dict(width=.4, edgecolor=colors[1],linewidth=2), colors=pcolor,
+        autopct=my_autopct, pctdistance=.84, labeldistance=1.14,
+        textprops={'fontsize': 10})
+    ax.set_title(titles[i], loc='center')
+    for t in ts[1]:
+        t.set_fontsize(15)
+    ax.pie(pos_data, labels=['']*3, radius=1-.4,
+        wedgeprops=dict(width=.4, edgecolor=colors[0], linewidth=2), 
+        colors=pcolor, autopct=my_autopct, pctdistance=.7, labeldistance=1.2,
+        textprops={'fontsize': 10}, startangle=50)
+    
+from matplotlib.lines import Line2D
+custom_lines = [Line2D([0], [0], color=pcolor[0], lw=7),
+                Line2D([0], [0], color=pcolor[1], lw=7),
+                Line2D([0], [0], color=pcolor[2], lw=7)]
 
+lgd = fig.legend(custom_lines, new_labels, bbox_to_anchor=(1.1, 0.6),borderpad=.8)
+lgd.get_frame().set_facecolor('grey')
+fig.tight_layout() 
 #%%
 df = df.dropna(subset=['PixelSpacing','SpacingBetweenSlices'],
     axis=0)
