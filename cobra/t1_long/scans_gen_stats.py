@@ -283,7 +283,6 @@ for i in range(4):
 fig, axs = plt.subplots(2,2, figsize=(5,5))
 axs = axs.flatten()
 man_labels = ['Siemens', 'Philips', 'others']
-pcolor0 = pcolor[[1,2,0]]
 for i, ax in enumerate(axs):
     d = dfs[i]
     pval = ss.chi2_contingency(pd.crosstab(d['Manufacturer_new'], d.Positive))[1]
@@ -298,7 +297,7 @@ for i, ax in enumerate(axs):
         pos_data.insert(0,0)
     neg_data = list(neg_value_counts.values())
     ts = ax.pie(neg_data, radius=1.1, labels=['']*3,
-        wedgeprops=dict(width=.4, edgecolor=colors[1],linewidth=2), colors=pcolor0,
+        wedgeprops=dict(width=.4, edgecolor=colors[1],linewidth=2), colors=pcolor,
         autopct=my_autopct, pctdistance=.84, labeldistance=1.14,
         textprops={'fontsize': 10})
     ax.set_title(titles[i]+'  ('+r"$P=$"+str(round(pval,3))+')', loc='center')
@@ -306,13 +305,13 @@ for i, ax in enumerate(axs):
         t.set_fontsize(15)
     ax.pie(pos_data, labels=['']*3, radius=1-.4,
         wedgeprops=dict(width=.4, edgecolor=colors[0], linewidth=2), 
-        colors=pcolor0, autopct=my_autopct, pctdistance=.7, labeldistance=1.2,
+        colors=pcolor, autopct=my_autopct, pctdistance=.7, labeldistance=1.2,
         textprops={'fontsize': 10}, startangle=30)
     
 from matplotlib.lines import Line2D
-custom_lines = [Line2D([0], [0], color=pcolor0[0], lw=7),
-                Line2D([0], [0], color=pcolor0[1], lw=7),
-                Line2D([0], [0], color=pcolor0[2], lw=7)]
+custom_lines = [Line2D([0], [0], color=pcolor[0], lw=7),
+                Line2D([0], [0], color=pcolor[1], lw=7),
+                Line2D([0], [0], color=pcolor[2], lw=7)]
 
 lgd = fig.legend(custom_lines, man_labels, bbox_to_anchor=(0.8, 0.1),
     borderpad=.8, ncol=3)
