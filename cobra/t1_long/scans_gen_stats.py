@@ -128,8 +128,8 @@ pcolor = cmap(np.array([0,50,150]))
 labels_dic = {1.0:'1.0 T', 1.5:'1.5 T', 3.0:'3.0 T',}
 new_labels = [labels_dic[l] for l in neg_value_counts.keys()]
 
-def my_autopct(pct):
-    return (f'{pct:.1f}%') if pct > 6 else ''
+def my_autopct(pct, th=6):
+    return (f'{pct:.1f}%') if pct > th else ''
 neg_data = list(neg_value_counts.values())
 ts = ax[0].pie(neg_data, radius=1.1, labels=new_labels,
     wedgeprops=dict(width=.4, edgecolor=colors[1],linewidth=2), colors=pcolor,
@@ -218,31 +218,39 @@ fig.savefig(join(fig_dir, '3dt1','B0_manufacturer.png'),dpi=350, bbox_inches='ti
 # In[Same for all the different settings in the cross sectional study]
 # for now draw random groups of patients
 dfs = []
+names = ['all', 'severe', 'short', 'long']
 for i in range(4):
-    ids = np.random.choice(len(df),800*(i+1))
-    dfs.append(df.iloc[ids])
-for d in dfs:
-    print(d[d.Positive==1].Positive .sum())
+    df_imp = pd.read_csv(join(base_dir,'data','t1_crossec', 
+        'groups_sids', names[i]+'.csv'))
+    df_res = pd.merge(df_imp, df, on='SeriesInstanceUID', how='left')
+    dfs.append(df_res)
 
 
-titles = ['all', 'severe', 'short', 'long']
+#%%
+titles = ['all', 'severe', 'short-term', 'long-term']
 b0_labels = ['1.0 T', '1.5 T','3.0 T']
 keys = neg_value_counts.keys()
 fig, axs = plt.subplots(2,2, figsize=(5,5))
 axs = axs.flatten()
+startangles = [30,-30,30,20]
 for i, ax in enumerate(axs):
     d = dfs[i]
-    pval = ss.chi2_contingency(pd.crosstab(d[MFS_k], d.Positive))[1]
+    pval = ss.chi2_contingency(pd.crosstab(d[MFS_k], d.case))[1]
     #ax.annotate(r"$P=$"+str(round(pval,3)),(.3,1.1), fontsize=12 )
-    pos_mask = d.positive_scan==1
+    pos_mask = d.case==1
     neg_value_counts = sort_dict(
         d[MFS_k][~pos_mask].value_counts())
     pos_value_counts = sort_dict(
         d[MFS_k][pos_mask].value_counts())
     pos_data = list(pos_value_counts.values())
+    
+ 
+    neg_data = list(neg_value_counts.values())
     if (len(pos_data)==2) & ~(1.0 in pos_value_counts.keys()):
         pos_data.insert(0,0)
-    neg_data = list(neg_value_counts.values())
+    if (len(neg_data)==2) & ~(1.0 in neg_value_counts.keys()):
+        neg_data.insert(0,0)
+    
     ts = ax.pie(neg_data, radius=1.1, labels=['']*3,
         wedgeprops=dict(width=.4, edgecolor=colors[1],linewidth=2), colors=pcolor,
         autopct=my_autopct, pctdistance=.84, labeldistance=1.14,
@@ -252,8 +260,8 @@ for i, ax in enumerate(axs):
         t.set_fontsize(15)
     ax.pie(pos_data, labels=['']*3, radius=1-.4,
         wedgeprops=dict(width=.4, edgecolor=colors[0], linewidth=2), 
-        colors=pcolor, autopct=my_autopct, pctdistance=.7, labeldistance=1.2,
-        textprops={'fontsize': 10}, startangle=50)
+        colors=pcolor, autopct=my_autopct, pctdistance=.6, labeldistance=1.2,
+        textprops={'fontsize': 10}, startangle=startangles[i])
     
 from matplotlib.lines import Line2D
 custom_lines = [Line2D([0], [0], color=pcolor[0], lw=7),
@@ -275,19 +283,24 @@ manufacturer_dic = {'SIEMENS':sim, 'Siemens':sim,
     oth:oth}
 df['Manufacturer_new'] = df.Manufacturer.map(manufacturer_dic)
 dfs = []
+names = ['all', 'severe', 'short', 'long']
 for i in range(4):
-    ids = np.random.choice(len(df),800*(i+1))
-    dfs.append(df.iloc[ids])
+    df_imp = pd.read_csv(join(base_dir,'data','t1_crossec', 
+        'groups_sids', names[i]+'.csv'))
+    df_res = pd.merge(df_imp, df, on='SeriesInstanceUID', how='left')
+    dfs.append(df_res)
 #%%
 # In[Same for manufacturer]
 fig, axs = plt.subplots(2,2, figsize=(5,5))
 axs = axs.flatten()
 man_labels = ['Siemens', 'Philips', 'others']
+startangles_inner = [0,0,0,40]
+startangles_outer = [20,0,20,20]
 for i, ax in enumerate(axs):
     d = dfs[i]
-    pval = ss.chi2_contingency(pd.crosstab(d['Manufacturer_new'], d.Positive))[1]
+    pval = ss.chi2_contingency(pd.crosstab(d['Manufacturer_new'], d.case))[1]
     #ax.annotate(r"$P=$"+str(round(pval,3)),(.3,1.1), fontsize=12 )
-    pos_mask = d.positive_scan==1
+    pos_mask = d.case==1
     neg_value_counts = sort_dict(
         d['Manufacturer_new'][~pos_mask].value_counts())
     pos_value_counts = sort_dict(
@@ -298,15 +311,16 @@ for i, ax in enumerate(axs):
     neg_data = list(neg_value_counts.values())
     ts = ax.pie(neg_data, radius=1.1, labels=['']*3,
         wedgeprops=dict(width=.4, edgecolor=colors[1],linewidth=2), colors=pcolor,
-        autopct=my_autopct, pctdistance=.84, labeldistance=1.14,
-        textprops={'fontsize': 10})
+        autopct=lambda x: my_autopct(x, 5), pctdistance=.82, labeldistance=1.14,
+        textprops={'fontsize': 10}, startangle=startangles_outer[i])
     ax.set_title(titles[i]+'  ('+r"$P=$"+str(round(pval,3))+')', loc='center')
     for t in ts[1]:
         t.set_fontsize(15)
     ax.pie(pos_data, labels=['']*3, radius=1-.4,
         wedgeprops=dict(width=.4, edgecolor=colors[0], linewidth=2), 
-        colors=pcolor, autopct=my_autopct, pctdistance=.7, labeldistance=1.2,
-        textprops={'fontsize': 10}, startangle=30)
+        colors=pcolor, autopct=lambda x: my_autopct(x, 11), 
+        pctdistance=.6, labeldistance=1.2,
+        textprops={'fontsize': 10}, startangle=startangles_inner[i])
     
 from matplotlib.lines import Line2D
 custom_lines = [Line2D([0], [0], color=pcolor[0], lw=7),
