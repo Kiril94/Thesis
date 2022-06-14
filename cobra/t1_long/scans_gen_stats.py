@@ -22,6 +22,9 @@ import importlib
 import pickle, gzip
 import matplotlib as mpl
 import matplotlib.lines as mlines
+from collections import OrderedDict
+
+
 from ast import literal_eval
 plt.style.use(join(base_dir,'utilities', 'plot_style.txt'))
 import importlib
@@ -266,10 +269,12 @@ for i, ax in enumerate(axs):
 from matplotlib.lines import Line2D
 custom_lines = [Line2D([0], [0], color=pcolor[0], lw=7),
                 Line2D([0], [0], color=pcolor[1], lw=7),
-                Line2D([0], [0], color=pcolor[2], lw=7)]
+                Line2D([0], [0], color=pcolor[2], lw=7),
+                Line2D([0], [0], color=colors[0], lw=2),
+                Line2D([0], [0], color=colors[1], lw=2),]
 
-lgd = fig.legend(custom_lines, b0_labels, bbox_to_anchor=(0.8,0.1),
-    borderpad=.8, ncol=3)
+lgd = fig.legend(custom_lines, b0_labels+['cases','controls'], bbox_to_anchor=(0.5,0.12),
+    borderpad=.8, ncol=2)
 lgd.get_frame().set_facecolor('grey')
 fig.savefig(join(fig_dir, 'crossec', 'B0.png'), dpi=300, bbox_inches='tight')
 #%%
@@ -325,13 +330,111 @@ for i, ax in enumerate(axs):
 from matplotlib.lines import Line2D
 custom_lines = [Line2D([0], [0], color=pcolor[0], lw=7),
                 Line2D([0], [0], color=pcolor[1], lw=7),
-                Line2D([0], [0], color=pcolor[2], lw=7)]
+                Line2D([0], [0], color=pcolor[2], lw=7),
+                Line2D([0], [0], color=colors[0], lw=2),
+                Line2D([0], [0], color=colors[1], lw=2),]
 
-lgd = fig.legend(custom_lines, man_labels, bbox_to_anchor=(0.8, 0.1),
-    borderpad=.8, ncol=3)
+lgd = fig.legend(custom_lines, man_labels+['cases','controls'], bbox_to_anchor=(0.5, 0.12),
+    borderpad=.8, ncol=2)
 lgd.get_frame().set_facecolor('grey')
 fig.savefig(join(fig_dir, 'crossec', 'manufacturer.png'),
      dpi=300, bbox_inches='tight')
+
+
+
+
+
+#%%
+# In[Manufacturer Model Name]
+titles = ['all', 'severe', 'short-term', 'long-term']
+MMN_k = 'ManufacturerModelName'
+
+for i in range(4):
+    d = dfs[i]
+    all_keys = d[MMN_k].value_counts().keys()
+    top10_keys = all_keys[:10]
+    mmn_dic = {k:k for k in top10_keys}
+    mmn_dic_temp = {k:'others' for k in all_keys if k not in top10_keys}
+    mmn_dic = {**mmn_dic, **mmn_dic_temp} 
+    d['MMN_new'] = d[MMN_k].map(mmn_dic)
+    dfs[i] = d
+fig, axs = plt.subplots(2,2, figsize=(8,8))
+axs = axs.flatten()
+case_label='case'
+control_label='control'
+for i, ax in enumerate(axs):
+    d = dfs[i]
+    d_case = d[d.case==1]
+    d_con = d[d.case==0]
+    dic = d_con['MMN_new'].value_counts()/len(d_con)
+    pval = ss.chi2_contingency(pd.crosstab(d['MMN_new'], d.case))[1]
+    print(pval)
+    # print(dic)
+    names = list(dic.keys())
+    values = np.array(list(dic.values))
+    if i>0:
+        control_label=''
+    ax.barh(y = np.arange(0,22,2)+.25, width = values, height=.5, color=colors[1],
+        label=control_label)
+    ax.set_yticks(np.arange(0,22,2))
+    ax.set_yticklabels(names)
+    ax.tick_params(axis='y', which='major', labelsize=14)
+    ax.set_ylim(-2,22)
+    case_dic = d_case['MMN_new'].value_counts()/len(d_case)
+    # create case_dic
+    for k in dic.keys():
+        if k in case_dic.keys():
+            pass
+        else:
+            case_dic[k] = 0
+    
+    case_dic = OrderedDict([(el, case_dic[el]) for el in dic.keys()])
+    case_names = list(case_dic.keys())
+    case_values = np.array(list(case_dic.values()))
+    if i>0:
+        case_label=''
+    ax.barh(y = np.arange(0,22,2)-.25, width = case_values, height=.5, color=colors[0],
+        label=case_label)
+    ax.set_title(titles[i], loc='center')
+    ax.set_xlim(0,0.4)
+
+fig.text(0.5, 0.04, r'$N/N_{\mathrm{tot}}$', ha='center', fontsize=14)
+fig.text(-0.11, 0.5, 'Model Name', va='center', rotation='vertical', fontsize=14)
+fig.legend( fontsize=14, bbox_to_anchor=(0.1, 1))
+plt.subplots_adjust(wspace=.75, hspace=.3)
+fig.savefig(join(fig_dir, 'crossec', 'model_name.png'),
+     dpi=300, bbox_inches='tight')
+#%%
+fig, axs = plt.subplots(2,2, figsize=(5,5))
+axs = axs.flatten()
+for i, ax in enumerate(axs):
+    d = dfs[i]
+    #pval = ss.chi2_contingency(pd.crosstab(d[MMN_k], d.case))[1]
+    #ax.annotate(r"$P=$"+str(round(pval,3)),(.3,1.1), fontsize=12 )
+    pos_mask = d.case==1
+    neg_value_counts = sort_dict(
+        d[MMN_k][~pos_mask].value_counts())
+    pos_value_counts = sort_dict(
+        d[MMN_k][pos_mask].value_counts())
+    pos_data = list(pos_value_counts.values())
+    neg_data = list(neg_value_counts.values())
+   
+    d[d.case==0][MMN_k].value_counts().sort_values().plot(kind = 'barh', ax=ax)
+    d[d.case==1][MMN_k].value_counts().sort_values().plot(kind = 'barh', ax=ax)
+    
+assert False
+from matplotlib.lines import Line2D
+custom_lines = [Line2D([0], [0], color=pcolor[0], lw=7),
+                Line2D([0], [0], color=pcolor[1], lw=7),
+                Line2D([0], [0], color=pcolor[2], lw=7),
+                Line2D([0], [0], color=colors[0], lw=2),
+                Line2D([0], [0], color=colors[1], lw=2),]
+
+lgd = fig.legend(custom_lines, b0_labels+['cases','controls'], bbox_to_anchor=(0.5,0.12),
+    borderpad=.8, ncol=2)
+lgd.get_frame().set_facecolor('grey')
+fig.savefig(join(fig_dir, 'crossec', 'manufacturer_model_name.png'), dpi=300, bbox_inches='tight')
+
 
 #%%
 df = df.dropna(subset=['PixelSpacing','SpacingBetweenSlices'],
