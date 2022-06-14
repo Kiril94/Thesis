@@ -358,7 +358,7 @@ for i in range(4):
     mmn_dic = {**mmn_dic, **mmn_dic_temp} 
     d['MMN_new'] = d[MMN_k].map(mmn_dic)
     dfs[i] = d
-fig, axs = plt.subplots(2,2, figsize=(8,8))
+fig, axs = plt.subplots(2,2, figsize=(8,10))
 axs = axs.flatten()
 case_label='case'
 control_label='control'
