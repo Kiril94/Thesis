@@ -87,17 +87,26 @@ for key in [MFS_k, 'man_new', MMN_k]:
     f_cm_ls.append(count_change(dfcm, key))
     f_ps_ls.append(count_change(dfps, key))
 #%%
-fig, axs = plt.subplots(1,2)
-case_label='case'
-control_label='control'
-for i, f_ps in zip(np.arange(0,7,3), f_ps_ls):
+fig, axs = plt.subplots(figsize=(7,3))
+case_label='cases'
+control_label_cm='CM controls'
+control_label_ps='PSM controls'
+for i, f_ps, f_cm in zip(np.arange(0,11,4), f_ps_ls, f_cm_ls):
     if i>0:
         case_label=''
-        control_label=''
-    axs[0].barh(y = i, width = f_ps[0], height=1, color=colors[0],
+        control_label_cm=''
+        control_label_ps=''
+    print(f_ps, 'ps')
+    print(f_cm, 'cm')
+    axs.barh(y = i, width = f_ps[0], height=1, color=colors[0],
         label=case_label)
-    axs[0].barh(y = i+1, width = f_ps[1], height=1, color=colors[1],
-        label=control_label)
-    axs[0].set_title('PS', loc='center')
-    
-fig.legend()
+    bp = axs.barh(y = i+1, width = f_ps[1], height=1, color=colors[1],
+        label=control_label_ps, hatch='x')
+    axs.barh(y = i+2, width = f_cm[1], height=1, color=colors[1],
+        label=control_label_cm, hatch='|')
+axs.set_yticks([1, 5, 9])
+axs.set_yticklabels([r'$B_0$', 'Manufacturer', 'Model Name'])
+axs.set_xlabel( 'Change of scanner from baseline to follow-up scan in ' +r'$N/N_{\mathrm{tot}}$', ha='center', fontsize=14)
+axs.legend(fontsize=12, bbox_to_anchor=(0.8, 1.1), ncol=3)
+fig.savefig(join(fig_dir, 'longitudinal', 'change.png'),
+     dpi=300, bbox_inches='tight')
