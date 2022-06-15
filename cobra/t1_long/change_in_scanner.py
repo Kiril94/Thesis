@@ -56,3 +56,48 @@ fig_dir = f"{base_dir}/figs"
 table_dir = f"{base_dir}/data/tables"
 with gzip.open(join(table_dir, 'scan_3dt1_clean.gz'), 'rb') as f:
     df = pickle.load(f)
+
+dfcm = pd.read_csv(join(base_dir, 'data\\t1_longitudinal\\imports\\dfscan_cov.csv'))
+dfps = pd.read_csv(join(base_dir, 'data\\t1_longitudinal\\imports\\dfscan_ps.csv'))
+
+dfcm = pd.merge(dfcm, df, how='left', on='SeriesInstanceUID')
+dfps = pd.merge(dfps, df, how='left', on='SeriesInstanceUID')
+MFS_k = 'MagneticFieldStrength'
+M_k = 'Manufacturer'
+MMN_k = 'ManufacturerModelName'
+#%%
+# Summarize manufacturers
+man_dic = {'SIEMENS':'S', 'Philips Medical Systems':'P', 'Philips':'P',
+        'Philips Healthcare':'P', 'GE MEDICAL SYSTEMS':'G','Agfa':'A'}
+dfcm['man_new'] = dfcm[M_k].map(man_dic)
+dfps['man_new'] = dfps[M_k].map(man_dic)
+
+#%%
+def count_change(df, key):
+    df_case = df[df.case==1]
+    df_con = df[df.case==0]
+    case_gb = df_case.groupby('PatientID_x')[key].nunique()
+    con_gb = df_con.groupby('PatientID_x')[key].nunique()
+    case_change_frac = len(case_gb[case_gb==2])/len(case_gb)
+    con_change_frac = len(con_gb[con_gb==2])/len(con_gb)
+    return case_change_frac, con_change_frac
+f_cm_ls = []
+f_ps_ls = []
+for key in [MFS_k, 'man_new', MMN_k]:
+    f_cm_ls.append(count_change(dfcm, key))
+    f_ps_ls.append(count_change(dfps, key))
+#%%
+fig, axs = plt.subplots(1,2)
+case_label='case'
+control_label='control'
+for i, f_ps in zip(np.arange(0,7,3), f_ps_ls):
+    if i>0:
+        case_label=''
+        control_label=''
+    axs[0].barh(y = i, width = f_ps[0], height=1, color=colors[0],
+        label=case_label)
+    axs[0].barh(y = i+1, width = f_ps[1], height=1, color=colors[1],
+        label=control_label)
+    axs[0].set_title('PS', loc='center')
+    
+fig.legend()
