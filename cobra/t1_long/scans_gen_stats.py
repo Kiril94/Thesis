@@ -25,16 +25,12 @@ import matplotlib.lines as mlines
 from collections import OrderedDict
 
 
-from ast import literal_eval
 plt.style.use(join(base_dir,'utilities', 'plot_style.txt'))
 import importlib
 import string
 plt.style.use('ggplot')
-#import proplot as pplt
-import matplotlib.dates as mdates
 import scipy.stats as ss
 
-from pylab import cm
 mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
 """

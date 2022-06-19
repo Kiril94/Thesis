@@ -8,19 +8,13 @@ Created on Mon Sep 13 15:50:50 2021
 from collections import defaultdict, deque
 import os
 import pickle
-import json
 from os.path import join
 from pathlib import Path
 import pandas as pd
 from sympy import count_ops
-from utilities import basic, mri_stats
-from stats_tools import vis as svis
+from utilities import basic
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import numpy as np
-import seaborn as sns
-import scikitplot as skplot
-from numpy.random import default_rng
 import proplot as pplt
 #import proplot as pplt
 # params = {'figure.dpi':300,

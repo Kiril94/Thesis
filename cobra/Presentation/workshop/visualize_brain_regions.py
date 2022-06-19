@@ -88,6 +88,42 @@ for br, z in zdc.items():
 #dfm.iloc[[0]].to_csv('DK_z_values_cov.csv', index=None)
 dfm.head()
 
+#%%
+#In[plot all brain regions involved]
+# Load dict
+def get_key_ls(keys, st):
+    return [k for k in keys if st in k]
+
+dfm = pd.read_csv('DK_template.csv')
+keys = list(dfm.keys()) 
+br_dic = {'Rolandic Operculum':get_key_ls(keys, 'parsopercularis')+\
+        get_key_ls(keys, 'triangularis')+get_key_ls(keys, 'parsorbitalis')+\
+        get_key_ls(keys, 'superiortemporal'), 
+        'Orbitofrontal Cortex':get_key_ls(keys,'orbitofrontal'),
+        'Heschls Gyrus':get_key_ls(keys, 'transverse'),
+        'Cingulate Gyrus':[],
+        'Bilateral Insulas':[],
+        'Bilateral Hipocampi':get_key_ls(keys, 'Hippo'),
+        'Parahippocampal Gyrus':get_key_ls(keys, 'parahi'),
+        'Temporal Pole':get_key_ls(keys, 'temporalpole'),
+        'Anterior Cingulate Cortex':[],
+        'Supramarginal Gyrus':get_key_ls(keys, 'supramarginal'),
+        'Ventricles':get_key_ls(keys, 'Ventricle')+get_key_ls(keys, 'Lat-Vent'),
+        'Whole Brain':[]
+        }
+print(br_dic)
+#'Anterior Cingulate Cortex':get_key_ls(keys, 'anteriorcingulate'),
+#'Bilateral Insulas':get_key_ls(keys,'insula'),
+# Set z-values
+keys.remove('Image-name-unique')
+dfm[keys] = 0
+for br in br_dic.keys():
+    for br_temp in br_dic[br]:
+        print(br_temp)
+        dfm[br_temp] = 1
+dfm.iloc[[0]].to_csv('defense_all_brs.csv', index=None)
+dfm.head()
+
 # %%
 #In[Visualize all included brain regions]
 # Load dict
