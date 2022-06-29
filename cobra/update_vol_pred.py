@@ -89,4 +89,6 @@ if __name__ == '__main__':
     df = main(pred_files, brain_regions_dic, inv_id_map, pred_df0)
     df.to_feather(join(data_dir, "volume_prediction_results.feather"))
     df.to_csv(join(data_dir, "volume_prediction_results.csv"), index=None)
+
+    df.to_csv(join("Y:\\tables", "volume_prediction_results.csv"), index=None)
     #print(df.head())
