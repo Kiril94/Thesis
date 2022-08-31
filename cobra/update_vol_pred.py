@@ -46,8 +46,6 @@ ids_present = []#[nid+'_1mm_seg.nii.gz' for nid in pred_df0.newID]
 pred_files = []
 for pred_dir in pred_dirs:
     pred_files = pred_files + list_subdir(pred_dir, ending='1mm_seg.nii.gz', exclude=ids_present)
-# we will create a list of dicts in parallel
-print(len(pred_files), 'segmented volumes after exclusion')
 
 
 def create_vol_dic(nii_file, brain_regions_dic, inv_id_map):
@@ -61,32 +59,48 @@ def create_vol_dic(nii_file, brain_regions_dic, inv_id_map):
         volume_dic[region] = np.sum(arr==intensity)
     return volume_dic
 
-def main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None):
+def main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None,
+            batch_size=500, name="volume_prediction_results_new", test=False):
+    sys.stdout.flush()
+    print('Reading ', len(pred_files), 'files in batches of ', batch_size)
 
-    print('Reading ', len(pred_files), 'files')
-    if not isinstance(converted_files_df, type(None)):
-        stored_ids = converted_files_df.newID.tolist()
-        pred_files = [file for file in pred_files if split(file)[1][:6] not in stored_ids]
-        print(len(pred_files), "after exclusion of converted files")
+    if test:
+        batch_size = 5
+    for i in range(0, len(pred_files), batch_size):
+        if test:
+            if i>2*batch_size:
+                break
+        batch = pred_files[i:i+batch_size]
+        if not isinstance(converted_files_df, type(None)):
+            stored_ids = converted_files_df.newID.tolist()
+            batch = [file for file in batch if split(file)[1][:6] not in stored_ids]
+            sys.stdout.flush()
+            print(len(batch), "after exclusion of converted files")
         
-    create_vol_dic_part = partial(create_vol_dic, 
-                    brain_regions_dic=brain_regions_dic,
-                    inv_id_map=inv_id_map)
-    start = time.time()
-    with mp.Pool() as pool:
-        volume_dic_ls = pool.map(create_vol_dic_part, pred_files)
-    print(f'The storing took {(time.time()-start)/60:.2f} min')
-    print('Create df')
-    df = pd.DataFrame(volume_dic_ls)
-    if not isinstance(converted_files_df, type(None)):
-        df = pd.concat([converted_files_df, df], ignore_index=True)
+        create_vol_dic_part = partial(create_vol_dic, 
+                        brain_regions_dic=brain_regions_dic,
+                        inv_id_map=inv_id_map)
+        start = time.time()
+        with mp.Pool() as pool:
+            volume_dic_ls = pool.map(create_vol_dic_part, batch)
+        sys.stdout.flush()
+        print(f'The storing took {(time.time()-start)/60:.2f} min')
+        print('Create df')
+        df = pd.DataFrame(volume_dic_ls)
+        if not isinstance(converted_files_df, type(None)):
+            df = pd.concat([converted_files_df, df], ignore_index=True)
+        else:
+            converted_files_df = df
+        sys.stdout.flush()
+        print("Save temporary dataframe")
+        df.to_csv(join(data_dir, "volume_pred", name + "_temp.csv"), index=None)
     return df
 
 
 if __name__ == '__main__':
-    df = main(pred_files, brain_regions_dic, inv_id_map, pred_df0)
-    df.to_feather(join(data_dir, "volume_pred","volume_prediction_results_new.feather"))
+    print(len(pred_files), 'segmented volumes to be computed')
+    df = main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None, test=True)
+    #df.to_feather(join(data_dir, "volume_pred","volume_prediction_results_new.feather"))
+    #df.to_feather(join(disk_data_dir, "volume_pred_results", "volume_prediction_results_new.feather"))
     df.to_csv(join(data_dir, "volume_pred", "volume_prediction_results_new.csv"), index=None)
-
-    df.to_csv(join("Y:\\tables", "volume_prediction_results_new.csv"), index=None)
-    #print(df.head())
+    #df.to_csv(join("Y:\\tables", "volume_prediction_results_new.csv"), index=None)
