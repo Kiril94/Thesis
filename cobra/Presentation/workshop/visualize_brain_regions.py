@@ -2,19 +2,24 @@
 import pandas as pd
 import numpy as np
 import pickle
+
+
 #%%
-# In[Parahippocampal gyrus]
+# In[Orbitofrontal Cortex]
+def get_key_ls(keys, st):
+    return [k for k in keys if st in k]
 dfm = pd.read_csv('DK_template.csv')
-all_keys = list(dfm.keys())
-all_keys.remove('Left-parahippocampal')
-all_keys.remove('Right-parahippocampal')
+all_keys = list(dfm.keys()) 
+print(get_key_ls(all_keys,'orbitofrontal'))
+
+all_keys.remove('Left-lateralorbitofrontal')
+all_keys.remove('Right-lateralorbitofrontal')
 all_keys.remove('Image-name-unique')
 dfm[all_keys] = 1
-dfm['Left-parahippocampal'] = 0
-dfm['Right-parahippocampal'] = 0
+dfm['Left-lateralorbitofrontal'] = 0
+dfm['Right-lateralorbitofrontal'] = 0
 
-dfm.iloc[[0]].to_csv('DK_parahipp.csv', index=None)
-
+dfm.iloc[[0]].to_csv('DK_orbitofrontal.csv', index=None)
 #%%
 # In[Parahippocampal gyrus]
 dfm = pd.read_csv('DK_template.csv')
