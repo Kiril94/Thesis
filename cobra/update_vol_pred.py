@@ -89,7 +89,7 @@ def main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None,
                         brain_regions_dic=brain_regions_dic,
                         inv_id_map=inv_id_map)
         start = time.time()
-        with mp.Pool() as pool:
+        with mp.Pool(10) as pool:
             volume_dic_ls = pool.map(create_vol_dic_part, batch)
         sys.stdout.flush()
         print(f'The storing took {(time.time()-start)/60:.2f} min')
