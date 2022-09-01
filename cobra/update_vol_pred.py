@@ -6,6 +6,7 @@ When reruning volume prediction for some files
 either remove them from the dataframe (recommended) or set converted_files_df to None.
 """
 
+from lib2to3.pytree import convert
 import os
 import sys
 from os.path import join, split
@@ -40,8 +41,8 @@ with open(join(data_long_dir, "sids_long_new.pkl"), 'rb') as f:
 with open(join(tables_dir, "disk_series_directories.json"), 'rb') as f:
     dir_dic = json.load(f)
 inv_id_map = {v: k for k, v in id_dic.items()}
-pred_df0 = pd.read_csv(join(data_dir,"volume_pred", "volume_prediction_results0.csv"))
-pred_df0.newID = pred_df0.newID.map(lambda x: str(x).zfill(6))
+#pred_df0 = pd.read_csv(join(data_dir,"volume_pred", "volume_prediction_results0.csv"))
+#pred_df0.newID = pred_df0.newID.map(lambda x: str(x).zfill(6))
 ids_present = []#[nid+'_1mm_seg.nii.gz' for nid in pred_df0.newID]
 pred_files = []
 for pred_dir in pred_dirs:
@@ -60,23 +61,30 @@ def create_vol_dic(nii_file, brain_regions_dic, inv_id_map):
     return volume_dic
 
 def main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None,
-            batch_size=500, name="volume_prediction_results_new", test=False):
+            batch_size=1000, name="volume_prediction_results_new", test=False):
     sys.stdout.flush()
     print('Reading ', len(pred_files), 'files in batches of ', batch_size)
 
     if test:
         batch_size = 5
+    converted_files_df_exists = False
     for i in range(0, len(pred_files), batch_size):
-        if test:
-            if i>2*batch_size:
-                break
+        print('start of loop', i)
+        try:
+            df
+            del df
+        except NameError:
+            pass
+        
         batch = pred_files[i:i+batch_size]
-        if not isinstance(converted_files_df, type(None)):
+        if converted_files_df_exists:
+            converted_files_df = pd.read_feather(join(data_dir, "volume_pred", name + "_temp.feather"))
             stored_ids = converted_files_df.newID.tolist()
+            del converted_files_df
+            stored_ids = [str(sid).zfill(6) for sid in stored_ids]
             batch = [file for file in batch if split(file)[1][:6] not in stored_ids]
             sys.stdout.flush()
             print(len(batch), "after exclusion of converted files")
-        
         create_vol_dic_part = partial(create_vol_dic, 
                         brain_regions_dic=brain_regions_dic,
                         inv_id_map=inv_id_map)
@@ -87,20 +95,34 @@ def main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None,
         print(f'The storing took {(time.time()-start)/60:.2f} min')
         print('Create df')
         df = pd.DataFrame(volume_dic_ls)
-        if not isinstance(converted_files_df, type(None)):
-            df = pd.concat([converted_files_df, df], ignore_index=True)
+        # load existing df each time to free up working memory
+        if not converted_files_df_exists:
+            converted_files_df_exists = True
         else:
-            converted_files_df = df
+            converted_files_df = pd.read_feather(join(data_dir, "volume_pred", name + "_temp.feather"))
+            df = pd.concat([converted_files_df, df], ignore_index=True)
+            del converted_files_df
+            converted_files_df = None
         sys.stdout.flush()
         print("Save temporary dataframe")
-        df.to_csv(join(data_dir, "volume_pred", name + "_temp.csv"), index=None)
+        df.to_feather(join(data_dir, "volume_pred", name + "_temp.feather"))
+        sys.stdout.flush()
+        print('end of loop', i)
+        if test:
+            if i>2*batch_size:
+                break
     return df
 
 
 if __name__ == '__main__':
     print(len(pred_files), 'segmented volumes to be computed')
-    df = main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None, test=True)
-    #df.to_feather(join(data_dir, "volume_pred","volume_prediction_results_new.feather"))
-    #df.to_feather(join(disk_data_dir, "volume_pred_results", "volume_prediction_results_new.feather"))
-    df.to_csv(join(data_dir, "volume_pred", "volume_prediction_results_new.csv"), index=None)
-    #df.to_csv(join("Y:\\tables", "volume_prediction_results_new.csv"), index=None)
+    test = False
+    df = main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None, test=test)
+    if not test:
+        df.to_feather(join(data_dir, "volume_pred","volume_prediction_results_new.feather"))
+        df.to_feather(join(disk_data_dir, "volume_pred_results", "volume_prediction_results_new.feather"))
+        df.to_csv(join(data_dir, "volume_pred", "volume_prediction_results_new.csv"), index=None)
+        df.to_csv(join(disk_data_dir, "volume_pred_results", "volume_prediction_results_new.csv"), index=None)
+        df.to_csv(join("Y:\\tables", "volume_prediction_results_new.csv"), index=None)
+
+
