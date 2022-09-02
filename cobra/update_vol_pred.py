@@ -67,7 +67,7 @@ def main(pred_files, brain_regions_dic, inv_id_map, converted_files_df=None,
 
     if test:
         batch_size = 5
-    converted_files_df_exists = False
+    converted_files_df_exists = True
     for i in range(0, len(pred_files), batch_size):
         print('start of loop', i)
         try:
@@ -123,6 +123,6 @@ if __name__ == '__main__':
         df.to_feather(join(disk_data_dir, "volume_pred_results", "volume_prediction_results_new.feather"))
         df.to_csv(join(data_dir, "volume_pred", "volume_prediction_results_new.csv"), index=None)
         df.to_csv(join(disk_data_dir, "volume_pred_results", "volume_prediction_results_new.csv"), index=None)
-        df.to_csv(join("Y:\\tables", "volume_prediction_results_new.csv"), index=None)
+        #df.to_csv(join("Y:\\tables", "volume_prediction_results_new.csv"), index=None)
 
 
