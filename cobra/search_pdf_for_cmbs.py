@@ -1,3 +1,7 @@
+"""
+    Save new patient IDs to text file (cases excluded) which contain keywords 
+    related to microbleeds.
+"""
 #%%
 import PyPDF2
 import glob
