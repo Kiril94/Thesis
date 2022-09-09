@@ -2,7 +2,6 @@ from datetime import datetime as dt
 from os.path import join, split
 import os
 
-from sympy import re
 from utilities.basic import list_subdir
 import numpy as np
 from pydicom import dcmread
@@ -201,18 +200,18 @@ def main(num_of_procs, write_file_dir, volume_dir_dic, sids, aggregation_func=np
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 table_dir = join(base_dir, 'data', 'tables')
-dicom_base_dir = "F:/CoBra/Data/dcm"
+dicom_base_dir = "G:/CoBra/Data/dcm"
 print('There are two different distance between slices files (long, cross), be cautious!')
 write_file_dir = join(base_dir, 'data/t1_longitudinal/distance_between_slices')
 
-with open(join(table_dir, "disk_series_directories.json"), "r") as json_file:
+with open(join(table_dir, "disk_series_directories_new.json"), "r") as json_file:
     volume_dir_dic = json.load(json_file)
 
 if __name__=="__main__":
     compute_distance = True
     if compute_distance:
         rest_sids = sorted(get_rest_sids(
-            sids_path=join(base_dir, 'data/t1_longitudinal/pairs_3dt1_long_sids.pkl'),
+            sids_path=join(base_dir, 'data/t1_longitudinal/sids_dbs_rest.pkl'),
             all_dist_path=join(write_file_dir, 'all_distances.txt')))
         print(len(rest_sids), 'sids before removing non-downloaded volumes')
         print('Take only downloaded volumes')
