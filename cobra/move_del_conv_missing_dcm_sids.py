@@ -19,7 +19,6 @@ sif_dir = "Y:\\"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
-update_downloaded_files = False
 pred_dir = join(disk_dir, "CoBra\\Data\\volume_longitudinal_nii\\prediction")
 input_dir = join(disk_dir, "CoBra\\Data\\volume_longitudinal_nii\\input\\nii_files")
 data_long_dir = join(data_dir, 't1_longitudinal')

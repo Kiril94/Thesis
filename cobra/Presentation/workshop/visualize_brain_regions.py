@@ -3,7 +3,27 @@ import pandas as pd
 import numpy as np
 import pickle
 
+#%%
+# In[ventricles]
+def get_key_ls(keys, st):
+    return [k for k in keys if st in k]
+dfm = pd.read_csv('DK_template.csv')
+all_keys = list(dfm.keys()) 
+print(get_key_ls(all_keys,'orbitofrontal'))
 
+all_keys.remove('Right-Lateral-Ventricle')
+all_keys.remove('Left-Lateral-Ventricle')
+all_keys.remove('Right-Inf-Lat-Vent')
+all_keys.remove('Left-Inf-Lat-Vent')
+
+all_keys.remove('Image-name-unique')
+dfm[all_keys] = 1
+dfm['Right-Lateral-Ventricle'] = 0
+dfm['Left-Lateral-Ventricle'] = 0
+dfm['Right-Inf-Lat-Vent'] = 0
+dfm['Left-Inf-Lat-Vent'] = 0
+
+dfm.iloc[[0]].to_csv('DK_ventricles.csv', index=None)
 #%%
 # In[Orbitofrontal Cortex]
 def get_key_ls(keys, st):
