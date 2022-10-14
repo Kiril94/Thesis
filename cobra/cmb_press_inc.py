@@ -62,4 +62,7 @@ print('Get first SWI and last 3D T1 scan and check \
 print(dfswi.PatientID.nunique(), 'Patients with SWI scans')
 dfswi_min = dfswi.loc[dfswi.groupby('PatientID').InstanceCreationDate.idxmin()]
 df3dt1_max = df3dt1_d.loc[df3dt1_d.groupby('PatientID').InstanceCreationDate.idxmax()]
+df_swi_3dt1 = pd.merge(dfswi_min, df3dt1_max, how='inner', on='PatientID',
+    suffixes=('_swi', '_3dt1'))
+
 #df['VALUE'] = df['VALUE'].where(df.groupby(['ID_1', 'ID_2'])['DATE'].transform('min').eq(df['DATE']))
