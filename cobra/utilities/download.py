@@ -116,7 +116,7 @@ def move_files_from_sif(df_group, df_volume_dir, df_patient_dir,
                 else:
                     print(volume_dst, 'already exists.')
 
-def save_list_downloaded_volumes_and_patients(disk_dcm_dir='F:\\CoBra\\Data\\dcm'):
+def save_list_downloaded_volumes_and_patients(disk_dcm_dir='G:\\CoBra\\Data\\dcm'):
     months_dirs = [join(disk_dcm_dir, f) for f in os.listdir(disk_dcm_dir) if f.startswith('2019')
                         or f.startswith('pos')]
     pat_ls, vol_ls = [], []
@@ -137,7 +137,7 @@ def save_list_downloaded_volumes_and_patients(disk_dcm_dir='F:\\CoBra\\Data\\dcm
             f.write("%s\n" % vol)
     return len(pat_ls), len(vol_ls)
 
-def get_downloaded_volumes_ls(disk_dcm_dir='F:\\CoBra\\Data\\dcm'):
+def get_downloaded_volumes_ls(disk_dcm_dir='G:\\CoBra\\Data\\dcm'):
     volume_list = []
     with open(join(disk_dcm_dir,'volume_log.txt'), 'r') as fd:
         reader = csv.reader(fd)

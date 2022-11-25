@@ -11,7 +11,7 @@ import shutil
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
 tables_dir = join(base_dir, 'data', 'tables')
-disk_data_dir = join("F:\\", 'CoBra', 'Data')
+disk_data_dir = join("G:\\", 'CoBra', 'Data')
 nii_input_dir = join(disk_data_dir, 'volume_longitudinal_nii', 'input')
 cases_dir = join(nii_input_dir, 'cases')
 con_dir = join(nii_input_dir, 'potential_controls')

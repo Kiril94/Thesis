@@ -14,7 +14,7 @@ from utilities.basic import list_subdir
 # In[tables directories]
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
-disk_dir = "F:\\"
+disk_dir = "G:\\"
 sif_dir = "Y:\\"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 data_dir = join(base_dir, 'data')

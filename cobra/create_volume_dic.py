@@ -12,12 +12,12 @@ import multiprocessing
 
 script_dir = os.path.realpath(__file__)
 base_dir = Path(script_dir).parent
-disk_dir = "F:"
+disk_dir = "G:"
 dst_data_dir = f"{disk_dir}/CoBra/Data/dcm"
 data_dir = join(base_dir, 'data')
 table_dir = join(data_dir, 'tables')
-disk_dcm_dir = 'F:\\CoBra\\Data\\dcm'
-disk_nii_dir = 'F:\\CoBra\\Data\\nii'
+disk_dcm_dir = 'G:\\CoBra\\Data\\dcm'
+disk_nii_dir = 'G:\\CoBra\\Data\\nii'
 
 
 def get_dic(vol_dir_dic, month_dir, filetype='dcm'):
