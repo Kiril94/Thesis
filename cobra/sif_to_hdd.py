@@ -34,7 +34,7 @@ def main():#
     parser.add_argument("-u", "--update_d_files",required=False, default=False, type=bool,
         help="Update downloaded files")
     parser.add_argument("-d", "--download_files",required=False, default=True, type=bool,
-        help="Update downloaded files")
+        help="download files")
     args = parser.parse_args()
     update_downloaded_files = args.update_d_files
     if update_downloaded_files:
@@ -85,3 +85,5 @@ def main():#
                             dst_data_dir, patient_log_file, volume_log_file, src_dir="Y:\\")
 if __name__ == '__main__':
     main()
+
+# python sif_to_hdd.py -b 9 -bs 2000 -s G:\CoBra\kiril\Thesis\CoBra\cobra\data\flair\flair_sids.pkl
